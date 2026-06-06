@@ -3,8 +3,8 @@
 import { Activity } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { BurndownChart } from "@/components/charts/burndown-chart";
+import { CardShell } from "@/components/home/card-shell";
 import type { BurndownPayload } from "@/lib/types";
-import { CardShell } from "./card-shell";
 
 export function SpendingPaceCard({ burndown }: { burndown: BurndownPayload }) {
   const t = useTranslations("home");

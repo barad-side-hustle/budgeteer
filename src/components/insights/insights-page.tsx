@@ -4,12 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
+import { FixedVsVariableCard } from "@/components/insights/fixed-vs-variable";
+import { RecommendationCard } from "@/components/insights/recommendation-card";
+import { SavingsList } from "@/components/insights/savings-list";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Link } from "@/i18n/navigation";
 import { getForecast } from "@/lib/api";
-import { FixedVsVariableCard } from "./fixed-vs-variable";
-import { RecommendationCard } from "./recommendation-card";
-import { SavingsList } from "./savings-list";
 
 export function InsightsPage() {
   const t = useTranslations("insights");
@@ -85,7 +85,7 @@ function EmptyInsights() {
         <h2 className="text-xl font-semibold tracking-tight">{t("emptyTitle")}</h2>
         <p className="text-sm text-muted-foreground">{t("emptyBody")}</p>
         <Link
-          href="/import"
+          href="/settings/bank"
           className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           {t("emptyCta")}

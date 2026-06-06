@@ -7,24 +7,23 @@ import type {
   Mover,
   Verdict,
 } from "@/lib/types";
-import { getAutoBudgetAverage } from "../db/queries/budgets";
-import { getAllCategories } from "../db/queries/categories";
+import { getAutoBudgetAverage } from "@/server/db/queries/budgets";
+import { getAllCategories } from "@/server/db/queries/categories";
 import {
   getBankHealth,
   getCashFlow,
   getHistoricalTrend,
   getNeedsAttentionCounts,
   getRecentTransactionsForHome,
-} from "../db/queries/home";
-import { getWorkspaceSetting } from "../db/queries/settings";
+} from "@/server/db/queries/home";
+import { getWorkspaceSetting } from "@/server/db/queries/settings";
 import {
   getCategoryMonthlySpend,
   getCategorySpendInRange,
   getDailySpendTotals,
   getPeriodTotal,
   getTopMerchantPerCategory,
-} from "../db/queries/transactions";
-import { daysUntil, nextPayday } from "../lib/pace";
+} from "@/server/db/queries/transactions";
 import {
   buildInsights,
   type CategoryMeta,
@@ -34,7 +33,8 @@ import {
   computeVerdict,
   cumulative,
   rollUpByParent,
-} from "./compute";
+} from "@/server/insights/compute";
+import { daysUntil, nextPayday } from "@/server/lib/pace";
 
 const HISTORICAL_MONTHS = 8;
 const RECENT_TXN_LIMIT = 6;

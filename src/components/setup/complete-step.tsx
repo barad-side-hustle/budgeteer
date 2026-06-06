@@ -1,25 +1,62 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { ProviderBadge } from "@/components/setup/provider-badge";
 import { Button } from "@/components/ui/button";
+import { getSettings, listIntegrations } from "@/lib/api";
+import { BANK_PROVIDERS } from "@/lib/types";
 
-export function CompleteStep({ onFinish }: { onFinish: () => void }) {
+interface CompleteStepProps {
+  onFinish: () => void;
+}
+
+type StepState = "todo" | "active" | "done";
+
+interface ImportStep {
+  id: string;
+  label: string;
+  state: StepState;
+}
+
+export function CompleteStep({ onFinish }: CompleteStepProps) {
   const t = useTranslations("setup");
-  const tips = [t("completeTip1"), t("completeTip2"), t("completeTip3")];
+  const { data: integrations = [] } = useQuery({
+    queryKey: ["integrations"],
+    queryFn: listIntegrations,
+  });
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: getSettings,
+  });
+
+  const aiLabel =
+    settings?.aiProvider === "claude"
+      ? t("aiSummaryClaude")
+      : settings?.aiProvider === "gemini"
+        ? t("aiSummaryGemini", { model: settings?.geminiModel ?? t("aiSummaryGeminiFallback") })
+        : settings?.aiProvider === "ollama"
+          ? t("aiSummaryOllama", { model: settings?.ollamaModel ?? t("aiSummaryOllamaFallback") })
+          : t("aiSummaryManual");
 
   return (
-    <div className="mx-auto w-full max-w-[520px] space-y-7 pt-4 text-center">
+    <div className="mx-auto w-full max-w-[520px] space-y-7 text-center">
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", damping: 14, stiffness: 160, delay: 0.05 }}
-        className="mx-auto flex size-24 items-center justify-center rounded-full bg-primary/15"
+        transition={{
+          type: "spring",
+          damping: 14,
+          stiffness: 160,
+          delay: 0.05,
+        }}
+        className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/15"
       >
         {/* Brand mark; local static SVG, next/image adds no value here. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="Budgeteer" className="size-14" />
+        <img src="/logo.svg" alt="Budgeteer" className="h-14 w-14" />
       </motion.div>
 
       <div>
@@ -48,25 +85,167 @@ export function CompleteStep({ onFinish }: { onFinish: () => void }) {
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="rounded-xl border border-border bg-card p-4 text-start"
+        className="rounded-xl border border-border bg-card p-5 text-start"
       >
-        <ul className="flex flex-col gap-2.5">
-          {tips.map((tip) => (
-            <li key={tip} className="flex items-start gap-2.5 text-sm">
-              <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-                <Check className="size-3" />
-              </span>
-              <span className="text-muted-foreground">{tip}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          {t("completeSummary")}
+        </div>
+
+        <div className="border-t border-border/40 py-3">
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("completeConnections", { count: integrations.length })}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {integrations.map((integ) => {
+              const info = BANK_PROVIDERS.find((b) => b.id === integ.provider);
+              if (!info) return null;
+              return (
+                <span
+                  key={integ.provider}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-muted py-0.5 ps-0.5 pe-2.5 text-xs"
+                >
+                  <ProviderBadge
+                    color={info.color}
+                    name={info.name}
+                    domain={info.domain}
+                    size={20}
+                    radius={6}
+                  />
+                  <span className="font-medium">{info.name}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("completeAi")}
+          </span>
+          <span className="text-sm font-medium">{aiLabel}</span>
+        </div>
+
+        <div className="grid grid-cols-[100px_1fr] items-center gap-3 border-t border-border/40 py-3">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            {t("completeStorage")}
+          </span>
+          <span className="text-sm font-medium">
+            {t.rich("completeStorageValue", {
+              dbPath: () => <code className="text-xs">data/budgeteer.db</code>,
+            })}
+          </span>
+        </div>
       </motion.div>
+
+      <ImportProgress />
 
       <div className="flex justify-center">
         <Button size="lg" onClick={onFinish}>
-          {t("completeOpenDashboard")}
+          {t("completeOpenBudgets")}
         </Button>
       </div>
     </div>
+  );
+}
+
+function ImportProgress() {
+  const t = useTranslations("setup");
+  const [steps, setSteps] = useState<ImportStep[]>([
+    { id: "connect", label: t("completeImportConnecting"), state: "active" },
+    { id: "fetch", label: t("completeImportFetch"), state: "todo" },
+    { id: "cat", label: t("completeImportCategorize"), state: "todo" },
+    { id: "budgets", label: t("completeImportBudgets"), state: "todo" },
+  ]);
+
+  useEffect(() => {
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setSteps((prev) =>
+        prev.map((s, idx) => {
+          if (idx < i) return { ...s, state: "done" };
+          if (idx === i) return { ...s, state: "active" };
+          return { ...s, state: "todo" };
+        }),
+      );
+      if (i >= 4) clearInterval(id);
+    }, 850);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ y: 12, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="rounded-xl border border-border bg-card p-4 text-start"
+    >
+      {steps.map((s, i) => (
+        <div
+          key={s.id}
+          className={`flex items-center gap-3 py-2 ${i > 0 ? "border-t border-border/40" : ""}`}
+        >
+          <motion.div
+            animate={s.state === "active" ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={
+              s.state === "active" ? { duration: 1.2, repeat: Infinity } : { duration: 0.2 }
+            }
+            className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+            style={{
+              background:
+                s.state === "done"
+                  ? "var(--primary)"
+                  : s.state === "active"
+                    ? "color-mix(in oklch, var(--primary) 18%, transparent)"
+                    : "var(--muted)",
+              color:
+                s.state === "done"
+                  ? "var(--primary-foreground)"
+                  : s.state === "active"
+                    ? "var(--primary)"
+                    : "var(--muted-foreground)",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              {s.state === "done" && (
+                <motion.span
+                  key="done"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                >
+                  ✓
+                </motion.span>
+              )}
+              {s.state === "active" && (
+                <motion.span
+                  key="active"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+                >
+                  ⟳
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.div>
+          <span
+            className={`text-sm ${
+              s.state === "todo"
+                ? "text-muted-foreground"
+                : s.state === "active"
+                  ? "font-medium"
+                  : ""
+            }`}
+          >
+            {s.label}
+          </span>
+          {s.state === "active" && (
+            <span className="ms-auto font-mono text-[11px] text-muted-foreground">
+              {t("completeWorking")}
+            </span>
+          )}
+        </div>
+      ))}
+    </motion.div>
   );
 }

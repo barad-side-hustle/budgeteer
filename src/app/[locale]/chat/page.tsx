@@ -6,9 +6,9 @@ import { ChatClient } from "@/components/chat/chat-client";
 import { ChatDisabled } from "@/components/chat/chat-disabled";
 import { AppShell } from "@/components/layout/app-shell";
 import { getOrm } from "@/server/db/orm";
+import { anyWorkspaceHasBankCredentials } from "@/server/db/queries/bank-credentials";
 import { getAppSettings } from "@/server/db/queries/settings";
 import { workspaces } from "@/server/db/schema";
-import { isAppOnboarded } from "@/server/lib/app-state";
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +29,7 @@ function firstWorkspaceId(): number {
 }
 
 export default async function ChatPage({ params }: { params: Promise<{ locale: string }> }) {
-  if (!isAppOnboarded()) {
+  if (!anyWorkspaceHasBankCredentials()) {
     const { locale } = await params;
     redirect(`/${locale}/setup`);
   }

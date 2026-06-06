@@ -2,12 +2,12 @@
 
 import { Receipt } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { CardAction, CardShell } from "@/components/home/card-shell";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { HomeRecentTransaction } from "@/lib/types";
-import { CardAction, CardShell } from "./card-shell";
 
 export function RecentActivity({ items }: { items: HomeRecentTransaction[] }) {
   const t = useTranslations("home");

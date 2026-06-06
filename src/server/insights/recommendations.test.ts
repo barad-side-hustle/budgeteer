@@ -6,7 +6,7 @@ import {
   buildSavings,
   type CategorySpendRow,
   type SavingsInput,
-} from "./recommendations";
+} from "@/server/insights/recommendations";
 
 function recurring(merchant: string, amount: number, categoryName: string | null): RecurringCharge {
   return {

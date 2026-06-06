@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "./app-sidebar";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (

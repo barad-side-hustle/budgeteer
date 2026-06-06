@@ -3,11 +3,11 @@
 import { PieChart } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Donut, type DonutSlice } from "@/components/charts/donut";
+import { CardAction, CardShell } from "@/components/home/card-shell";
 import { DeltaBadge } from "@/components/ui/delta-badge";
 import { formatCurrency } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { BreakdownItem } from "@/lib/types";
-import { CardAction, CardShell } from "./card-shell";
 
 const MAX_ROWS = 7;
 const DONUT_SLICES = 6;

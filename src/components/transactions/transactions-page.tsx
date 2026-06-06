@@ -7,6 +7,8 @@ import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { PageHeader } from "@/components/layout/app-shell";
+import { KpiCards } from "@/components/transactions/kpi-cards";
+import { WidgetsRow } from "@/components/transactions/widgets-row";
 import { QueryError } from "@/components/ui/query-error";
 import type { Locale } from "@/i18n/routing";
 import type { TransactionKindFilter } from "@/lib/api";
@@ -14,8 +16,6 @@ import { getCategories, getTransactions, getTransactionsSummary, listAccounts } 
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
 import { expandCategoryFilterIds } from "@/lib/transaction-filters";
 import { nextSortState, type SortOrder, type TransactionSortField } from "@/lib/transaction-sort";
-import { KpiCards } from "./kpi-cards";
-import { WidgetsRow } from "./widgets-row";
 
 export function TransactionsPage() {
   const t = useTranslations("transactions");

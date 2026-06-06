@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { MatchSettings } from "@/lib/types";
-import { type MatchCandidate, type MatchSettingsMap, proposeEvents } from "./matching";
+import { type MatchCandidate, type MatchSettingsMap, proposeEvents } from "@/server/lib/matching";
 
 function cand(p: Partial<MatchCandidate> & { id: number }): MatchCandidate {
   return {

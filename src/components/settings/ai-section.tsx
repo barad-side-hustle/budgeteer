@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { OllamaModelStatus } from "@/components/settings/ollama-model-status";
+import { SectionShell, SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +22,6 @@ import {
   RECOMMENDED_GEMINI_MODELS,
   RECOMMENDED_OLLAMA_MODELS,
 } from "@/lib/types";
-import { OllamaModelStatus } from "./ollama-model-status";
-import { SectionShell, SettingCard } from "./section-shell";
 
 function ollamaModelKey(name: string): string {
   return name.replace(/[^a-zA-Z0-9]/g, "_");

@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 
-import { computeFixedVsVariable, detectRecurring, type MerchantSeries } from "./recurring";
+import {
+  computeFixedVsVariable,
+  detectRecurring,
+  type MerchantSeries,
+} from "@/server/insights/recurring";
 
 function series(merchant: string, monthly: number[]): MerchantSeries {
   return { merchant, categoryId: null, categoryName: null, monthly };

@@ -1,14 +1,14 @@
 import "server-only";
 
 import type { EventRole, EventType, MatchSettings } from "@/lib/types";
-import { findInternalTransferPairs } from "./internal-transfers";
+import { findInternalTransferPairs } from "@/server/lib/internal-transfers";
 import {
   isAtmWithdrawal,
   isBankProvider,
   matchesCreditCardPayment,
   matchesInternalTransfer,
   type TransactionKind,
-} from "./transfers";
+} from "@/server/lib/transfers";
 
 // Pure matching core. Turns a window of transaction rows into proposed
 // FinancialEvents (group, never delete). No DB and no clock, so it is fully

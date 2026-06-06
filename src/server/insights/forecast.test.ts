@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { computeForecast, type ForecastInput } from "./forecast";
+import { computeForecast, type ForecastInput } from "@/server/insights/forecast";
 
 const base: ForecastInput = {
   monthLabel: "March",

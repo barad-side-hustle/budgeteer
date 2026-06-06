@@ -16,8 +16,8 @@ import type {
   SetupStatus,
   TransactionWithCategory,
   Workspace,
-} from "./types";
-import { getActiveWorkspaceIdSync } from "./workspace-store";
+} from "@/lib/types";
+import { getActiveWorkspaceIdSync } from "@/lib/workspace-store";
 
 const BASE = "";
 
@@ -67,10 +67,6 @@ export function deleteWorkspace(id: number) {
 
 export function getSetupStatus() {
   return fetchJSON<SetupStatus>("/api/setup/status");
-}
-
-export function completeSetup() {
-  return fetchJSON<{ success: boolean }>("/api/setup/complete", { method: "POST" });
 }
 
 export function saveBankCredentials(
@@ -258,6 +254,10 @@ export function getTransactions(params: {
   );
 }
 
+export function getReviewTransactions() {
+  return fetchJSON<{ transactions: TransactionWithCategory[] }>("/api/transactions/review");
+}
+
 export function setTransactionKind(id: number, kind: TransactionKind) {
   return fetchJSON<{ success: boolean }>(`/api/transactions/${id}`, {
     method: "PATCH",
@@ -342,43 +342,6 @@ export function getInsights() {
 
 export function getForecast() {
   return fetchJSON<ForecastPayload>(`/api/forecast`);
-}
-
-export interface ImportResult {
-  added: number;
-  updated: number;
-  accountName: string;
-}
-
-export interface ImportRowInput {
-  date: string;
-  description: string;
-  /** Signed: negative = expense, positive = income. */
-  amount: number;
-  currency?: string;
-  memo?: string | null;
-}
-
-export function importCsvRows(accountName: string, rows: ImportRowInput[]) {
-  return fetchJSON<ImportResult>("/api/import/csv", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ accountName, rows }),
-  });
-}
-
-export function createManualTransaction(input: {
-  date: string;
-  description: string;
-  amount: number;
-  accountName?: string;
-  currency?: string;
-}) {
-  return fetchJSON<ImportResult>("/api/transactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
 }
 
 export function getActivity() {

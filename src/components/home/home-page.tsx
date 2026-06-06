@@ -1,35 +1,31 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { SyncButton } from "@/components/dashboard/sync-button";
+import { AttentionStrip } from "@/components/home/attention-strip";
+import { BreakdownSection } from "@/components/home/breakdown-section";
+import { CardError, CardSkeleton } from "@/components/home/card-shell";
+import { ForecastHero } from "@/components/home/forecast-hero";
+import { ImproveFeed } from "@/components/home/improve-feed";
+import { RecentActivity } from "@/components/home/recent-activity";
+import { SpendingPaceCard } from "@/components/home/spending-pace-card";
+import { SyncFailureBanner } from "@/components/home/sync-failure-banner";
+import { SyncStatusPill } from "@/components/home/sync-status-pill";
+import { TopMovers } from "@/components/home/top-movers";
 import { RecommendationCard } from "@/components/insights/recommendation-card";
 import { PageHeader } from "@/components/layout/app-shell";
-import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
 import { getActivity, getForecast, getInsights } from "@/lib/api";
-import { AttentionStrip } from "./attention-strip";
-import { BreakdownSection } from "./breakdown-section";
-import { CardError, CardSkeleton } from "./card-shell";
-import { ForecastHero } from "./forecast-hero";
-import { ImproveFeed } from "./improve-feed";
-import { RecentActivity } from "./recent-activity";
-import { SpendingPaceCard } from "./spending-pace-card";
-import { SyncFailureBanner } from "./sync-failure-banner";
-import { SyncStatusPill } from "./sync-status-pill";
-import { TopMovers } from "./top-movers";
 
 export function HomePage() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [autoStartSync] = useState(() => searchParams.get("sync") === "1");
   const t = useTranslations("home");
-  const tNav = useTranslations("nav");
 
   const insights = useQuery({ queryKey: ["insights"], queryFn: getInsights });
   const forecast = useQuery({ queryKey: ["forecast"], queryFn: getForecast });
@@ -66,7 +62,6 @@ export function HomePage() {
   const data = insights.data;
   const insightsLoading = insights.isLoading || !data;
   const forecastLoading = forecast.isLoading || !forecast.data;
-  const hasBanks = (data?.bankHealth?.length ?? 0) > 0;
   const recommendations = forecast.data?.recommendations?.slice(0, 3) ?? [];
 
   return (
@@ -75,28 +70,14 @@ export function HomePage() {
         title={t("pageTitle")}
         actions={
           <>
-            <Button
-              variant="outline"
-              size="sm"
-              render={
-                <Link href="/import">
-                  <Upload />
-                  {tNav("import")}
-                </Link>
-              }
+            <SyncStatusPill
+              items={data?.bankHealth ?? null}
+              nextScheduledSync={data?.nextScheduledSync ?? null}
+              activity={activity ?? null}
+              onOpenChange={handleActivityOpenChange}
             />
-            {hasBanks && (
-              <>
-                <SyncStatusPill
-                  items={data?.bankHealth ?? null}
-                  nextScheduledSync={data?.nextScheduledSync ?? null}
-                  activity={activity ?? null}
-                  onOpenChange={handleActivityOpenChange}
-                />
-                <SyncButton onComplete={handleComplete} autoStart={autoStartSync} />
-              </>
-            )}
             <CategorizeButton onApplied={handleComplete} />
+            <SyncButton onComplete={handleComplete} autoStart={autoStartSync} />
           </>
         }
       />

@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/i18n/client-provider";
 import { dirFor, isLocale, locales } from "@/i18n/routing";
-import "../globals.css";
+import "@/app/globals.css";
 
 const geistSans = Geist({
   variable: "--font-sans",

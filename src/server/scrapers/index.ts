@@ -2,8 +2,8 @@ import "server-only";
 
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
 import type { BankProvider } from "@/lib/types";
-import { getWorkspaceSetting } from "../db/queries/settings";
-import type { ScrapedTransaction, ScrapeResult } from "./types";
+import { getWorkspaceSetting } from "@/server/db/queries/settings";
+import type { ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
 
 export const PROVIDER_MAP: Record<string, CompanyTypes> = {
   isracard: CompanyTypes.isracard,

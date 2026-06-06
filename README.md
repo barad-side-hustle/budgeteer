@@ -6,7 +6,7 @@
 # Budgeteer
 
 **RiseUp, but free, open-source, and local-first.**
-Forecast your month, see what's safe to spend, and find where to save. All on your machine.
+Connect your Israeli bank, forecast your month, and see what's safe to spend. Encrypted, on your own machine.
 
 [![Website](https://img.shields.io/badge/%F0%9F%8C%90%20Website-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/budgeteer/)
 [![Docs](https://img.shields.io/badge/%F0%9F%93%96%20Docs-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/budgeteer/getting-started)
@@ -23,7 +23,7 @@ Forecast your month, see what's safe to spend, and find where to save. All on yo
 </div>
 
 > [!WARNING]
-> Personal, local-only tool. The optional bank scraper may violate a bank's Terms of Service. Use only for your own accounts on your own machine. **Do not deploy as a hosted service.**
+> Personal, local-only tool. Scraping financial institutions may violate their Terms of Service. Use only for your own accounts on your own machine. **Do not deploy as a hosted service.**
 
 <div align="center">
 
@@ -33,23 +33,13 @@ Forecast your month, see what's safe to spend, and find where to save. All on yo
 
 ## Why Budgeteer?
 
-[RiseUp](https://www.riseup.co.il/) showed Israelis how good it feels to know, on any given day, whether the month is heading for a plus or a minus and exactly how much is safe to spend. It's a lovely product, but it's a paid subscription that connects to your accounts in the cloud. Budgeteer brings the same calm, forward-looking experience to people who'd rather pay nothing and keep their data on their own laptop.
+Israeli banks have terrible exports, YNAB doesn't speak ILS gracefully, and every "cloud finance" app wants you to hand over your bank password. Budgeteer is the answer for people who'd rather just run something on their own laptop.
 
-You bring your transactions in yourself: **import a CSV from your bank or credit card, paste from a spreadsheet, or type them in by hand.** They land in a local SQLite file you can `cp` and back up like any other file. From there Budgeteer forecasts where your month is going, shows what's safe to spend per day, splits fixed from variable, and surfaces practical, non-judgmental ways to save.
+Your transactions get pulled directly from your bank with [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider you choose: paid Claude, Gemini, free local Ollama, or nothing at all.
 
-Everything runs locally with **no cloud, no subscription, and no external financial-data provider required.** AI categorization is optional (Claude, Gemini, local Ollama, or none), and connecting an Israeli bank for automatic sync is an opt-in power feature, never a requirement.
+The trade-off is honest: you self-host, you trust the scraper, and you accept that banks may not love automation. In return you get a fast, beautiful, fully offline dashboard that never phones home.
 
-### How it's different from RiseUp
-
-| | **RiseUp** | **Budgeteer** |
-|---|---|---|
-| Cost | Paid subscription | Free & open source |
-| Data | Cloud | 100% on your machine |
-| Getting data in | Open-banking connection | CSV / Excel paste / manual / optional bank scraper |
-| Cash-flow forecast | ✅ | ✅ |
-| Safe-to-spend & overdraft warning | ✅ | ✅ |
-| Savings suggestions | ✅ | ✅ |
-| Self-hostable & hackable | ❌ | ✅ |
+And it's forward-looking like [RiseUp](https://www.riseup.co.il/): Budgeteer forecasts whether you'll finish the month in the plus or the minus, tells you what's safe to spend per day, splits fixed from variable, and suggests practical ways to save, all computed locally from your own transactions.
 
 ## Features
 
@@ -58,47 +48,47 @@ Everything runs locally with **no cloud, no subscription, and no external financ
 <td width="33%" valign="top">
 
 ### 📈 Cash-flow forecast
-The "bottom line" front and center: a clear verdict on whether you'll finish the month in the plus or the minus, your projected income vs spending, and the expected month-end balance.
+The "bottom line" front and center: will you finish the month in the plus or the minus, your projected income vs spending, expected month-end balance, and an overdraft warning. Fixed commitments like rent are counted once, not extrapolated.
 
 </td>
 <td width="33%" valign="top">
 
-### 💸 Safe to spend & overdraft alerts
-A daily and weekly amount that keeps you on track, plus an overdraft warning when your balance is heading below zero. Fixed commitments like rent are counted once, never extrapolated.
+### 💸 Safe to spend & ways to save
+A daily and weekly amount that keeps you on track, plus friendly, non-judgmental suggestions: subscriptions to cancel, categories running high, and avoidable fees, each with a ₪/month estimate.
 
 </td>
 <td width="33%" valign="top">
 
-### 📥 Local-first import
-Upload a CSV from your bank or credit card, paste rows from a spreadsheet, or add transactions by hand. Smart column mapping, signed amounts, and idempotent re-imports. No account, no cloud.
+### ✅ Review queue
+Transactions the categorizer wasn't sure about land on a dedicated Review page with a clear explanation, so confirming or fixing them takes seconds.
+
+</td>
+</tr>
+<tr>
+<td width="33%" valign="top">
+
+### 🏦 Israeli bank integration
+18 banks and card issuers ship enabled out of the box, from Isracard, Hapoalim, Leumi, Mizrahi, and Cal to One Zero (with programmatic SMS 2FA).
+
+</td>
+<td width="33%" valign="top">
+
+### 🤖 AI categorization
+Choose Claude (Anthropic) for best accuracy, Gemini (Google) for a generous free tier, Ollama for fully local LLMs, or skip and categorize manually.
+
+</td>
+<td width="33%" valign="top">
+
+### 🔒 Local-only & encrypted
+Credentials encrypted with AES-256-GCM. Server binds to `127.0.0.1` only — never reachable from your LAN or the internet.
 
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-### 💰 Ways to save
-Practical, non-judgmental suggestions: recurring charges you could cancel, categories running above your usual, big variable categories worth trimming, and avoidable bank fees — each with a ₪/month estimate.
-
-</td>
-<td valign="top">
-
-### 🧱 Fixed vs variable
-Recurring-charge detection splits your committed monthly spend (rent, bills, subscriptions) from the flexible part, so you can see what's truly discretionary.
-
-</td>
-<td valign="top">
-
-### 🤖 Optional AI categorization
-Auto-categorize with Claude (Anthropic), Gemini (Google), or fully local Ollama — or skip AI entirely and categorize by hand. Everything works without it.
-
-</td>
-</tr>
-<tr>
-<td valign="top">
-
-### 🔒 Local-only & private
-No cloud, no account, no telemetry. The server binds to `127.0.0.1` only and your data never leaves `data/`. Credentials (if you connect a bank) are AES-256-GCM encrypted.
+### 📊 Budgets with pacing
+Hierarchical categories, monthly targets, "ahead of pace" hero card, and per-category drilldown.
 
 </td>
 <td valign="top">
@@ -109,28 +99,31 @@ Polished buttercream-and-sage palette in light mode, warm charcoal in dark. Syst
 </td>
 <td valign="top">
 
+### 🔒 Runs entirely on your machine
+No cloud, no account, no telemetry. The server binds to loopback only and your data never leaves `data/`.
+
 ### 💬 Chat with your spending
-An optional AI chat agent at `/chat` answers questions about your transactions, budgets, and categories, using the provider you picked.
+A built-in AI chat agent at `/chat` answers questions about your transactions, budgets, and categories. Uses the same provider you picked for categorization.
 
 </td>
 </tr>
 <tr>
 <td valign="top">
 
-### 🏦 Optional bank sync
-Prefer automatic updates? Connect an Israeli bank or card issuer (18 supported, from Isracard and Hapoalim to One Zero) in **Settings → Banks**. Entirely opt-in.
+### 🎯 Auto-detected transfers
+Credit card payments and inter-account moves are recognized and excluded from spending totals.
 
 </td>
 <td valign="top">
 
-### 🔍 Merchant memory & transfers
-Correct a category once and the same merchant is remembered. Credit-card payments and inter-account transfers are auto-detected and excluded from spending.
+### 📅 Multi-month history
+Pull up to 3 months of transactions per sync (configurable). Most banks support 12 months total.
 
 </td>
 <td valign="top">
 
-### 📊 Budgets & history
-Hierarchical categories, monthly targets with pacing, per-category drilldown, and multi-month trends.
+### 🔍 Merchant memory
+Once you correct an AI categorization, Budgeteer remembers — same merchant goes to the right category next time.
 
 </td>
 </tr>
@@ -157,23 +150,31 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 </tr>
 <tr>
 <td align="center"><b>Insights & ways to save</b></td>
-<td align="center"><b>Import (CSV / paste / manual)</b></td>
+<td align="center"><b>Review queue</b></td>
 </tr>
 <tr>
 <td><img src="public/screenshots/insights-light.png" alt="Insights: recommendations, savings, fixed vs variable"></td>
-<td><img src="public/screenshots/import-light.png" alt="Local-first import"></td>
+<td><img src="public/screenshots/review-light.png" alt="Review queue for flagged transactions"></td>
 </tr>
 <tr>
 <td align="center"><b>Onboarding</b></td>
-<td align="center"><b>Transactions</b></td>
+<td align="center"><b>Connect a bank</b></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/setup-light.png" alt="Import-first onboarding"></td>
+<td><img src="public/screenshots/setup-light.png" alt="Onboarding welcome"></td>
+<td><img src="public/screenshots/setup-bank-light.png" alt="Onboarding bank picker"></td>
+</tr>
+<tr>
+<td align="center"><b>Transactions</b></td>
+<td align="center"><b>Settings</b></td>
+</tr>
+<tr>
 <td><img src="public/screenshots/transactions-light.png" alt="Transactions page"></td>
+<td><img src="public/screenshots/settings-general-light.png" alt="Settings"></td>
 </tr>
 <tr>
 <td align="center"><b>Categories</b></td>
-<td align="center"><b>AI provider (optional)</b></td>
+<td align="center"><b>AI provider</b></td>
 </tr>
 <tr>
 <td><img src="public/screenshots/settings-categories-light.png" alt="Category management"></td>
@@ -185,30 +186,26 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 
 ```mermaid
 flowchart LR
-    Import["📥 Import<br/>CSV · spreadsheet paste · manual"]
-    Bank["🏦 Optional bank sync<br/>(israeli-bank-scrapers)"]
+    Bank["🏦 Israeli bank<br/>(Isracard, Hapoalim, Leumi,<br/>Mizrahi, Cal, One Zero, …)"]
+    Scraper["Puppeteer scraper<br/>(israeli-bank-scrapers)"]
     DB[("📦 SQLite<br/>data/budgeteer.db<br/>(WAL mode)")]
-    Engine["📈 Forecast & insights<br/>local, deterministic"]
-    AI{"🤖 Optional AI<br/>Claude · Gemini · Ollama"}
+    AI{"🤖 AI provider<br/>Claude · Gemini · Ollama · None"}
     UI["🖥 Dashboard<br/>http://127.0.0.1:2412"]
 
-    Import -->|new transactions| DB
-    Bank -.->|opt-in| DB
-    DB --> Engine
-    DB -.->|uncategorized| AI
-    AI -.->|categories| DB
-    Engine --> UI
+    Bank -->|HTTPS<br/>credentials encrypted| Scraper
+    Scraper -->|new transactions| DB
+    DB -->|uncategorized batch| AI
+    AI -->|category proposals| DB
+    DB --> UI
 
     subgraph local["🔒 Your machine — 127.0.0.1 only"]
-        Import
-        Bank
+        Scraper
         DB
-        Engine
         UI
     end
 ```
 
-The forecast, savings suggestions, and fixed-vs-variable split are computed locally and deterministically from your transactions. By default Budgeteer is **fully offline** — nothing leaves your machine. The only outbound traffic happens if you opt into a bank connection (to your bank) or a cloud AI provider: `api.anthropic.com` (Claude), Google Gemini API endpoints (Gemini), or `localhost:11434` (Ollama, still local).
+Everything inside the dashed box stays on your laptop. The only outbound traffic is to your bank (for scraping) and optionally `api.anthropic.com` (if you chose Claude), Google Gemini API endpoints (if you chose Gemini), or `localhost:11434` (if you chose Ollama).
 
 ## Supported banks
 
@@ -278,11 +275,11 @@ To hack on the app with hot reload instead, run `bun dev` and open `http://127.0
 In the browser:
 
 1. **Welcome** — a quick tour of the local-first, private, free idea.
-2. **Add your money** — import a CSV from your bank or credit card, paste rows from a spreadsheet, or add a few transactions by hand. (Prefer automatic bank sync? Skip this and connect a bank later in **Settings → Banks**.)
-3. **Set your current balance** — optional, but it unlocks the expected month-end balance and overdraft warnings.
-4. **Done.** Your dashboard opens with the month's forecast, what's safe to spend, and where you can save.
-
-Optional, any time afterward: pick an AI provider in **Settings → AI** for auto-categorization, set a monthly spending target, or connect an Israeli bank in **Settings → Banks** for automatic syncs.
+2. **Connect your bank** — credentials are AES-256-GCM encrypted before they touch disk.
+3. **Choose an AI provider** — Claude (default), Gemini, Ollama, or none.
+4. **Set your monthly target** — the spend you want to stay under each month (optional).
+5. **Set per-category budgets** — type an amount on any category to budget it; leave blank to track without a limit (optional).
+6. **Done.** Sync starts automatically: a few months of transactions, then AI categorization. Your dashboard opens with the month's forecast.
 
 ## How you'll use it
 
@@ -333,16 +330,12 @@ spent/
 │   │   ├── api/              Sync (SSE), summary, transactions, setup
 │   │   └── setup/            First-run wizard
 │   ├── components/
-│   │   ├── home/             Forecast hero, breakdown, movers, spending pace
-│   │   ├── insights/         Recommendations, savings, fixed-vs-variable
-│   │   ├── import/           CSV/paste/manual import panel
-│   │   ├── setup/            Welcome, add-money, balance onboarding steps
+│   │   ├── dashboard/        Hero card, category grid, budget drawer
+│   │   ├── setup/            Bank, AI, target, budgets steps
 │   │   └── settings/         Per-tab settings panels
-│   ├── lib/                  Shared client-side types, helpers, CSV parser
+│   ├── lib/                  Shared client-side types and helpers
 │   └── server/
 │       ├── ai/               Claude + Gemini + Ollama provider implementations
-│       ├── insights/         Forecast, recurring, savings, recommendations (pure + engine)
-│       ├── import/           Local import commit path
 │       ├── db/               SQLite singleton, migrations, query helpers
 │       ├── lib/              Encryption, dedup, transfer detection, pace
 │       └── scrapers/         Wrapper around israeli-bank-scrapers
@@ -358,17 +351,15 @@ spent/
 
 ## Roadmap
 
-- [x] Local-first import (CSV, spreadsheet paste, manual entry)
 - [x] Cash-flow forecast: plus/minus verdict, expected month-end balance, overdraft risk
-- [x] Safe-to-spend (daily & weekly) with fixed-vs-variable awareness
-- [x] Savings opportunities and human-readable recommendations
+- [x] Safe-to-spend, savings opportunities, and a review queue for flagged transactions
 - [x] Hebrew UI with full RTL layout
-- [x] Optional Israeli bank sync via `israeli-bank-scrapers` (incl. One Zero 2FA)
-- [x] Optional AI categorization (Claude, Gemini, Ollama) + AI chat
+- [x] Visa Cal, Bank Leumi, Mizrahi, Discount, FIBI, and the rest of the `israeli-bank-scrapers` roster
+- [x] One Zero with programmatic SMS 2FA
+- [x] Gemini as a third AI provider
+- [x] AI chat agent for asking questions about your spending
 - [x] Multiple workspaces
-- [ ] Excel (.xlsx) import without a CSV export step
 - [ ] CSV / OFX export
-- [ ] Recurring-bill calendar and upcoming-charges view
 - [ ] Custom user-defined categories
 - [ ] Mobile companion (Phase 2)
 

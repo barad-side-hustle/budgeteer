@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { queryTransactions, type TransactionKindFilter } from "@/server/db/queries/transactions";
-import { commitImport } from "@/server/import/commit";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseKind(raw: string | null): TransactionKindFilter | undefined {
@@ -58,38 +57,5 @@ export async function GET(request: Request) {
     accountKeys,
   });
 
-  return NextResponse.json(result);
-}
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
-/** Manually add a single transaction. `amount` is signed (negative = expense). */
-export async function POST(request: Request) {
-  const workspaceId = getWorkspaceIdFromRequest(request);
-  const body = await request.json().catch(() => null);
-  if (body == null || typeof body !== "object") {
-    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
-  }
-  const { date, description, amount, accountName, currency } = body as Record<string, unknown>;
-  const amountNum = Number(amount);
-  if (typeof date !== "string" || !ISO_DATE.test(date)) {
-    return NextResponse.json({ error: "A valid date (YYYY-MM-DD) is required" }, { status: 400 });
-  }
-  if (!Number.isFinite(amountNum) || amountNum === 0) {
-    return NextResponse.json({ error: "A non-zero amount is required" }, { status: 400 });
-  }
-
-  const result = commitImport(workspaceId, {
-    source: "manual",
-    accountName: typeof accountName === "string" ? accountName : "Manual",
-    rows: [
-      {
-        date,
-        description: typeof description === "string" ? description : "",
-        amount: amountNum,
-        currency: typeof currency === "string" ? currency : "ILS",
-      },
-    ],
-  });
   return NextResponse.json(result);
 }

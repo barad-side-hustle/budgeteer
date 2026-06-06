@@ -4,12 +4,12 @@ import { ArrowDownRight, ArrowUpRight, TrendingUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CategoryIcon } from "@/components/category-icon";
 import { Sparkline } from "@/components/charts/sparkline";
+import { CardShell } from "@/components/home/card-shell";
 import { Link } from "@/i18n/navigation";
 import { formatCurrency } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { Mover } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CardShell } from "./card-shell";
 
 export function TopMovers({ movers }: { movers: Mover[] }) {
   const t = useTranslations("home");

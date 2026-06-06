@@ -46,7 +46,7 @@ export function ForecastHero({ forecast: f }: Props) {
           <h2 className="text-xl font-semibold tracking-tight">{t("emptyTitle")}</h2>
           <p className="text-sm text-muted-foreground">{t("emptyBody")}</p>
           <Link
-            href="/import"
+            href="/settings/bank"
             className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("emptyCta")}

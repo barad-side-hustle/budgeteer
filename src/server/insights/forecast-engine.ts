@@ -1,16 +1,24 @@
 import "server-only";
 
 import type { ForecastPayload, InsightSection, InsightSectionError } from "@/lib/types";
-import { getAutoBudgetAverage } from "../db/queries/budgets";
-import { getAllCategories } from "../db/queries/categories";
-import { getCashFlow, getTypicalMonthly } from "../db/queries/home";
-import { getBalanceAnchor, getWorkspaceSetting } from "../db/queries/settings";
-import { getCategorySpendInRange, getMerchantMonthlySpend } from "../db/queries/transactions";
-import { daysUntil, nextPayday } from "../lib/pace";
-import { type CategoryMeta, computeMonthRanges, rollUpByParent } from "./compute";
-import { computeForecast } from "./forecast";
-import { buildRecommendations, buildSavings, type CategorySpendRow } from "./recommendations";
-import { computeFixedVsVariable, detectRecurring, type MerchantSeries } from "./recurring";
+import { getAutoBudgetAverage } from "@/server/db/queries/budgets";
+import { getAllCategories } from "@/server/db/queries/categories";
+import { getCashFlow, getTypicalMonthly } from "@/server/db/queries/home";
+import { getBalanceAnchor, getWorkspaceSetting } from "@/server/db/queries/settings";
+import { getCategorySpendInRange, getMerchantMonthlySpend } from "@/server/db/queries/transactions";
+import { type CategoryMeta, computeMonthRanges, rollUpByParent } from "@/server/insights/compute";
+import { computeForecast } from "@/server/insights/forecast";
+import {
+  buildRecommendations,
+  buildSavings,
+  type CategorySpendRow,
+} from "@/server/insights/recommendations";
+import {
+  computeFixedVsVariable,
+  detectRecurring,
+  type MerchantSeries,
+} from "@/server/insights/recurring";
+import { daysUntil, nextPayday } from "@/server/lib/pace";
 
 const RECURRING_MONTHS = 6;
 const RECURRING_LIMIT = 8;

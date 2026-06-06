@@ -4,7 +4,7 @@ import type {
   CategoryForCategorization,
   PastCorrection,
   TransactionForCategorization,
-} from "./types";
+} from "@/server/ai/types";
 
 function renderCategoryLine(c: CategoryForCategorization, indent = ""): string {
   return c.description && c.description.trim().length > 0

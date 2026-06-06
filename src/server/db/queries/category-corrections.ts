@@ -2,10 +2,10 @@ import "server-only";
 
 import { sql } from "drizzle-orm";
 import type { PastCorrection } from "@/server/ai/types";
-import { normalizeMerchant } from "../../lib/merchant-memory";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { categoryCorrections } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { categoryCorrections } from "@/server/db/schema";
+import { normalizeMerchant } from "@/server/lib/merchant-memory";
 
 export function recordCorrection(
   workspaceId: number,

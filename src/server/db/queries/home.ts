@@ -9,10 +9,10 @@ import type {
   HomeRecentTransaction,
 } from "@/lib/types";
 import { BANK_PROVIDERS } from "@/lib/types";
-import { toLocalISODate } from "../../lib/date-utils";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { bankCredentials, syncRuns } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { bankCredentials, syncRuns } from "@/server/db/schema";
+import { toLocalISODate } from "@/server/lib/date-utils";
 
 export function getCashFlow(workspaceId: number, from: string, to: string): HomeCashFlow {
   const db = getDb();

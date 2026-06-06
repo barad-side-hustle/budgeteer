@@ -1,10 +1,10 @@
 import "server-only";
 
 import { and, eq, sql } from "drizzle-orm";
-import { toLocalISODate } from "../../lib/date-utils";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { budgets } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { budgets } from "@/server/db/schema";
+import { toLocalISODate } from "@/server/lib/date-utils";
 
 export interface BudgetRow {
   categoryId: number;

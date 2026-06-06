@@ -2,9 +2,9 @@ import "server-only";
 
 import { and, eq, sql } from "drizzle-orm";
 import { type AppSettings, RECOMMENDED_GEMINI_MODELS } from "@/lib/types";
-import { toLocalISODate } from "../../lib/date-utils";
-import { getOrm } from "../orm";
-import { settings, workspaceSettings } from "../schema";
+import { getOrm } from "@/server/db/orm";
+import { settings, workspaceSettings } from "@/server/db/schema";
+import { toLocalISODate } from "@/server/lib/date-utils";
 
 // Global settings live in the `settings` table and apply to every workspace.
 // Currently: ai_provider, ai_ollama_url, ai_ollama_model, ai_gemini_model,

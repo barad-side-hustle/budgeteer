@@ -9,7 +9,7 @@ import {
   computeVerdict,
   cumulative,
   rollUpByParent,
-} from "./compute";
+} from "@/server/insights/compute";
 
 function meta(rows: Array<[number, number | null, string]>): Map<number, CategoryMeta> {
   const m = new Map<number, CategoryMeta>();

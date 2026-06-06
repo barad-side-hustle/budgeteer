@@ -8,12 +8,12 @@ import type {
   MonthlySummary,
   TransactionWithCategory,
 } from "@/lib/types";
-import { computeDedupHash } from "../../lib/dedup";
-import type { MatchCandidate } from "../../lib/matching";
-import { detectKind } from "../../lib/transfers";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { transactions as transactionsTable } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { transactions as transactionsTable } from "@/server/db/schema";
+import { computeDedupHash } from "@/server/lib/dedup";
+import type { MatchCandidate } from "@/server/lib/matching";
+import { detectKind } from "@/server/lib/transfers";
 export type TransactionKindFilter = "expense" | "income" | "all";
 
 interface RawTransaction {
@@ -136,100 +136,6 @@ export function insertTransactions(
 
   batchInsert();
   return { added, updated };
-}
-
-/**
- * A locally-imported transaction (CSV upload or manual entry). Unlike the bank
- * scraper path, these carry no credential and an explicit signed amount:
- * negative = expense (money out), positive = income (money in). Kind is derived
- * from the sign, never from `detectKind`, because the user told us directly.
- */
-export interface ImportedTransactionInput {
-  accountNumber: string;
-  date: string;
-  description: string;
-  amount: number;
-  currency: string;
-  memo?: string | null;
-}
-
-/**
- * Insert locally-imported rows, reusing the same dedup fingerprint as the
- * scraper (so re-uploading the same file is idempotent) but with a null
- * credential and a sign-derived kind. `provider` is "csv" or "manual".
- */
-export function insertImportedTransactions(
-  workspaceId: number,
-  rows: ImportedTransactionInput[],
-  provider: string,
-  syncRunId: number,
-): InsertResult {
-  const db = getDb();
-  let added = 0;
-  let updated = 0;
-  const hashCounts = new Map<string, number>();
-
-  const existingCountStmt = db.prepare(
-    "SELECT COUNT(*) as count FROM transactions WHERE workspace_id = ? AND dedup_hash = ?",
-  );
-
-  const insertStmt = db.prepare(`
-    INSERT INTO transactions (
-      workspace_id, account_number, date, processed_date, original_amount, original_currency,
-      charged_amount, charged_currency, description, memo, type, status,
-      identifier, provider, credential_id, sync_run_id, dedup_hash, dedup_sequence, kind
-    ) VALUES (
-      @workspaceId, @accountNumber, @date, @date, @amount, @currency,
-      @amount, @currency, @description, @memo, 'normal', 'completed',
-      NULL, @provider, NULL, @syncRunId, @dedupHash, @dedupSequence, @kind
-    )
-    ON CONFLICT(workspace_id, dedup_hash, dedup_sequence) DO NOTHING
-  `);
-
-  const batchInsert = db.transaction(() => {
-    for (const row of rows) {
-      const hash = computeDedupHash({
-        accountNumber: row.accountNumber,
-        date: row.date,
-        originalAmount: row.amount,
-        originalCurrency: row.currency,
-        description: row.description,
-      });
-      const batchCount = (hashCounts.get(hash) ?? 0) + 1;
-      hashCounts.set(hash, batchCount);
-      const { count: existingCount } = existingCountStmt.get(workspaceId, hash) as {
-        count: number;
-      };
-      if (batchCount <= existingCount) {
-        updated++;
-        continue;
-      }
-      insertStmt.run({
-        workspaceId,
-        accountNumber: row.accountNumber,
-        date: row.date,
-        amount: row.amount,
-        currency: row.currency,
-        description: row.description,
-        memo: row.memo ?? null,
-        provider,
-        syncRunId,
-        dedupHash: hash,
-        dedupSequence: batchCount - 1,
-        kind: row.amount >= 0 ? "income" : "expense",
-      });
-      added++;
-    }
-  });
-
-  batchInsert();
-  return { added, updated };
-}
-
-/** True when any workspace has at least one transaction (bank or imported). */
-export function anyWorkspaceHasTransactions(): boolean {
-  const row = getDb().prepare("SELECT 1 FROM transactions LIMIT 1").get();
-  return row != null;
 }
 
 interface QueryParams {
@@ -411,6 +317,28 @@ export function queryTransactions(
     transactions: rows.map(mapTransactionRow),
     total: countRow.total,
   };
+}
+
+/**
+ * Transactions waiting for the user's review. Mirrors the "Review" badge in the
+ * transactions table: any flagged row (needs_review, regardless of kind or
+ * pending/completed status), plus still-uncategorized completed expenses that
+ * need a category. Excluded rows are left out.
+ */
+export function getReviewTransactions(workspaceId: number, limit = 200): TransactionWithCategory[] {
+  const rows = getDb()
+    .prepare(
+      `${TRANSACTION_LIST_SELECT}
+       WHERE t.workspace_id = ? AND t.is_excluded = 0
+         AND (
+           t.needs_review = 1
+           OR (t.category_id IS NULL AND t.kind = 'expense' AND t.status = 'completed')
+         )
+       ORDER BY t.needs_review DESC, t.date DESC, t.id DESC
+       LIMIT ?`,
+    )
+    .all(workspaceId, limit);
+  return rows.map(mapTransactionRow);
 }
 
 export function getUncategorizedTransactionIds(workspaceId: number): number[] {

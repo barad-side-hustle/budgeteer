@@ -1,12 +1,12 @@
 import "server-only";
 
 import { RECOMMENDED_GEMINI_MODELS } from "@/lib/types";
-import { getSetting } from "../db/queries/settings";
-import { decrypt } from "../lib/encryption";
-import { ClaudeProvider } from "./providers/claude";
-import { GeminiProvider } from "./providers/gemini";
-import { OllamaProvider } from "./providers/ollama";
-import type { AIProvider } from "./types";
+import { ClaudeProvider } from "@/server/ai/providers/claude";
+import { GeminiProvider } from "@/server/ai/providers/gemini";
+import { OllamaProvider } from "@/server/ai/providers/ollama";
+import type { AIProvider } from "@/server/ai/types";
+import { getSetting } from "@/server/db/queries/settings";
+import { decrypt } from "@/server/lib/encryption";
 
 export function createAIProvider(): AIProvider | null {
   const provider = getSetting("ai_provider");

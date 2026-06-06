@@ -1,7 +1,7 @@
 import "server-only";
 
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
-import type { ScrapedTransaction, ScrapeResult } from "./types";
+import type { ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
 
 /**
  * OneZero is the only scraper in israeli-bank-scrapers that actually implements

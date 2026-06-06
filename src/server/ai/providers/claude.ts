@@ -1,15 +1,15 @@
 import "server-only";
 
 import Anthropic from "@anthropic-ai/sdk";
-import { parseCategorizationResponse } from "../lib/parse-response";
-import { buildCategorizationPrompt, SYSTEM_PROMPT } from "../prompts";
+import { parseCategorizationResponse } from "@/server/ai/lib/parse-response";
+import { buildCategorizationPrompt, SYSTEM_PROMPT } from "@/server/ai/prompts";
 import type {
   AIProvider,
   CategoryForCategorization,
   CategoryMapping,
   PastCorrection,
   TransactionForCategorization,
-} from "../types";
+} from "@/server/ai/types";
 
 export class ClaudeProvider implements AIProvider {
   private client: Anthropic;

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { detectKind, isAtmWithdrawal, matchesInternalTransfer } from "./transfers";
+import { detectKind, isAtmWithdrawal, matchesInternalTransfer } from "@/server/lib/transfers";
 
 describe("detectKind — credit card settlements", () => {
   test("plural 'כרטיסי אשראי' on a bank account is a transfer", () => {

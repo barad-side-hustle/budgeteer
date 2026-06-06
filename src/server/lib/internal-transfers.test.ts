@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { findInternalTransferPairs, type TransferCandidate } from "./internal-transfers";
+import { findInternalTransferPairs, type TransferCandidate } from "@/server/lib/internal-transfers";
 
 function row(partial: Partial<TransferCandidate> & { id: number }): TransferCandidate {
   return {

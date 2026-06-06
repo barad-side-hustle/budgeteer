@@ -2,9 +2,9 @@ import "server-only";
 
 import { asc, eq, sql } from "drizzle-orm";
 import type { Workspace } from "@/lib/types";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { categories, workspaces } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { categories, workspaces } from "@/server/db/schema";
 
 interface WorkspaceRow {
   id: number;

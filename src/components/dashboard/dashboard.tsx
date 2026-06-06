@@ -4,6 +4,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
+import { AccountSummaryCards } from "@/components/dashboard/account-summary-cards";
+import { CategorizeButton } from "@/components/dashboard/categorize-button";
+import { CategoryGrid } from "@/components/dashboard/category-grid";
+import { HeroCard } from "@/components/dashboard/hero-card";
+import { PeriodSelector } from "@/components/dashboard/period-selector";
+import { SyncButton } from "@/components/dashboard/sync-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,12 +17,6 @@ import type { Locale } from "@/i18n/routing";
 import { getSummary } from "@/lib/api";
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
 import type { CategoryViewMode } from "@/lib/types";
-import { AccountSummaryCards } from "./account-summary-cards";
-import { CategorizeButton } from "./categorize-button";
-import { CategoryGrid } from "./category-grid";
-import { HeroCard } from "./hero-card";
-import { PeriodSelector } from "./period-selector";
-import { SyncButton } from "./sync-button";
 
 const VIEW_MODE_KEY = "budgeteer.dashboard.viewMode";
 

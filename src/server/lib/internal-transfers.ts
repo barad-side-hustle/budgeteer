@@ -1,6 +1,6 @@
 import "server-only";
 
-import { matchesInternalTransfer } from "./transfers";
+import { matchesInternalTransfer } from "@/server/lib/transfers";
 
 // A money move between two of the user's own accounts lands as an expense
 // (debit) on one side and income (credit) on the other, inflating both totals.

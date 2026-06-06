@@ -5,13 +5,14 @@ import {
   ArrowLeftRight,
   LayoutDashboard,
   Lightbulb,
+  ListChecks,
   Settings as SettingsIcon,
   Sparkles,
   Star,
-  Upload,
   Wallet,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -28,7 +29,6 @@ import {
 import { Link, usePathname } from "@/i18n/navigation";
 import { getSettings } from "@/lib/api";
 import { GITHUB_REPO_URL } from "@/lib/constants";
-import { WorkspaceSwitcher } from "./workspace-switcher";
 
 interface NavDef {
   href: string;
@@ -57,16 +57,16 @@ const NAV: NavDef[] = [
     match: (p: string) => p.startsWith("/transactions"),
   },
   {
+    href: "/review",
+    labelKey: "review",
+    Icon: ListChecks,
+    match: (p: string) => p.startsWith("/review"),
+  },
+  {
     href: "/budget",
     labelKey: "budget",
     Icon: Wallet,
     match: (p: string) => p.startsWith("/budget"),
-  },
-  {
-    href: "/import",
-    labelKey: "import",
-    Icon: Upload,
-    match: (p: string) => p.startsWith("/import"),
   },
   {
     href: "/chat",

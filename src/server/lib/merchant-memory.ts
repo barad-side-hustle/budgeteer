@@ -2,8 +2,8 @@ import "server-only";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { CategoryKind } from "@/lib/types";
-import { getOrm } from "../db/orm";
-import { merchantCategories } from "../db/schema";
+import { getOrm } from "@/server/db/orm";
+import { merchantCategories } from "@/server/db/schema";
 
 export function normalizeMerchant(description: string): string {
   return description

@@ -1,15 +1,15 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
-import { parseCategorizationResponse } from "../lib/parse-response";
-import { buildCategorizationPrompt, SYSTEM_PROMPT } from "../prompts";
+import { parseCategorizationResponse } from "@/server/ai/lib/parse-response";
+import { buildCategorizationPrompt, SYSTEM_PROMPT } from "@/server/ai/prompts";
 import type {
   AIProvider,
   CategoryForCategorization,
   CategoryMapping,
   PastCorrection,
   TransactionForCategorization,
-} from "../types";
+} from "@/server/ai/types";
 
 export class GeminiProvider implements AIProvider {
   private client: GoogleGenAI;

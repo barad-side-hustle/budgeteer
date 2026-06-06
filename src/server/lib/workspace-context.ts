@@ -1,8 +1,8 @@
 import "server-only";
 
 import { asc, eq } from "drizzle-orm";
-import { getOrm } from "../db/orm";
-import { workspaces } from "../db/schema";
+import { getOrm } from "@/server/db/orm";
+import { workspaces } from "@/server/db/schema";
 
 const HEADER = "x-workspace-id";
 
