@@ -325,7 +325,10 @@
     "vsLastMonthDown": "↓ {pct}% vs last month",
     "vsLastMonthFlat": "flat vs last month",
     "vsTypical": "vs {amount} typical",
-    "ofBudget": "of {amount}"
+    "ofBudget": "of {amount}",
+    "accountBalance": "Balance",
+    "accountIncome": "Income",
+    "accountExpense": "Spent"
   },
   "settings": {
     "pageTitle": "Settings",
@@ -462,7 +465,13 @@
       "twoFaNeededTitle": "{bank} needs a 2FA code",
       "twoFaNeededDescription": "Use the global Sync button on the dashboard to enter the one-time code. Budgeteer will remember the token for future syncs.",
       "syncDone": "Sync complete: {added, plural, one {# new} other {# new}}, {updated, plural, one {# updated} other {# updated}}, {categorized, plural, one {# categorized} other {# categorized}}",
-      "syncFailed": "Sync failed"
+      "syncFailed": "Sync failed",
+      "accountsHeading": "Accounts",
+      "accountsHint": "Name each account and set how it is owned.",
+      "accountNameLabel": "Account name",
+      "accountSaved": "Account updated.",
+      "accountSaveFailed": "Couldn’t update the account. Please try again.",
+      "noAccountsYet": "Accounts appear here after the first sync."
     },
     "ai": {
       "title": "AI & automation",
@@ -1012,5 +1021,10 @@
     "downloadPromptSized": "Download <b>{model}</b> now (~{size} GB, a few minutes depending on your connection). You only need to do this once.",
     "download": "Download",
     "downloadFailed": "Failed to download the model."
+  },
+  "accounts": {
+    "ownershipPersonal": "Personal",
+    "ownershipJoint": "Joint",
+    "ownershipShared": "Shared"
   }
 }

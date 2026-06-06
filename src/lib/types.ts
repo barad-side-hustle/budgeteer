@@ -38,6 +38,8 @@ export interface Transaction {
   provider: string;
   credentialId: number | null;
   accountLabel: string | null;
+  /** Friendly per-account name from bank_accounts, when one exists. */
+  accountName: string | null;
   syncRunId: number;
   kind: "expense" | "income" | "transfer";
   needsReview: boolean;
@@ -425,6 +427,37 @@ export interface Integration {
   requiresManualTwoFactor: boolean;
   /** True when a long-term OTP token is already stored (programmatic 2FA banks only). */
   hasTwoFactorToken: boolean;
+}
+
+/** How an account is owned, set by the user. Drives the account badge/label. */
+export type AccountOwnershipType = "personal" | "joint" | "shared";
+
+/**
+ * A real account exposed by a bank connection. One Integration (credential) can
+ * own several of these. Pure metadata: transactions stay keyed by
+ * (credentialId, accountNumber); see src/server/db/queries/bank-accounts.ts.
+ */
+export interface BankAccount {
+  id: number;
+  credentialId: number;
+  /** Joined from bank_credentials for the provider badge. */
+  provider: string;
+  accountNumber: string;
+  name: string;
+  ownershipType: AccountOwnershipType;
+  balance: number | null;
+  balanceCurrency: string | null;
+  balanceUpdatedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A BankAccount plus per-account spend aggregates for the dashboard cards. */
+export interface AccountSummary extends BankAccount {
+  income: number;
+  expense: number;
+  net: number;
+  transactionCount: number;
 }
 
 export interface SetupStatus {

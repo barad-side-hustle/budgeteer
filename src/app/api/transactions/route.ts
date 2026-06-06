@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { queryTransactions, type TransactionKindFilter } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
@@ -25,6 +26,21 @@ export async function GET(request: Request) {
     return Number.isFinite(n) && n > 0 ? [n] : [];
   });
 
+  // Resolve selected bank_accounts.id values to their (credentialId,
+  // accountNumber) pairs. Account keys take precedence over credentialIds.
+  const accountIds = new Set(
+    searchParams.getAll("accountIds").flatMap((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? [n] : [];
+    }),
+  );
+  const accountKeys =
+    accountIds.size > 0
+      ? listBankAccounts(workspaceId)
+          .filter((a) => accountIds.has(a.id))
+          .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber }))
+      : undefined;
+
   const result = queryTransactions(workspaceId, {
     from: searchParams.get("from") ?? undefined,
     to: searchParams.get("to") ?? undefined,
@@ -38,6 +54,7 @@ export async function GET(request: Request) {
     kind: parseKind(searchParams.get("kind")),
     provider: searchParams.get("provider") ?? undefined,
     credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
+    accountKeys,
   });
 
   return NextResponse.json(result);

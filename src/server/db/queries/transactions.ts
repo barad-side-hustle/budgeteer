@@ -158,6 +158,27 @@ interface QueryParams {
   /** @deprecated Use credentialIds */
   credentialId?: number;
   credentialIds?: number[];
+  /**
+   * Filter by specific real accounts. Resolved from bank_accounts.id to its
+   * (credentialId, accountNumber) pair by the route. More specific than
+   * credentialIds: when both are present, account keys win.
+   */
+  accountKeys?: AccountKey[];
+}
+
+/** A real account identified by its (credentialId, accountNumber) pair. */
+export interface AccountKey {
+  credentialId: number;
+  accountNumber: string;
+}
+
+/**
+ * Optional account scoping shared by the dashboard summary queries. Account keys
+ * win over credential ids when both are present (see appendAccountFilter).
+ */
+export interface AccountFilter {
+  credentialIds?: number[];
+  accountKeys?: AccountKey[];
 }
 
 function appendCredentialIdsFilter(
@@ -173,6 +194,38 @@ function appendCredentialIdsFilter(
   for (const id of credentialIds) values.push(id);
 }
 
+function appendAccountKeysFilter(
+  conditions: string[],
+  values: (string | number)[],
+  accountKeys: AccountKey[] | undefined,
+  columnPrefix = "",
+): void {
+  if (!accountKeys || accountKeys.length === 0) return;
+  const credCol = `${columnPrefix}credential_id`;
+  const acctCol = `${columnPrefix}account_number`;
+  const clauses = accountKeys.map(() => `(${credCol} = ? AND ${acctCol} = ?)`);
+  conditions.push(`(${clauses.join(" OR ")})`);
+  for (const key of accountKeys) values.push(key.credentialId, key.accountNumber);
+}
+
+/**
+ * Apply the account filter (account keys preferred over credential ids), the
+ * shared pattern across the list and every summary query. Returns nothing; it
+ * mutates conditions/values like the append* helpers.
+ */
+function appendAccountFilter(
+  conditions: string[],
+  values: (string | number)[],
+  filter: { credentialIds?: number[]; accountKeys?: AccountKey[] },
+  columnPrefix = "",
+): void {
+  if (filter.accountKeys && filter.accountKeys.length > 0) {
+    appendAccountKeysFilter(conditions, values, filter.accountKeys, columnPrefix);
+  } else {
+    appendCredentialIdsFilter(conditions, values, filter.credentialIds, columnPrefix);
+  }
+}
+
 function resolveSortSql(sort: string | undefined): string {
   if (isTransactionSortField(sort)) {
     return TRANSACTION_SORT_SQL[sort];
@@ -183,11 +236,14 @@ function resolveSortSql(sort: string | undefined): string {
 const TRANSACTION_LIST_FROM = `
   FROM transactions t
   LEFT JOIN categories c ON t.category_id = c.id
-  LEFT JOIN bank_credentials bc ON t.credential_id = bc.id`;
+  LEFT JOIN bank_credentials bc ON t.credential_id = bc.id
+  LEFT JOIN bank_accounts ba ON ba.workspace_id = t.workspace_id
+    AND ba.credential_id = t.credential_id
+    AND ba.account_number = t.account_number`;
 
 const TRANSACTION_LIST_SELECT = `
   SELECT t.*, c.name AS category_name, c.color AS category_color,
-         bc.label AS account_label
+         bc.label AS account_label, ba.name AS account_name
   ${TRANSACTION_LIST_FROM}`;
 
 export function queryTransactions(
@@ -235,7 +291,7 @@ export function queryTransactions(
       : params.credentialId != null
         ? [params.credentialId]
         : undefined;
-  appendCredentialIdsFilter(conditions, values, credentialIds, "t.");
+  appendAccountFilter(conditions, values, { credentialIds, accountKeys: params.accountKeys }, "t.");
 
   const where = `WHERE ${conditions.join(" AND ")}`;
 
@@ -412,21 +468,30 @@ export function batchUpdateCategories(
   });
 }
 
-export function getMonthlySummary(workspaceId: number, months: number): MonthlySummary[] {
+export function getMonthlySummary(
+  workspaceId: number,
+  months: number,
+  filter: AccountFilter = {},
+): MonthlySummary[] {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= date('now', '-' || ? || ' months')",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, months];
+  appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
               SUM(ABS(charged_amount)) as amount
        FROM transactions
-       WHERE workspace_id = ?
-         AND date >= date('now', '-' || ? || ' months')
-         AND status = 'completed'
-         AND kind = 'expense'
-         AND is_excluded = 0
+       WHERE ${conditions.join(" AND ")}
        GROUP BY month
        ORDER BY month ASC`,
     )
-    .all(workspaceId, months) as MonthlySummary[];
+    .all(...values) as MonthlySummary[];
 }
 
 export interface CategoryMonthSpend {
@@ -464,27 +529,48 @@ export function getTopMerchants(
   from: string,
   to: string,
   limit = 10,
+  filter: AccountFilter = {},
 ): MerchantSummary[] {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
       `SELECT description as name,
               SUM(ABS(charged_amount)) as amount,
               COUNT(*) as count
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
-         AND is_excluded = 0
+       WHERE ${conditions.join(" AND ")}
        GROUP BY description
        ORDER BY amount DESC
        LIMIT ?`,
     )
-    .all(workspaceId, from, to, limit) as MerchantSummary[];
+    .all(...values, limit) as MerchantSummary[];
 }
 
 export function getCategoryBreakdown(
   workspaceId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): CategoryBreakdown[] {
+  const conditions = [
+    "t.workspace_id = ?",
+    "t.date >= ?",
+    "t.date <= ?",
+    "t.status = 'completed'",
+    "t.kind = 'expense'",
+    "t.is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter, "t.");
   return getDb()
     .prepare(
       `SELECT
@@ -495,12 +581,11 @@ export function getCategoryBreakdown(
          COUNT(*) as count
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.id
-       WHERE t.workspace_id = ? AND t.date >= ? AND t.date <= ? AND t.status = 'completed' AND t.kind = 'expense'
-         AND t.is_excluded = 0
+       WHERE ${conditions.join(" AND ")}
        GROUP BY t.category_id
        ORDER BY amount DESC`,
     )
-    .all(workspaceId, from, to) as CategoryBreakdown[];
+    .all(...values) as CategoryBreakdown[];
 }
 
 export interface CategorySpend {
@@ -513,18 +598,29 @@ export function getCategorySpendInRange(
   workspaceId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): CategorySpend[] {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "category_id IS NOT NULL",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
       `SELECT category_id as categoryId,
               SUM(ABS(charged_amount)) as amount,
               COUNT(*) as count
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense' AND category_id IS NOT NULL
-         AND is_excluded = 0
+       WHERE ${conditions.join(" AND ")}
        GROUP BY category_id`,
     )
-    .all(workspaceId, from, to) as CategorySpend[];
+    .all(...values) as CategorySpend[];
 }
 
 export interface CategoryTopMerchant {
@@ -537,7 +633,19 @@ export function getTopMerchantPerCategory(
   workspaceId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): CategoryTopMerchant[] {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "category_id IS NOT NULL",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
       `SELECT category_id as categoryId, description as merchant, amount
@@ -545,13 +653,12 @@ export function getTopMerchantPerCategory(
          SELECT category_id, description, SUM(ABS(charged_amount)) as amount,
                 ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM(ABS(charged_amount)) DESC) as rn
          FROM transactions
-         WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense' AND category_id IS NOT NULL
-           AND is_excluded = 0
+         WHERE ${conditions.join(" AND ")}
          GROUP BY category_id, description
        )
        WHERE rn = 1`,
     )
-    .all(workspaceId, from, to) as CategoryTopMerchant[];
+    .all(...values) as CategoryTopMerchant[];
 }
 
 export interface DailySpendPoint {
@@ -648,27 +755,55 @@ export function getTopMerchantsForCategory(
     .all(workspaceId, categoryId, from, to, limit) as TopMerchantForCategory[];
 }
 
-export function getPeriodTotal(workspaceId: number, from: string, to: string): number {
+export function getPeriodTotal(
+  workspaceId: number,
+  from: string,
+  to: string,
+  filter: AccountFilter = {},
+): number {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   const row = getDb()
     .prepare(
       `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
-         AND is_excluded = 0`,
+       WHERE ${conditions.join(" AND ")}`,
     )
-    .get(workspaceId, from, to) as { total: number };
+    .get(...values) as { total: number };
   return row.total;
 }
 
-export function getPeriodCount(workspaceId: number, from: string, to: string): number {
+export function getPeriodCount(
+  workspaceId: number,
+  from: string,
+  to: string,
+  filter: AccountFilter = {},
+): number {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "is_excluded = 0",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   const row = getDb()
     .prepare(
       `SELECT COUNT(*) as count
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND kind = 'expense'
-         AND is_excluded = 0`,
+       WHERE ${conditions.join(" AND ")}`,
     )
-    .get(workspaceId, from, to) as { count: number };
+    .get(...values) as { count: number };
   return row.count;
 }
 
@@ -705,6 +840,7 @@ interface TransactionRow {
   category_name?: string | null;
   category_color?: string | null;
   account_label?: string | null;
+  account_name?: string | null;
 }
 
 function mapTransactionRow(row: unknown): TransactionWithCategory {
@@ -731,6 +867,7 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     provider: r.provider,
     credentialId: r.credential_id ?? null,
     accountLabel: r.account_label ?? null,
+    accountName: r.account_name ?? null,
     syncRunId: r.sync_run_id,
     kind: r.kind as "expense" | "income" | "transfer",
     needsReview: r.needs_review === 1,
@@ -830,6 +967,8 @@ export interface TransactionsSummaryParams {
   /** @deprecated Use credentialIds */
   credentialId?: number;
   credentialIds?: number[];
+  /** More specific than credentialIds: when both are present, account keys win. */
+  accountKeys?: AccountKey[];
 }
 
 export function getTransactionsSummary(
@@ -853,7 +992,11 @@ export function getTransactionsSummary(
       : params.credentialId != null
         ? [params.credentialId]
         : undefined;
-  appendCredentialIdsFilter(baseConditions, baseValues, summaryCredentialIds);
+  const summaryFilter: AccountFilter = {
+    credentialIds: summaryCredentialIds,
+    accountKeys: params.accountKeys,
+  };
+  appendAccountFilter(baseConditions, baseValues, summaryFilter);
   const baseWhere = baseConditions.join(" AND ");
 
   const incomeAgg = db
@@ -882,7 +1025,7 @@ export function getTransactionsSummary(
       "t.is_excluded = 0",
     ];
     const tValues: (string | number)[] = [workspaceId, from, to, sign];
-    appendCredentialIdsFilter(tConditions, tValues, summaryCredentialIds, "t.");
+    appendAccountFilter(tConditions, tValues, summaryFilter, "t.");
     const row = db
       .prepare(
         `${TRANSACTION_LIST_SELECT}
@@ -936,17 +1079,25 @@ export function getNeedsReviewCountByCategory(
   workspaceId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): NeedsReviewCount[] {
+  const conditions = [
+    "workspace_id = ?",
+    "date >= ?",
+    "date <= ?",
+    "status = 'completed'",
+    "kind = 'expense'",
+    "needs_review = 1",
+    "category_id IS NOT NULL",
+  ];
+  const values: (string | number)[] = [workspaceId, from, to];
+  appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
       `SELECT category_id as categoryId, COUNT(*) as count
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ?
-         AND status = 'completed'
-         AND kind = 'expense'
-         AND needs_review = 1
-         AND category_id IS NOT NULL
+       WHERE ${conditions.join(" AND ")}
        GROUP BY category_id`,
     )
-    .all(workspaceId, from, to) as NeedsReviewCount[];
+    .all(...values) as NeedsReviewCount[];
 }

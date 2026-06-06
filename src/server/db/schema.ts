@@ -1,7 +1,13 @@
 import { sql } from "drizzle-orm";
 import { blob, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-import type { EventRole, EventSource, EventStatus, EventType } from "@/lib/types";
+import type {
+  AccountOwnershipType,
+  EventRole,
+  EventSource,
+  EventStatus,
+  EventType,
+} from "@/lib/types";
 
 // Drizzle schema for the typed query layer. It mirrors the live database, whose
 // DDL is owned by the .sql migration runner (src/server/db/migrate.ts), NOT by
@@ -62,6 +68,24 @@ export const bankCredentials = sqliteTable("bank_credentials", {
   iv: blob().notNull(),
   authTag: blob("auth_tag").notNull(),
   requiresManualTwoFactor: integer("requires_manual_two_factor").notNull().default(0),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+export const bankAccounts = sqliteTable("bank_accounts", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  workspaceId: integer("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  credentialId: integer("credential_id")
+    .notNull()
+    .references(() => bankCredentials.id, { onDelete: "cascade" }),
+  accountNumber: text("account_number").notNull(),
+  name: text().notNull().default(""),
+  ownershipType: text("ownership_type").$type<AccountOwnershipType>().notNull().default("personal"),
+  balance: real(),
+  balanceCurrency: text("balance_currency"),
+  balanceUpdatedAt: text("balance_updated_at"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

@@ -1,7 +1,10 @@
 import type { UIMessage } from "ai";
 import type {
+  AccountOwnershipType,
+  AccountSummary,
   ActivitySnapshot,
   AppSettings,
+  BankAccount,
   Budget,
   BudgetMode,
   Category,
@@ -202,11 +205,17 @@ export function getTransactionsSummary(params: {
   from: string;
   to: string;
   credentialIds?: number[];
+  accountIds?: number[];
 }) {
   const sp = new URLSearchParams({ from: params.from, to: params.to });
   if (params.credentialIds?.length) {
     for (const id of params.credentialIds) {
       sp.append("credentialIds", String(id));
+    }
+  }
+  if (params.accountIds?.length) {
+    for (const id of params.accountIds) {
+      sp.append("accountIds", String(id));
     }
   }
   return fetchJSON<TransactionsSummary>(`/api/transactions/summary?${sp}`);
@@ -225,11 +234,15 @@ export function getTransactions(params: {
   kind?: TransactionKindFilter;
   provider?: string;
   credentialIds?: number[];
+  accountIds?: number[];
 }) {
   const searchParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined) return;
-    if ((key === "categoryIds" || key === "credentialIds") && Array.isArray(value)) {
+    if (
+      (key === "categoryIds" || key === "credentialIds" || key === "accountIds") &&
+      Array.isArray(value)
+    ) {
       for (const id of value) searchParams.append(key, String(id));
       return;
     }
@@ -281,13 +294,41 @@ export function deleteExcludedMerchantRule(id: number) {
   });
 }
 
-export function getSummary(params: { from: string; to: string; months?: number }) {
+export function getSummary(params: {
+  from: string;
+  to: string;
+  months?: number;
+  accountIds?: number[];
+}) {
   const searchParams = new URLSearchParams({
     from: params.from,
     to: params.to,
   });
   if (params.months) searchParams.set("months", String(params.months));
+  if (params.accountIds?.length) {
+    for (const id of params.accountIds) searchParams.append("accountIds", String(id));
+  }
   return fetchJSON<DashboardSummary>(`/api/summary?${searchParams}`);
+}
+
+export function listAccounts() {
+  return fetchJSON<BankAccount[]>("/api/accounts");
+}
+
+export function getAccountSummaries(params: { from: string; to: string }) {
+  const sp = new URLSearchParams({ from: params.from, to: params.to });
+  return fetchJSON<AccountSummary[]>(`/api/accounts?${sp}`);
+}
+
+export function updateAccount(
+  id: number,
+  updates: { name?: string; ownershipType?: AccountOwnershipType },
+) {
+  return fetchJSON<BankAccount>(`/api/accounts/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
 }
 
 export function getInsights() {

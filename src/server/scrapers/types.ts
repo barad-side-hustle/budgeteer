@@ -17,6 +17,8 @@ export interface ScrapedTransaction {
 
 export interface ScrapedAccount {
   accountNumber: string;
+  /** Current account balance, when the bank exposes one. No currency is given. */
+  balance?: number;
   transactions: ScrapedTransaction[];
 }
 

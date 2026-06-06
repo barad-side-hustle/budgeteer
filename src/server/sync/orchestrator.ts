@@ -3,6 +3,7 @@ import "server-only";
 import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
+import { upsertBankAccount } from "@/server/db/queries/bank-accounts";
 import {
   type BankCredentialMeta,
   getBankCredentials,
@@ -244,6 +245,13 @@ async function syncOneCredential(
     meta.id,
     syncRunId,
   );
+
+  // Auto-discover/refresh first-class accounts from the scrape. Pure metadata:
+  // never overwrites the user's name/ownership_type (see bank-accounts.ts).
+  for (const account of result.accounts) {
+    upsertBankAccount(workspaceId, meta.id, account.accountNumber, { balance: account.balance });
+  }
+
   applyMerchantRulesToSyncRun(workspaceId, syncRunId);
   completeSyncRun(syncRunId, added, updated);
 

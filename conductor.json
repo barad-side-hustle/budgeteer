@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "setup": "bun install",
+    "run": "PORT=\"$CONDUCTOR_PORT\" bun run dev",
+    "archive": "rm -rf \"$CONDUCTOR_WORKSPACE_PATH/data\""
+  },
+  "runScriptMode": "concurrent"
+}

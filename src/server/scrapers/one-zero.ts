@@ -60,6 +60,7 @@ function mapAccounts(
 ): ScrapeResult["accounts"] {
   return (scrapeResult.accounts ?? []).map((account) => ({
     accountNumber: account.accountNumber,
+    balance: account.balance,
     transactions: account.txns.map(
       (txn): ScrapedTransaction => ({
         type: txn.type === "installments" ? "installments" : "normal",

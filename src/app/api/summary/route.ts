@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import type { BudgetSource, CategoryWithData } from "@/lib/types";
+import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { getAllBudgets, getAutoBudgetAverage } from "@/server/db/queries/budgets";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getWorkspaceSetting } from "@/server/db/queries/settings";
 import {
+  type AccountFilter,
   getCategoryBreakdown,
   getCategorySpendInRange,
   getMonthlySummary,
@@ -39,6 +41,23 @@ export async function GET(request: Request) {
   const to = searchParams.get("to") ?? defaultTo;
   const months = Number(searchParams.get("months") ?? "12");
 
+  // Optional per-account scoping. Resolve the selected bank_accounts.id values to
+  // their (credentialId, accountNumber) pairs so the dashboard can be narrowed to
+  // specific accounts. No accountIds -> unchanged workspace-wide behavior.
+  const accountIds = new Set(
+    searchParams.getAll("accountIds").flatMap((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? [n] : [];
+    }),
+  );
+  const accountKeys =
+    accountIds.size > 0
+      ? listBankAccounts(workspaceId)
+          .filter((a) => accountIds.has(a.id))
+          .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber }))
+      : undefined;
+  const accountFilter: AccountFilter = { accountKeys };
+
   const fromDate = parseISODate(from);
   const monthLabel = fromDate.toLocaleDateString("en-US", { month: "long" });
   const year = fromDate.getFullYear();
@@ -59,11 +78,11 @@ export async function GET(request: Request) {
   const prevTo = toLocalISODate(prevMonthEnd);
 
   const categories = getAllCategories(workspaceId, "expense");
-  const currentSpend = getCategorySpendInRange(workspaceId, from, to);
-  const prevSpend = getCategorySpendInRange(workspaceId, prevFrom, prevTo);
-  const topMerchants = getTopMerchantPerCategory(workspaceId, from, to);
+  const currentSpend = getCategorySpendInRange(workspaceId, from, to, accountFilter);
+  const prevSpend = getCategorySpendInRange(workspaceId, prevFrom, prevTo, accountFilter);
+  const topMerchants = getTopMerchantPerCategory(workspaceId, from, to, accountFilter);
   const explicitBudgets = getAllBudgets(workspaceId);
-  const needsReviewCounts = getNeedsReviewCountByCategory(workspaceId, from, to);
+  const needsReviewCounts = getNeedsReviewCountByCategory(workspaceId, from, to, accountFilter);
   const needsReviewMap = new Map(needsReviewCounts.map((r) => [r.categoryId, r.count]));
 
   const currentMap = new Map(currentSpend.map((s) => [s.categoryId, s]));
@@ -236,8 +255,8 @@ export async function GET(request: Request) {
 
   const categoriesWithData: CategoryWithData[] = [...parentRows, ...leafRows];
 
-  const periodTotal = getPeriodTotal(workspaceId, from, to);
-  const transactionCount = getPeriodCount(workspaceId, from, to);
+  const periodTotal = getPeriodTotal(workspaceId, from, to, accountFilter);
+  const transactionCount = getPeriodCount(workspaceId, from, to, accountFilter);
 
   // Hero total comes from the workspace-level monthly target. ALL spend
   // counts against it — tracking-mode is a per-category organizational tag
@@ -269,9 +288,9 @@ export async function GET(request: Request) {
   return NextResponse.json({
     periodTotal,
     transactionCount,
-    monthlySpend: getMonthlySummary(workspaceId, months),
-    topMerchants: getTopMerchants(workspaceId, from, to),
-    categoryBreakdown: getCategoryBreakdown(workspaceId, from, to),
+    monthlySpend: getMonthlySummary(workspaceId, months, accountFilter),
+    topMerchants: getTopMerchants(workspaceId, from, to, 10, accountFilter),
+    categoryBreakdown: getCategoryBreakdown(workspaceId, from, to, accountFilter),
     // New fields for the budgets dashboard:
     categoriesWithData,
     totalBudget,
