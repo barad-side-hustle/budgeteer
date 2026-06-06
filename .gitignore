@@ -41,6 +41,9 @@ yarn-error.log*
 /.claude/
 /.superpowers/
 
+# conductor workspace artifacts (per-workspace scratch, not shared)
+/.context/
+
 # vercel
 .vercel
 
