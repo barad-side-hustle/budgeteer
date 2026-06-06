@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { ProviderBadge } from "@/components/setup/provider-badge";
 import { Button } from "@/components/ui/button";
 import { getSettings, listIntegrations } from "@/lib/api";
 import { BANK_PROVIDERS } from "@/lib/types";
-import { ProviderBadge } from "./provider-badge";
 
 interface CompleteStepProps {
   onFinish: () => void;

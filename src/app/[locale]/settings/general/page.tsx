@@ -52,6 +52,10 @@ export default function GeneralSettingsPage() {
       <WorkspaceNameCard />
       {settings ? (
         <>
+          <CurrentBalanceCard
+            key={`balance:${settings.currentBalance ?? "null"}`}
+            initialBalance={settings.currentBalance}
+          />
           <MonthlyTargetCard
             key={`target:${settings.monthlyTarget ?? "null"}`}
             initialTarget={settings.monthlyTarget}
@@ -78,6 +82,57 @@ export default function GeneralSettingsPage() {
         </SettingCard>
       )}
     </SectionShell>
+  );
+}
+
+function CurrentBalanceCard({ initialBalance }: { initialBalance: number | null }) {
+  const t = useTranslations("settings.general");
+  const tCommon = useTranslations("common");
+  const queryClient = useQueryClient();
+  const [value, setValue] = useState(initialBalance != null ? String(initialBalance) : "");
+
+  const mutation = useMutation({
+    mutationFn: updateSettings,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: ["forecast"] });
+      toast.success(tCommon("saved"));
+    },
+  });
+
+  const parsed = value.trim() === "" ? null : Number(value);
+  const valid = parsed == null || Number.isFinite(parsed);
+  const dirty = valid && (parsed ?? null) !== (initialBalance ?? null);
+
+  return (
+    <div id="section-balance">
+      <SettingCard title={t("balanceTitle")} description={t("balanceDescription")}>
+        <div className="max-w-xs space-y-2">
+          <Label htmlFor="current-balance">{t("balanceLabel")}</Label>
+          <InputGroup prefix="₪">
+            <Input
+              id="current-balance"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              placeholder={t("balancePlaceholder")}
+              className="text-end tabular-nums"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            />
+          </InputGroup>
+          <p className="text-[11px] text-muted-foreground">{t("balanceHint")}</p>
+        </div>
+        <div className="mt-5 flex justify-end">
+          <Button
+            onClick={() => mutation.mutate({ currentBalance: parsed })}
+            disabled={!dirty || mutation.isPending}
+          >
+            {mutation.isPending ? tCommon("saving") : tCommon("saveChanges")}
+          </Button>
+        </div>
+      </SettingCard>
+    </div>
   );
 }
 

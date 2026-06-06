@@ -203,7 +203,6 @@ export function computeBreakdown(
 }
 
 interface InsightsInput {
-  verdict: Verdict;
   movers: Mover[];
   current: Map<number, number>;
   typicalByKey: Map<number, number>;
@@ -217,7 +216,7 @@ const ANOMALY_MIN_RATIO = 1.5;
 const ANOMALY_MIN_ABS = 200;
 
 export function buildInsights(input: InsightsInput): SpendInsight[] {
-  const { verdict, movers, current, typicalByKey, metaById } = input;
+  const { movers, current, typicalByKey, metaById } = input;
   const limit = input.limit ?? 4;
   const insights: SpendInsight[] = [];
   const used = new Set<number>();
@@ -280,32 +279,9 @@ export function buildInsights(input: InsightsInput): SpendInsight[] {
     }
   }
 
-  if (verdict.typicalMonthly != null && verdict.typicalMonthly > 0) {
-    if (verdict.projectedStatus === "over") {
-      insights.push({
-        id: "pace-over",
-        type: "over-pace",
-        tone: "warning",
-        categoryId: null,
-        categoryName: null,
-        amount: verdict.projected - verdict.typicalMonthly,
-        percent: verdict.vsTypicalPercent,
-        merchant: null,
-      });
-    } else if (verdict.projectedStatus === "under") {
-      insights.push({
-        id: "pace-under",
-        type: "under-pace",
-        tone: "positive",
-        categoryId: null,
-        categoryName: null,
-        amount: verdict.typicalMonthly - verdict.projected,
-        percent: verdict.vsTypicalPercent,
-        merchant: null,
-      });
-    }
-  }
-
+  // Month-end pacing now lives in the cash-flow forecast (the "This month" hero),
+  // so this feed stays focused on category-level changes (what moved, what's
+  // unusual) and never contradicts the headline verdict.
   return insights.slice(0, limit);
 }
 

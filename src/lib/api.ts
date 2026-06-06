@@ -10,13 +10,14 @@ import type {
   Category,
   ChatSession,
   DashboardSummary,
+  ForecastPayload,
   InsightPayload,
   Integration,
   SetupStatus,
   TransactionWithCategory,
   Workspace,
-} from "./types";
-import { getActiveWorkspaceIdSync } from "./workspace-store";
+} from "@/lib/types";
+import { getActiveWorkspaceIdSync } from "@/lib/workspace-store";
 
 const BASE = "";
 
@@ -253,6 +254,10 @@ export function getTransactions(params: {
   );
 }
 
+export function getReviewTransactions() {
+  return fetchJSON<{ transactions: TransactionWithCategory[] }>("/api/transactions/review");
+}
+
 export function setTransactionKind(id: number, kind: TransactionKind) {
   return fetchJSON<{ success: boolean }>(`/api/transactions/${id}`, {
     method: "PATCH",
@@ -333,6 +338,10 @@ export function updateAccount(
 
 export function getInsights() {
   return fetchJSON<InsightPayload>(`/api/insights`);
+}
+
+export function getForecast() {
+  return fetchJSON<ForecastPayload>(`/api/forecast`);
 }
 
 export function getActivity() {

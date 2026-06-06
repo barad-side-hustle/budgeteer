@@ -2,15 +2,15 @@ import "server-only";
 
 import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { EventType, FinancialEventWithMembers, MatchSettings } from "@/lib/types";
-import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
-import { getOrm } from "../orm";
+import { getOrm } from "@/server/db/orm";
 import {
   bankCredentials,
   eventMembers,
   financialEvents,
   matchSettings,
   transactions,
-} from "../schema";
+} from "@/server/db/schema";
+import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
 
 // DB-applying half of the deduplication engine. The pure proposal logic lives in
 // src/server/lib/matching.ts; this module persists events, lists them for review,

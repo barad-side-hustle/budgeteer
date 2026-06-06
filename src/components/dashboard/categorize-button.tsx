@@ -4,10 +4,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { CategorizeReviewDialog } from "@/components/dashboard/categorize-review-dialog";
 import { Button } from "@/components/ui/button";
 import type { CategorizePreview } from "@/lib/api";
 import { previewCategorize } from "@/lib/api";
-import { CategorizeReviewDialog } from "./categorize-review-dialog";
 
 interface CategorizeButtonProps {
   onApplied?: () => void;

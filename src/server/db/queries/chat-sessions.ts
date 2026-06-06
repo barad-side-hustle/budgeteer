@@ -2,9 +2,9 @@ import "server-only";
 
 import type { UIMessage } from "ai";
 import { and, asc, eq, or, sql } from "drizzle-orm";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { chatMessages, chatSessions } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { chatMessages, chatSessions } from "@/server/db/schema";
 
 export interface ChatSession {
   id: string;

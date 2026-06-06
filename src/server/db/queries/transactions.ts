@@ -8,12 +8,12 @@ import type {
   MonthlySummary,
   TransactionWithCategory,
 } from "@/lib/types";
-import { computeDedupHash } from "../../lib/dedup";
-import type { MatchCandidate } from "../../lib/matching";
-import { detectKind } from "../../lib/transfers";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { transactions as transactionsTable } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { transactions as transactionsTable } from "@/server/db/schema";
+import { computeDedupHash } from "@/server/lib/dedup";
+import type { MatchCandidate } from "@/server/lib/matching";
+import { detectKind } from "@/server/lib/transfers";
 export type TransactionKindFilter = "expense" | "income" | "all";
 
 interface RawTransaction {
@@ -319,6 +319,28 @@ export function queryTransactions(
   };
 }
 
+/**
+ * Transactions waiting for the user's review. Mirrors the "Review" badge in the
+ * transactions table: any flagged row (needs_review, regardless of kind or
+ * pending/completed status), plus still-uncategorized completed expenses that
+ * need a category. Excluded rows are left out.
+ */
+export function getReviewTransactions(workspaceId: number, limit = 200): TransactionWithCategory[] {
+  const rows = getDb()
+    .prepare(
+      `${TRANSACTION_LIST_SELECT}
+       WHERE t.workspace_id = ? AND t.is_excluded = 0
+         AND (
+           t.needs_review = 1
+           OR (t.category_id IS NULL AND t.kind = 'expense' AND t.status = 'completed')
+         )
+       ORDER BY t.needs_review DESC, t.date DESC, t.id DESC
+       LIMIT ?`,
+    )
+    .all(workspaceId, limit);
+  return rows.map(mapTransactionRow);
+}
+
 export function getUncategorizedTransactionIds(workspaceId: number): number[] {
   const rows = getOrm()
     .select({ id: transactionsTable.id })
@@ -522,6 +544,38 @@ export function getCategoryMonthlySpend(
        ORDER BY month ASC`,
     )
     .all(workspaceId, monthsBack) as CategoryMonthSpend[];
+}
+
+export interface MerchantMonthSpend {
+  month: string;
+  merchant: string;
+  categoryId: number | null;
+  amount: number;
+}
+
+// Per-(month, merchant) expense totals over a trailing window. Feeds recurring-
+// charge detection (a merchant billing most months is a fixed commitment).
+export function getMerchantMonthlySpend(
+  workspaceId: number,
+  monthsBack: number,
+): MerchantMonthSpend[] {
+  return getDb()
+    .prepare(
+      `SELECT strftime('%Y-%m', date) as month,
+              description as merchant,
+              category_id as categoryId,
+              SUM(ABS(charged_amount)) as amount
+       FROM transactions
+       WHERE workspace_id = ?
+         AND date >= date('now', 'start of month', '-' || ? || ' months')
+         AND status = 'completed'
+         AND kind = 'expense'
+         AND is_excluded = 0
+         AND description != ''
+       GROUP BY month, description
+       ORDER BY month ASC`,
+    )
+    .all(workspaceId, monthsBack) as MerchantMonthSpend[];
 }
 
 export function getTopMerchants(

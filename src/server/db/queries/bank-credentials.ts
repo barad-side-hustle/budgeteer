@@ -2,10 +2,10 @@ import "server-only";
 
 import { and, asc, eq, sql } from "drizzle-orm";
 import { BANK_PROVIDERS } from "@/lib/types";
-import { decrypt, encrypt } from "../../lib/encryption";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { bankCredentials } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { bankCredentials } from "@/server/db/schema";
+import { decrypt, encrypt } from "@/server/lib/encryption";
 
 /** Display name only. Must not store secrets (passwords, tokens, keys). */
 export const BANK_CREDENTIAL_LABEL_MAX_LENGTH = 128;

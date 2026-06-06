@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import { getCategoryIcon } from "@/components/category-icon";
+import { CategoryIcon } from "@/components/category-icon";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/routing";
@@ -73,7 +73,7 @@ export function BudgetsStep({ onComplete, onBack }: BudgetsStepProps) {
         <div className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
           {t("budgetsStep")}
         </div>
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-tight">{t("budgetsTitle")}</h1>
+        <h1 className="text-2xl font-semibold leading-tight tracking-tight">{t("budgetsTitle")}</h1>
         <p className="text-sm leading-relaxed text-muted-foreground">{t("budgetsDescription")}</p>
       </header>
 
@@ -137,7 +137,6 @@ function CategoryCell({
   value: string;
   onChange: (v: string) => void;
 }) {
-  const Icon = getCategoryIcon(category.icon);
   const accent = shade(category.color);
   const filled = value.trim() !== "" && Number(value.trim()) > 0;
 
@@ -151,9 +150,9 @@ function CategoryCell({
     >
       <div
         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
-        style={{ background: tint(category.color, 0.18) }}
+        style={{ background: tint(category.color, 0.18), color: accent }}
       >
-        <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
+        <CategoryIcon name={category.icon} className="h-3.5 w-3.5" />
       </div>
       <Tooltip>
         <TooltipTrigger

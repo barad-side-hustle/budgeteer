@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { FormatLastSyncLabels } from "./formatters";
+import type { FormatLastSyncLabels } from "@/lib/formatters";
 
 type TranslatorFn = ReturnType<typeof useTranslations<string>>;
 

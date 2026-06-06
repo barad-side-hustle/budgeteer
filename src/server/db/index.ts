@@ -3,7 +3,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { runMigrations } from "./migrate";
+import { runMigrations } from "@/server/db/migrate";
 
 const DB_DIR = process.env.BUDGETEER_DATA_DIR
   ? path.resolve(process.env.BUDGETEER_DATA_DIR)

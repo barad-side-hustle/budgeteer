@@ -2,6 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
+import { BudgetDetailSheet } from "@/components/dashboard/budget-detail-sheet";
+import { CategoryCard } from "@/components/dashboard/category-card";
 import {
   Select,
   SelectContent,
@@ -11,8 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BudgetStatus, CategoryViewMode, CategoryWithData } from "@/lib/types";
-import { BudgetDetailSheet } from "./budget-detail-sheet";
-import { CategoryCard } from "./category-card";
 
 type Filter = "all" | "needs-action" | BudgetStatus;
 type Sort = "budgeted-first" | "most-spent" | "least-spent" | "alphabetical" | "over-pace";

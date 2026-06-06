@@ -1,4 +1,4 @@
-import type { CategoryMapping } from "../types";
+import type { CategoryMapping } from "@/server/ai/types";
 
 function parseConfidence(raw: unknown): number | undefined {
   const n = typeof raw === "number" ? raw : Number(raw);

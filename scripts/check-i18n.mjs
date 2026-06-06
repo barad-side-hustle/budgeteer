@@ -10,7 +10,15 @@ import { spawn } from "node:child_process";
 
 // Legitimate dynamic-access namespaces. These keys exist for a reason; the
 // linter just can't see the access pattern.
-const dynamicNamespaces = ["banks.*", "categoriesSeeded.*", "settings.sidebar.*", "nav.*"];
+const dynamicNamespaces = [
+  "banks.*",
+  "categoriesSeeded.*",
+  "settings.sidebar.*",
+  "nav.*",
+  // Recommendation copy is keyed by recommendation type at runtime
+  // (rec_<type>_title/body, recCta*), so the static parser can't see the access.
+  "recommendations.*",
+];
 
 // Pre-existing orphan keys, grandfathered to land CI without a huge cleanup
 // diff. New code MUST NOT add to this list — fix the orphan or use the key.

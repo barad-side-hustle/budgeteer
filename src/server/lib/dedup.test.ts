@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { computeDedupHash } from "./dedup";
+import { computeDedupHash } from "@/server/lib/dedup";
 
 const baseFields = {
   accountNumber: "1234",

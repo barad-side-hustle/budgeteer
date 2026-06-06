@@ -9,7 +9,7 @@ import {
   computeVerdict,
   cumulative,
   rollUpByParent,
-} from "./compute";
+} from "@/server/insights/compute";
 
 function meta(rows: Array<[number, number | null, string]>): Map<number, CategoryMeta> {
   const m = new Map<number, CategoryMeta>();
@@ -181,21 +181,11 @@ describe("computeBreakdown", () => {
 });
 
 describe("buildInsights", () => {
-  test("surfaces the biggest increase, a saving, and pace verdict", () => {
+  test("surfaces the biggest increase and a saving", () => {
     const m = meta([
       [1, null, "Dining"],
       [2, null, "Groceries"],
     ]);
-    const verdict = computeVerdict({
-      spentMtd: 1000,
-      priorMtd: 800,
-      elapsedDays: 10,
-      totalDays: 30,
-      daysUntilPayday: 5,
-      monthLabel: "March",
-      typicalMonthly: 2000,
-      monthlyTarget: null,
-    });
     const movers: Parameters<typeof buildInsights>[0]["movers"] = [
       {
         categoryId: 1,
@@ -225,7 +215,6 @@ describe("buildInsights", () => {
       },
     ];
     const insights = buildInsights({
-      verdict,
       movers,
       current: new Map([
         [1, 920],
@@ -237,23 +226,11 @@ describe("buildInsights", () => {
     const types = insights.map((i) => i.type);
     expect(types).toContain("biggest-increase");
     expect(types).toContain("biggest-saving");
-    expect(types).toContain("over-pace");
   });
 
   test("flags a category running well above its own typical", () => {
     const m = meta([[5, null, "Shopping"]]);
-    const verdict = computeVerdict({
-      spentMtd: 100,
-      priorMtd: 100,
-      elapsedDays: 10,
-      totalDays: 30,
-      daysUntilPayday: 5,
-      monthLabel: "March",
-      typicalMonthly: null,
-      monthlyTarget: null,
-    });
     const insights = buildInsights({
-      verdict,
       movers: [],
       current: new Map([[5, 900]]),
       typicalByKey: new Map([[5, 300]]),

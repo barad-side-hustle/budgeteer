@@ -3,6 +3,7 @@
 import { Check, ExternalLink, Loader2, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
+import { Confetti } from "@/components/confetti";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -72,6 +73,10 @@ export function SyncProgressDialog({
     );
   }, [providers, rows]);
 
+  const settled = fullRows.filter((r) => r.status === "done" || r.status === "error").length;
+  const progressPct = fullRows.length > 0 ? Math.round((settled / fullRows.length) * 100) : 0;
+  const celebrate = done && !aiWarning;
+
   return (
     <Dialog
       open={open}
@@ -79,7 +84,10 @@ export function SyncProgressDialog({
         if (!o && done) onClose();
       }}
     >
-      <DialogContent className="max-w-md p-0 sm:max-w-md" showCloseButton={done}>
+      {/* No `relative` here: it would override the base `fixed` (via tailwind-merge)
+          and knock the popup off-screen. `fixed` already anchors the confetti. */}
+      <DialogContent className="max-w-md overflow-hidden p-0 sm:max-w-md" showCloseButton={done}>
+        {celebrate && <Confetti />}
         <div className="px-6 pt-6 pb-2">
           <HeroDots done={done} warning={Boolean(aiWarning)} />
           <DialogTitle className="mt-4 text-center font-semibold text-2xl">
@@ -98,6 +106,14 @@ export function SyncProgressDialog({
                 ? stageLabel(stage)
                 : t("descReachingOut")}
           </DialogDescription>
+          {!done && fullRows.length > 1 && (
+            <div className="mx-auto mt-4 h-1.5 w-full max-w-[14rem] overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2 px-6 pb-2" aria-live="polite">

@@ -2,9 +2,9 @@ import "server-only";
 
 import { and, asc, eq, inArray, isNotNull, notInArray, sql } from "drizzle-orm";
 import type { Category, CategoryKind } from "@/lib/types";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { categories } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { categories } from "@/server/db/schema";
 
 const CATEGORY_PROJECTION = {
   id: categories.id,

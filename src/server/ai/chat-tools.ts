@@ -2,15 +2,15 @@ import "server-only";
 
 import { tool } from "ai";
 import { z } from "zod";
-import { getAllCategories } from "../db/queries/categories";
-import { updateChatSessionTitle } from "../db/queries/chat-sessions";
+import { getAllCategories } from "@/server/db/queries/categories";
+import { updateChatSessionTitle } from "@/server/db/queries/chat-sessions";
 import {
   getCategoryBreakdown,
   getCategorySpendInRange,
   getMonthlySummary,
   getTopMerchants,
   queryTransactions,
-} from "../db/queries/transactions";
+} from "@/server/db/queries/transactions";
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use ISO date format YYYY-MM-DD");
 

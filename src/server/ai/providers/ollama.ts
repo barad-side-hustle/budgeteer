@@ -1,13 +1,13 @@
 import "server-only";
 
-import { buildCategorizationPrompt, SYSTEM_PROMPT } from "../prompts";
+import { buildCategorizationPrompt, SYSTEM_PROMPT } from "@/server/ai/prompts";
 import type {
   AIProvider,
   CategoryForCategorization,
   CategoryMapping,
   PastCorrection,
   TransactionForCategorization,
-} from "../types";
+} from "@/server/ai/types";
 
 function parseConfidence(raw: unknown): number | undefined {
   const n = typeof raw === "number" ? raw : Number(raw);

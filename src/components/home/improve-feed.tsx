@@ -9,12 +9,12 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { CardShell } from "@/components/home/card-shell";
 import { Link } from "@/i18n/navigation";
 import { formatCurrency } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import type { SpendInsight } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { CardShell } from "./card-shell";
 
 export function ImproveFeed({ insights }: { insights: SpendInsight[] }) {
   const t = useTranslations("home");

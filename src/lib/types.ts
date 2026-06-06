@@ -396,6 +396,143 @@ export interface InsightPayload {
   errors: InsightSectionError[];
 }
 
+// ---------------------------------------------------------------------------
+// Forecast: the RiseUp-style "bottom line" for the current month. Answers "will
+// I finish the month in the plus or the minus", "how much is safe to spend",
+// and (when a balance is known) "what will my balance be at month end". All
+// computed locally and deterministically; see src/server/insights/forecast.ts.
+// ---------------------------------------------------------------------------
+
+/** plus = projected to finish positive, tight = near zero, minus = projected negative. */
+export type ForecastVerdict = "plus" | "tight" | "minus";
+
+export type OverdraftRisk = "none" | "watch" | "high";
+
+export interface Forecast {
+  monthLabel: string;
+  elapsedDays: number;
+  totalDays: number;
+  daysLeft: number;
+  daysUntilPayday: number;
+  /** Income received so far this month. */
+  incomeMtd: number;
+  /** Spending so far this month. */
+  expensesMtd: number;
+  /** incomeMtd - expensesMtd. */
+  netMtd: number;
+  /** Expected total income for the month (counts salary not yet received). */
+  expectedIncome: number;
+  /** Projected total spending for the month at the current pace. */
+  projectedExpenses: number;
+  /** expectedIncome - projectedExpenses: the month's projected bottom line. */
+  projectedNet: number;
+  remainingIncome: number;
+  remainingExpenses: number;
+  verdict: ForecastVerdict;
+  /** How much more can be spent this month while still finishing in the plus (or within target). */
+  safeToSpendRemaining: number;
+  safeToSpendPerDay: number;
+  safeToSpendThisWeek: number;
+  /** Trailing 3-month average monthly spend, the honest baseline. */
+  typicalMonthlyExpenses: number | null;
+  typicalMonthlyIncome: number | null;
+  /** Optional explicit monthly spending target the user set. */
+  monthlyTarget: number | null;
+  /** Tier 2 (only when the user has set a current balance). */
+  balanceToday: number | null;
+  expectedMonthEnd: number | null;
+  overdraftRisk: OverdraftRisk;
+  /** False when there is no income/expense this month and no history: nothing to forecast yet. */
+  hasData: boolean;
+  /** True when a current balance is known, unlocking the month-end balance line. */
+  hasBalance: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Recurring charges + fixed vs variable. A merchant that bills you most months
+// (rent, utilities, subscriptions, insurance) is a fixed commitment; everything
+// else is discretionary. See src/server/insights/recurring.ts.
+// ---------------------------------------------------------------------------
+
+export interface RecurringCharge {
+  merchant: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  /** Representative monthly amount (median of the months it appeared in). */
+  amount: number;
+  monthsPresent: number;
+  monthsConsidered: number;
+  /** True when the most recent month is missing it (may have been cancelled). */
+  lapsed: boolean;
+}
+
+export interface FixedVsVariable {
+  /** Sum of recurring commitments per month. */
+  fixedMonthly: number;
+  /** typicalMonthly - fixedMonthly (floored at 0): discretionary spend. */
+  variableMonthly: number;
+  typicalMonthly: number;
+}
+
+// ---------------------------------------------------------------------------
+// Savings opportunities + recommendations: the behavior-change layer. Friendly,
+// non-judgmental, practical actions. See src/server/insights/recommendations.ts.
+// ---------------------------------------------------------------------------
+
+export type SavingsType = "subscription" | "category-spike" | "trim-category" | "fees";
+
+export interface SavingsOpportunity {
+  id: string;
+  type: SavingsType;
+  /** Potential money freed up per month if acted on. */
+  estimatedMonthly: number;
+  merchant: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+  /** For trim-category: the fraction suggested (e.g. 0.15). */
+  fraction: number | null;
+}
+
+export type RecommendationTone = "celebrate" | "encourage" | "watch" | "act";
+
+export type RecommendationType =
+  | "overdraft-risk"
+  | "minus-month"
+  | "tight-month"
+  | "plus-month"
+  | "safe-to-spend"
+  | "cut-subscription"
+  | "category-spike"
+  | "trim-category"
+  | "fees"
+  | "build-savings"
+  | "add-balance";
+
+export interface Recommendation {
+  id: string;
+  type: RecommendationType;
+  tone: RecommendationTone;
+  /** Primary money figure, raw (the UI formats it for the locale). */
+  amount: number | null;
+  /** Secondary figure (e.g. per-day allowance), raw. */
+  amount2: number | null;
+  categoryName: string | null;
+  merchant: string | null;
+  /** Where the card's action links, or null for an informational card. */
+  href: string | null;
+}
+
+export interface ForecastPayload {
+  forecast: Forecast | null;
+  fixedVsVariable: FixedVsVariable | null;
+  recurring: RecurringCharge[] | null;
+  savings: SavingsOpportunity[] | null;
+  recommendations: Recommendation[] | null;
+  /** Sum of savings.estimatedMonthly. */
+  totalSavings: number;
+  errors: InsightSectionError[];
+}
+
 export type SyncKind = "manual" | "scheduled";
 
 export interface ActivitySnapshot {
@@ -467,6 +604,10 @@ export interface SetupStatus {
 }
 
 export interface AppSettings {
+  /** The user's current account balance, the anchor for the month-end forecast. Null when not set. */
+  currentBalance: number | null;
+  /** ISO date the balance was accurate as of. Null when no balance is set. */
+  balanceDate: string | null;
   monthsToSync: number;
   aiProvider: "claude" | "gemini" | "ollama" | "none";
   geminiModel: string;

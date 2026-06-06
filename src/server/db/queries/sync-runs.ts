@@ -2,9 +2,9 @@ import "server-only";
 
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { SyncRun } from "@/lib/types";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { syncRuns } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { syncRuns } from "@/server/db/schema";
 
 export function createSyncRun(
   workspaceId: number,

@@ -5,8 +5,8 @@
 
 # Budgeteer
 
-**Local-only personal finance for Israeli bank accounts.**
-Encrypted. AI-categorized. Yours.
+**RiseUp, but free, open-source, and local-first.**
+Connect your Israeli bank, forecast your month, and see what's safe to spend. Encrypted, on your own machine.
 
 [![Website](https://img.shields.io/badge/%F0%9F%8C%90%20Website-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/budgeteer/)
 [![Docs](https://img.shields.io/badge/%F0%9F%93%96%20Docs-1F4D33?style=for-the-badge&labelColor=1F4D33)](https://shaya16.github.io/budgeteer/getting-started)
@@ -39,9 +39,31 @@ Your transactions get pulled directly from your bank with [`israeli-bank-scraper
 
 The trade-off is honest: you self-host, you trust the scraper, and you accept that banks may not love automation. In return you get a fast, beautiful, fully offline dashboard that never phones home.
 
+And it's forward-looking like [RiseUp](https://www.riseup.co.il/): Budgeteer forecasts whether you'll finish the month in the plus or the minus, tells you what's safe to spend per day, splits fixed from variable, and suggests practical ways to save, all computed locally from your own transactions.
+
 ## Features
 
 <table>
+<tr>
+<td width="33%" valign="top">
+
+### 📈 Cash-flow forecast
+The "bottom line" front and center: will you finish the month in the plus or the minus, your projected income vs spending, expected month-end balance, and an overdraft warning. Fixed commitments like rent are counted once, not extrapolated.
+
+</td>
+<td width="33%" valign="top">
+
+### 💸 Safe to spend & ways to save
+A daily and weekly amount that keeps you on track, plus friendly, non-judgmental suggestions: subscriptions to cancel, categories running high, and avoidable fees, each with a ₪/month estimate.
+
+</td>
+<td width="33%" valign="top">
+
+### ✅ Review queue
+Transactions the categorizer wasn't sure about land on a dedicated Review page with a clear explanation, so confirming or fixing them takes seconds.
+
+</td>
+</tr>
 <tr>
 <td width="33%" valign="top">
 
@@ -119,20 +141,36 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 
 <table>
 <tr>
-<td width="50%" align="center"><b>Dashboard — light</b></td>
-<td width="50%" align="center"><b>Dashboard — dark</b></td>
+<td width="50%" align="center"><b>This month — light</b></td>
+<td width="50%" align="center"><b>This month — dark</b></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/dashboard-light.png" alt="Dashboard light mode"></td>
-<td><img src="public/screenshots/dashboard-dark.png" alt="Dashboard dark mode"></td>
+<td><img src="public/screenshots/dashboard-light.png" alt="Cash-flow forecast dashboard, light mode"></td>
+<td><img src="public/screenshots/dashboard-dark.png" alt="Cash-flow forecast dashboard, dark mode"></td>
+</tr>
+<tr>
+<td align="center"><b>Insights & ways to save</b></td>
+<td align="center"><b>Review queue</b></td>
+</tr>
+<tr>
+<td><img src="public/screenshots/insights-light.png" alt="Insights: recommendations, savings, fixed vs variable"></td>
+<td><img src="public/screenshots/review-light.png" alt="Review queue for flagged transactions"></td>
+</tr>
+<tr>
+<td align="center"><b>Onboarding</b></td>
+<td align="center"><b>Connect a bank</b></td>
+</tr>
+<tr>
+<td><img src="public/screenshots/setup-light.png" alt="Onboarding welcome"></td>
+<td><img src="public/screenshots/setup-bank-light.png" alt="Onboarding bank picker"></td>
 </tr>
 <tr>
 <td align="center"><b>Transactions</b></td>
-<td align="center"><b>Setup wizard</b></td>
+<td align="center"><b>Settings</b></td>
 </tr>
 <tr>
 <td><img src="public/screenshots/transactions-light.png" alt="Transactions page"></td>
-<td><img src="public/screenshots/setup-bank-light.png" alt="Setup wizard bank picker"></td>
+<td><img src="public/screenshots/settings-general-light.png" alt="Settings"></td>
 </tr>
 <tr>
 <td align="center"><b>Categories</b></td>
@@ -141,12 +179,6 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 <tr>
 <td><img src="public/screenshots/settings-categories-light.png" alt="Category management"></td>
 <td><img src="public/screenshots/settings-ai-light.png" alt="AI provider settings"></td>
-</tr>
-<tr>
-<td colspan="2" align="center"><b>Bank accounts</b></td>
-</tr>
-<tr>
-<td colspan="2"><img src="public/screenshots/settings-bank-light.png" alt="Bank accounts settings"></td>
 </tr>
 </table>
 
@@ -242,11 +274,12 @@ To hack on the app with hot reload instead, run `bun dev` and open `http://127.0
 
 In the browser:
 
-1. **Connect your bank** — credentials are AES-256-GCM encrypted before they touch disk.
-2. **Choose an AI provider** — Claude (default), Gemini, Ollama, or none.
-3. **Set your monthly ceiling** — total spend you want to stay under each month.
-4. **Set per-category budgets** — type an amount on any category to budget it; leave blank to track without a limit.
-5. **Done.** Sync starts automatically: 3 months of transactions, then AI categorization.
+1. **Welcome** — a quick tour of the local-first, private, free idea.
+2. **Connect your bank** — credentials are AES-256-GCM encrypted before they touch disk.
+3. **Choose an AI provider** — Claude (default), Gemini, Ollama, or none.
+4. **Set your monthly target** — the spend you want to stay under each month (optional).
+5. **Set per-category budgets** — type an amount on any category to budget it; leave blank to track without a limit (optional).
+6. **Done.** Sync starts automatically: a few months of transactions, then AI categorization. Your dashboard opens with the month's forecast.
 
 ## How you'll use it
 
@@ -318,15 +351,17 @@ spent/
 
 ## Roadmap
 
+- [x] Cash-flow forecast: plus/minus verdict, expected month-end balance, overdraft risk
+- [x] Safe-to-spend, savings opportunities, and a review queue for flagged transactions
 - [x] Hebrew UI with full RTL layout
 - [x] Visa Cal, Bank Leumi, Mizrahi, Discount, FIBI, and the rest of the `israeli-bank-scrapers` roster
 - [x] One Zero with programmatic SMS 2FA
 - [x] Gemini as a third AI provider
 - [x] AI chat agent for asking questions about your spending
+- [x] Multiple workspaces
 - [ ] CSV / OFX export
 - [ ] Custom user-defined categories
 - [ ] Mobile companion (Phase 2)
-- [ ] Multiple workspaces
 
 ## Contributing
 

@@ -9,10 +9,10 @@ import type {
   HomeRecentTransaction,
 } from "@/lib/types";
 import { BANK_PROVIDERS } from "@/lib/types";
-import { toLocalISODate } from "../../lib/date-utils";
-import { getDb } from "../index";
-import { getOrm } from "../orm";
-import { bankCredentials, syncRuns } from "../schema";
+import { getDb } from "@/server/db/index";
+import { getOrm } from "@/server/db/orm";
+import { bankCredentials, syncRuns } from "@/server/db/schema";
+import { toLocalISODate } from "@/server/lib/date-utils";
 
 export function getCashFlow(workspaceId: number, from: string, to: string): HomeCashFlow {
   const db = getDb();
@@ -37,6 +37,43 @@ export function getCashFlow(workspaceId: number, from: string, to: string): Home
     expenses: expenses.total,
     net: income.total - expenses.total,
   };
+}
+
+/**
+ * Average monthly income or expense over the last N completed calendar months
+ * (current month excluded). Divides by months *with activity*, so a one-month-
+ * old database returns that month's figure rather than a third of it. Powers the
+ * forecast's "expected income/expenses this month". Null when there is no
+ * history yet.
+ */
+export function getTypicalMonthly(
+  workspaceId: number,
+  kind: "expense" | "income",
+  monthsBack = 3,
+): number | null {
+  const db = getDb();
+  const now = new Date();
+  const sumExpr = kind === "income" ? "SUM(charged_amount)" : "SUM(ABS(charged_amount))";
+  const stmt = db.prepare(
+    `SELECT COALESCE(${sumExpr}, 0) as total
+     FROM transactions
+     WHERE workspace_id = ? AND date >= ? AND date <= ?
+       AND status = 'completed' AND kind = ? AND is_excluded = 0`,
+  );
+  let total = 0;
+  let monthsSeen = 0;
+  for (let i = 1; i <= monthsBack; i++) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+    const row = stmt.get(workspaceId, toLocalISODate(start), toLocalISODate(end), kind) as {
+      total: number;
+    };
+    if (row.total > 0) {
+      total += row.total;
+      monthsSeen++;
+    }
+  }
+  return monthsSeen > 0 ? total / monthsSeen : null;
 }
 
 export function getHistoricalTrend(

@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { AccountOwnershipType, AccountSummary, BankAccount } from "@/lib/types";
-import { getDb } from "../index";
+import { getDb } from "@/server/db/index";
 
 /** Mirrors the CHECK(length(name) <= 128) in migration 023. */
 export const BANK_ACCOUNT_NAME_MAX_LENGTH = 128;

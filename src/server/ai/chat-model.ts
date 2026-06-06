@@ -5,8 +5,8 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import type { LanguageModel } from "ai";
 import { createOllama } from "ai-sdk-ollama";
 import { RECOMMENDED_GEMINI_MODELS } from "@/lib/types";
-import { getSetting } from "../db/queries/settings";
-import { decrypt } from "../lib/encryption";
+import { getSetting } from "@/server/db/queries/settings";
+import { decrypt } from "@/server/lib/encryption";
 
 export const CLAUDE_CHAT_MODEL_ID = "claude-haiku-4-5-20251001";
 

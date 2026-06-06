@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SettingCard } from "@/components/settings/section-shell";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,7 +20,6 @@ import { Label } from "@/components/ui/label";
 import { deleteWorkspace, listWorkspaces, renameWorkspace } from "@/lib/api";
 import type { Workspace } from "@/lib/types";
 import { setActiveWorkspaceId, useActiveWorkspaceId } from "@/lib/workspace-store";
-import { SettingCard } from "./section-shell";
 
 function useActiveWorkspace() {
   const activeId = useActiveWorkspaceId();

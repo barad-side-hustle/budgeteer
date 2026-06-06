@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
+import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { BankStep } from "@/components/setup/bank-step";
 import { BudgetsStep } from "@/components/setup/budgets-step";
 import { CompleteStep } from "@/components/setup/complete-step";
 import { MonthlyTargetStep } from "@/components/setup/monthly-target-step";
+import { WelcomeStep } from "@/components/setup/welcome-step";
 import { WorkspaceNameStep } from "@/components/setup/workspace-name-step";
 import { useRouter } from "@/i18n/navigation";
 import { createWorkspace } from "@/lib/api";
@@ -18,32 +20,38 @@ import { setActiveWorkspaceId } from "@/lib/workspace-store";
 
 export type SetupMode = "first-run" | "new-workspace";
 
-type WizardStep = 0 | 1 | 2 | 3 | 4 | 5;
+type Step = "welcome" | "name" | "connect" | "ai" | "target" | "budgets" | "done";
 
-const FIRST_RUN_STEPS = [
-  { n: 1 as const, labelKey: "stepConnect" },
-  { n: 2 as const, labelKey: "stepAi" },
-  { n: 5 as const, labelKey: "stepTarget" },
-  { n: 3 as const, labelKey: "stepBudgets" },
-  { n: 4 as const, labelKey: "stepDone" },
-];
+const FLOWS: Record<SetupMode, Step[]> = {
+  // AI is a global (one-time) setting, so the new-workspace flow skips it.
+  "first-run": ["welcome", "connect", "ai", "target", "budgets", "done"],
+  "new-workspace": ["name", "connect", "target", "budgets", "done"],
+};
 
-const NEW_WORKSPACE_STEPS = [
-  { n: 0 as const, labelKey: "stepName" },
-  { n: 1 as const, labelKey: "stepConnect" },
-  { n: 5 as const, labelKey: "stepTarget" },
-  { n: 3 as const, labelKey: "stepBudgets" },
-  { n: 4 as const, labelKey: "stepDone" },
-];
+// Directional slide: forward enters from the right and exits left, back reverses.
+const variants = {
+  enter: (dir: number) => ({ x: dir >= 0 ? 36 : -36, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir >= 0 ? -36 : 36, opacity: 0 }),
+};
 
 export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
   const t = useTranslations("setup");
+  const tNav = useTranslations("nav");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<WizardStep>(mode === "new-workspace" ? 0 : 1);
+  const flow = FLOWS[mode];
+  const [step, setStep] = useState<Step>(flow[0]);
+  const [dir, setDir] = useState(0);
   const [creating, setCreating] = useState(false);
 
-  const steps = mode === "new-workspace" ? NEW_WORKSPACE_STEPS : FIRST_RUN_STEPS;
+  const idx = flow.indexOf(step);
+  const goTo = (nextStep: Step, direction: number) => {
+    setDir(direction);
+    setStep(nextStep);
+  };
+  const next = () => goTo(flow[Math.min(idx + 1, flow.length - 1)], 1);
+  const back = () => goTo(flow[Math.max(idx - 1, 0)], -1);
 
   async function handleNameSubmit(name: string) {
     setCreating(true);
@@ -51,7 +59,7 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
       const ws = await createWorkspace(name);
       setActiveWorkspaceId(ws.id);
       queryClient.invalidateQueries();
-      setStep(1);
+      next();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("workspaceCreateFailed"));
     } finally {
@@ -64,127 +72,81 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
     router.push("/?sync=1");
   }
 
-  return (
-    <div className="relative min-h-screen bg-background">
-      <header className="relative z-10 mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-6 md:px-8">
-        <BrandMark />
-        <DotStepper step={step} steps={steps} />
-        <a
-          href={GITHUB_REPO_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="hidden text-xs text-muted-foreground hover:text-foreground md:inline"
-        >
-          {t("docs")}
-        </a>
-      </header>
+  const total = flow.length;
+  const current = idx + 1;
+  const progress = total > 1 ? idx / (total - 1) : 1;
 
-      <main className="relative z-10 mx-auto px-6 pb-16 md:px-8">
-        <AnimatePresence mode="wait">
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-muted/30 to-background px-4 py-8">
+      <a
+        href={GITHUB_REPO_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="absolute end-5 top-5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+      >
+        {t("docs")}
+      </a>
+
+      <div className="w-full max-w-[560px]">
+        {/* Brand + progress */}
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Brand mark; local static SVG, next/image adds no value here. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.svg" alt="Budgeteer" className="h-7 w-7" />
+            <div>
+              <div className="text-base font-semibold leading-none tracking-tight">Budgeteer</div>
+              <div className="mt-1 text-[8px] font-bold tracking-[0.18em] text-muted-foreground">
+                {tNav("brandTagline")}
+              </div>
+            </div>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">
+            {t("railStepLabel", { current, total })}
+          </span>
+        </div>
+
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
           <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.28, ease: [0.2, 0.7, 0.3, 1] }}
-          >
-            {step === 0 && (
-              <WorkspaceNameStep onComplete={handleNameSubmit} submitting={creating} />
-            )}
-            {step === 1 && (
-              <BankStep onComplete={() => setStep(mode === "new-workspace" ? 5 : 2)} />
-            )}
-            {step === 2 && <AIStep onComplete={() => setStep(5)} onBack={() => setStep(1)} />}
-            {step === 5 && (
-              <MonthlyTargetStep
-                onComplete={() => setStep(3)}
-                onBack={() => setStep(mode === "new-workspace" ? 1 : 2)}
-              />
-            )}
-            {step === 3 && <BudgetsStep onComplete={() => setStep(4)} onBack={() => setStep(5)} />}
-            {step === 4 && <CompleteStep onFinish={handleFinish} />}
-          </motion.div>
-        </AnimatePresence>
-      </main>
-    </div>
-  );
-}
+            className="h-full rounded-full bg-primary"
+            animate={{ width: `${Math.round(progress * 100)}%` }}
+            transition={{ duration: 0.4, ease: [0.2, 0.7, 0.3, 1] }}
+          />
+        </div>
 
-function BrandMark() {
-  const tNav = useTranslations("nav");
-  return (
-    <div className="flex items-center gap-2.5">
-      {/* Brand mark; local static SVG, next/image adds no value here. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.svg" alt="Budgeteer" className="h-8 w-8" />
-      <div>
-        <div className="text-lg font-semibold leading-none tracking-tight">Budgeteer</div>
-        <div className="mt-1 text-[8px] font-bold tracking-[0.18em] text-muted-foreground">
-          {tNav("brandTagline")}
+        {/* Fixed-size card; content swaps with a directional slide */}
+        <div className="mt-4 h-[min(72vh,580px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex h-full flex-col overflow-y-auto px-6 py-8 md:px-10">
+            <AnimatePresence mode="wait" custom={dir} initial={false}>
+              <motion.div
+                key={step}
+                custom={dir}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.26, ease: [0.2, 0.7, 0.3, 1] }}
+                className="m-auto w-full"
+              >
+                {step === "welcome" && <WelcomeStep onComplete={next} />}
+                {step === "name" && (
+                  <WorkspaceNameStep onComplete={handleNameSubmit} submitting={creating} />
+                )}
+                {step === "connect" && <BankStep onComplete={next} />}
+                {step === "ai" && <AIStep onComplete={next} onBack={back} />}
+                {step === "target" && <MonthlyTargetStep onComplete={next} onBack={back} />}
+                {step === "budgets" && <BudgetsStep onComplete={next} onBack={back} />}
+                {step === "done" && <CompleteStep onFinish={handleFinish} />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="size-3.5" />
+          {t("railReassure")}
         </div>
       </div>
-    </div>
-  );
-}
-
-interface StepDef {
-  n: WizardStep;
-  labelKey: string;
-}
-
-function DotStepper({ step, steps }: { step: WizardStep; steps: ReadonlyArray<StepDef> }) {
-  const t = useTranslations("setup");
-  const currentIdx = steps.findIndex((s) => s.n === step);
-  return (
-    <div className="flex items-center gap-2">
-      {steps.map((s, i) => {
-        const state = i < currentIdx ? "done" : i === currentIdx ? "active" : "todo";
-        return (
-          <div key={s.n} className="flex items-center gap-2">
-            <DotLabel label={t(s.labelKey)} state={state} />
-            {i < steps.length - 1 && (
-              <motion.div
-                animate={{
-                  background: i < currentIdx ? "var(--primary)" : "var(--border)",
-                }}
-                transition={{ duration: 0.35 }}
-                className="h-px w-3.5 rounded-full"
-              />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function DotLabel({ label, state }: { label: string; state: "todo" | "active" | "done" }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <motion.div
-        animate={{
-          background:
-            state === "active"
-              ? "var(--foreground)"
-              : state === "done"
-                ? "var(--primary)"
-                : "var(--border)",
-          scale: state === "active" ? 1.4 : 1,
-        }}
-        transition={{ duration: 0.25 }}
-        className="h-1.5 w-1.5 rounded-full"
-      />
-      <span
-        className={`text-[9px] font-bold uppercase tracking-[0.14em] transition-colors ${
-          state === "active"
-            ? "text-foreground"
-            : state === "done"
-              ? "text-primary"
-              : "text-muted-foreground/60"
-        }`}
-      >
-        {label}
-      </span>
     </div>
   );
 }
