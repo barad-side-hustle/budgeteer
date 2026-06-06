@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -20,12 +27,20 @@ import {
 import {
   deleteIntegration,
   getIntegrationCredentials,
+  listAccounts,
   saveBankCredentials,
   testBankConnection,
+  updateAccount,
   updateIntegrationSettings,
 } from "@/lib/api";
 import { type FormatLastSyncLabels, formatLastSync } from "@/lib/formatters";
-import { BANK_PROVIDERS, type BankProviderInfo, type Integration } from "@/lib/types";
+import {
+  type AccountOwnershipType,
+  BANK_PROVIDERS,
+  type BankAccount,
+  type BankProviderInfo,
+  type Integration,
+} from "@/lib/types";
 
 function useLastSyncLabels(): FormatLastSyncLabels {
   const t = useTranslations("settings.bank");
@@ -130,6 +145,7 @@ function SheetBody({
           initialLabel={connected?.label ?? ""}
           onSaved={onClose}
         />
+        {mode === "edit" && connected ? <AccountsSection credentialId={connected.id} /> : null}
         {mode === "edit" && connected ? (
           <RecentSyncCard
             lastSyncAt={connected.lastSyncAt}
@@ -376,6 +392,95 @@ function CredentialsForm({
         </Button>
         <Button onClick={handleSave} disabled={!allValid || saving || testing}>
           {saving ? tc("saving") : tc("save")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function AccountsSection({ credentialId }: { credentialId: number }) {
+  const t = useTranslations("settings.bank");
+  const accountsQuery = useQuery({ queryKey: ["accounts"], queryFn: () => listAccounts() });
+  const accounts = (accountsQuery.data ?? []).filter((a) => a.credentialId === credentialId);
+
+  return (
+    <div>
+      <div className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        {t("accountsHeading")}
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{t("accountsHint")}</p>
+      {accountsQuery.isLoading ? (
+        <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
+      ) : accounts.length === 0 ? (
+        <p className="mt-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+          {t("noAccountsYet")}
+        </p>
+      ) : (
+        <div className="mt-3 space-y-3">
+          {accounts.map((account) => (
+            <AccountRow key={account.id} account={account} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AccountRow({ account }: { account: BankAccount }) {
+  const t = useTranslations("settings.bank");
+  const tAccounts = useTranslations("accounts");
+  const tc = useTranslations("common");
+  const queryClient = useQueryClient();
+  const [name, setName] = useState(account.name);
+  const [ownership, setOwnership] = useState<AccountOwnershipType>(account.ownershipType);
+
+  const dirty = name !== account.name || ownership !== account.ownershipType;
+
+  const mutation = useMutation({
+    mutationFn: () => updateAccount(account.id, { name: name.trim(), ownershipType: ownership }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["summary"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(t("accountSaved"));
+    },
+    onError: () => {
+      toast.error(t("accountSaveFailed"));
+    },
+  });
+
+  return (
+    <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
+      <div className="font-mono text-xs text-muted-foreground">{account.accountNumber}</div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={account.accountNumber}
+          aria-label={t("accountNameLabel")}
+          className="flex-1"
+        />
+        <Select
+          value={ownership}
+          onValueChange={(v) => {
+            if (v) setOwnership(v as AccountOwnershipType);
+          }}
+        >
+          <SelectTrigger className="sm:w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="personal">{tAccounts("ownershipPersonal")}</SelectItem>
+            <SelectItem value="joint">{tAccounts("ownershipJoint")}</SelectItem>
+            <SelectItem value="shared">{tAccounts("ownershipShared")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => mutation.mutate()} disabled={!dirty || mutation.isPending}>
+          {mutation.isPending ? tc("saving") : tc("save")}
         </Button>
       </div>
     </div>

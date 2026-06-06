@@ -11,6 +11,7 @@ import type { Locale } from "@/i18n/routing";
 import { getSummary } from "@/lib/api";
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
 import type { CategoryViewMode } from "@/lib/types";
+import { AccountSummaryCards } from "./account-summary-cards";
 import { CategorizeButton } from "./categorize-button";
 import { CategoryGrid } from "./category-grid";
 import { HeroCard } from "./hero-card";
@@ -35,6 +36,7 @@ export function Dashboard() {
   const locale = useLocale() as Locale;
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<CategoryViewMode>("collapsed");
+  const [accountFilter, setAccountFilter] = useState<number[]>([]);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -56,13 +58,21 @@ export function Dashboard() {
   const { from, to } = getMonthRange(selectedDate);
 
   const summaryQuery = useQuery({
-    queryKey: ["summary", from, to],
-    queryFn: () => getSummary({ from, to }),
+    queryKey: ["summary", from, to, accountFilter],
+    queryFn: () =>
+      getSummary({ from, to, accountIds: accountFilter.length > 0 ? accountFilter : undefined }),
   });
+
+  const toggleAccount = useCallback((accountId: number) => {
+    setAccountFilter((prev) =>
+      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId],
+    );
+  }, []);
 
   const handleSyncComplete = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["summary"] });
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["accounts"] });
     queryClient.invalidateQueries({ queryKey: ["settings"] });
   }, [queryClient]);
 
@@ -97,6 +107,13 @@ export function Dashboard() {
         ) : (
           <>
             <HeroCard data={summary} loading={summaryQuery.isLoading} monthLabel={monthLabel} />
+
+            <AccountSummaryCards
+              from={from}
+              to={to}
+              selectedIds={accountFilter}
+              onToggle={toggleAccount}
+            />
 
             <div className="flex items-center justify-end">
               <Tabs

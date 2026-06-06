@@ -10,12 +10,7 @@ import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import type { Locale } from "@/i18n/routing";
 import type { TransactionKindFilter } from "@/lib/api";
-import {
-  getCategories,
-  getTransactions,
-  getTransactionsSummary,
-  listIntegrations,
-} from "@/lib/api";
+import { getCategories, getTransactions, getTransactionsSummary, listAccounts } from "@/lib/api";
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
 import { expandCategoryFilterIds } from "@/lib/transaction-filters";
 import { nextSortState, type SortOrder, type TransactionSortField } from "@/lib/transaction-sort";
@@ -47,9 +42,9 @@ export function TransactionsPage() {
     queryKey: ["categories"],
     queryFn: () => getCategories(),
   });
-  const integrationsQuery = useQuery({
-    queryKey: ["integrations"],
-    queryFn: () => listIntegrations(),
+  const accountsQuery = useQuery({
+    queryKey: ["accounts"],
+    queryFn: () => listAccounts(),
   });
 
   const expandedCategoryIds = expandCategoryFilterIds(
@@ -76,7 +71,7 @@ export function TransactionsPage() {
         to,
         search: search || undefined,
         categoryIds: expandedCategoryIds,
-        credentialIds: accountFilter.length > 0 ? accountFilter : undefined,
+        accountIds: accountFilter.length > 0 ? accountFilter : undefined,
         limit: 50,
         offset: page * 50,
         kind,
@@ -155,7 +150,7 @@ export function TransactionsPage() {
             transactions={transactionsQuery.data?.transactions ?? []}
             total={transactionsQuery.data?.total ?? 0}
             categories={categoriesQuery.data ?? []}
-            integrations={integrationsQuery.data ?? []}
+            accounts={accountsQuery.data ?? []}
             loading={tableInitialLoading}
             isFetching={transactionsQuery.isFetching}
             sortField={sortField}

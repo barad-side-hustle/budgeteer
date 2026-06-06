@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { getTransactionsSummary } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
@@ -17,9 +18,23 @@ export async function GET(request: Request) {
     return Number.isFinite(n) && n > 0 ? [n] : [];
   });
 
+  const accountIds = new Set(
+    searchParams.getAll("accountIds").flatMap((v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? [n] : [];
+    }),
+  );
+  const accountKeys =
+    accountIds.size > 0
+      ? listBankAccounts(workspaceId)
+          .filter((a) => accountIds.has(a.id))
+          .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber }))
+      : undefined;
+
   return NextResponse.json(
     getTransactionsSummary(workspaceId, from, to, {
       credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
+      accountKeys,
     }),
   );
 }

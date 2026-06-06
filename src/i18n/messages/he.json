@@ -325,7 +325,10 @@
     "vsLastMonthDown": "↓ {pct}% לעומת חודש שעבר",
     "vsLastMonthFlat": "ללא שינוי מהחודש שעבר",
     "vsTypical": "מתוך {amount} בממוצע",
-    "ofBudget": "מתוך {amount}"
+    "ofBudget": "מתוך {amount}",
+    "accountBalance": "יתרה",
+    "accountIncome": "הכנסות",
+    "accountExpense": "הוצאות"
   },
   "settings": {
     "pageTitle": "הגדרות",
@@ -462,7 +465,13 @@
       "twoFaNeededTitle": "{bank} זקוק לקוד אימות דו־שלבי",
       "twoFaNeededDescription": "השתמשו בכפתור הסנכרון הכללי בלוח הבקרה כדי להזין את הקוד החד־פעמי. Budgeteer יזכור את האסימון לסנכרונים הבאים.",
       "syncDone": "הסנכרון הושלם: {added, plural, one {# חדשה} other {# חדשות}}, {updated, plural, one {# עודכנה} other {# עודכנו}}, {categorized, plural, one {# סווגה} other {# סווגו}}",
-      "syncFailed": "הסנכרון נכשל"
+      "syncFailed": "הסנכרון נכשל",
+      "accountsHeading": "חשבונות",
+      "accountsHint": "תנו שם לכל חשבון והגדירו את סוג הבעלות.",
+      "accountNameLabel": "שם חשבון",
+      "accountSaved": "החשבון עודכן.",
+      "accountSaveFailed": "לא ניתן לעדכן את החשבון. נסו שוב.",
+      "noAccountsYet": "החשבונות יופיעו כאן לאחר הסנכרון הראשון."
     },
     "ai": {
       "title": "AI ואוטומציה",
@@ -1012,5 +1021,10 @@
     "downloadPromptSized": "הורידו את <b>{model}</b> עכשיו (כ־{size} GB, כמה דקות תלוי בחיבור שלכם). צריך לעשות את זה רק פעם אחת.",
     "download": "הורדה",
     "downloadFailed": "הורדת המודל נכשלה."
+  },
+  "accounts": {
+    "ownershipPersonal": "אישי",
+    "ownershipJoint": "משותף",
+    "ownershipShared": "שיתופי"
   }
 }

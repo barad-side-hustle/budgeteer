@@ -22,10 +22,7 @@ import {
   MultiFilterOption,
   TransactionMultiFilter,
 } from "@/components/transactions/transaction-multi-filter";
-import {
-  getAccountDisplayLabel,
-  TransactionSourceCell,
-} from "@/components/transactions/transaction-source-cell";
+import { TransactionSourceCell } from "@/components/transactions/transaction-source-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +59,7 @@ import {
   toggleCategoryFilterSelection,
 } from "@/lib/transaction-filters";
 import type { SortOrder, TransactionSortField } from "@/lib/transaction-sort";
-import type { Category, Integration, TransactionWithCategory } from "@/lib/types";
+import type { BankAccount, Category, TransactionWithCategory } from "@/lib/types";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -72,14 +69,14 @@ interface TransactionsTableProps {
   transactions: TransactionWithCategory[];
   total: number;
   categories: Category[];
-  integrations: Integration[];
+  accounts: BankAccount[];
   loading: boolean;
   search: string;
   onSearchChange: (search: string) => void;
   categoryFilter: number[];
   onCategoryFilterChange: (categoryIds: number[]) => void;
   accountFilter: number[];
-  onAccountFilterChange: (credentialIds: number[]) => void;
+  onAccountFilterChange: (accountIds: number[]) => void;
   page: number;
   onPageChange: (page: number) => void;
   sortField: TransactionSortField;
@@ -94,7 +91,7 @@ export function TransactionsTable({
   transactions,
   total,
   categories,
-  integrations,
+  accounts,
   loading,
   search,
   onSearchChange,
@@ -222,18 +219,18 @@ export function TransactionsTable({
     return [];
   };
 
-  const accountOptions = integrations
-    .map((integration) => {
-      const info = BANK_PROVIDERS.find((b) => b.id === integration.provider);
+  const accountOptions = accounts
+    .map((account) => {
+      const info = BANK_PROVIDERS.find((b) => b.id === account.provider);
       const providerName = translateProviderName(
-        integration.provider,
-        info?.name ?? integration.provider,
+        account.provider,
+        info?.name ?? account.provider,
         tBanks,
       );
-      const { primary } = getAccountDisplayLabel(providerName, integration.label);
-      return { integration, info, providerName, primary };
+      const label = account.name.trim() || account.accountNumber;
+      return { account, info, providerName, label };
     })
-    .sort((a, b) => a.primary.localeCompare(b.primary));
+    .sort((a, b) => a.providerName.localeCompare(b.providerName) || a.label.localeCompare(b.label));
 
   const showAccountFilter = accountOptions.length > 1;
 
@@ -241,7 +238,7 @@ export function TransactionsTable({
     ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
 
   const accountLabels = accountFilter
-    .map((id) => accountOptions.find((o) => o.integration.id === id)?.primary)
+    .map((id) => accountOptions.find((o) => o.account.id === id)?.label)
     .filter((name): name is string => name != null);
 
   const accountDisplayValue = formatMultiFilterDisplay(accountLabels, t("filterAny"), (count) =>
@@ -268,7 +265,7 @@ export function TransactionsTable({
   const allCategoryIds = [
     ...new Set(categories.flatMap((c) => getCategoryDescendantIds(c.id, categories))),
   ];
-  const allAccountIds = accountOptions.map((o) => o.integration.id);
+  const allAccountIds = accountOptions.map((o) => o.account.id);
 
   const renderCategoryFilterOptions = (
     parentId: number | null,
@@ -332,25 +329,28 @@ export function TransactionsTable({
                 onSelectAll={() => onAccountFilterChange(allAccountIds)}
                 onClear={() => onAccountFilterChange([])}
               >
-                {accountOptions.map(({ integration, info, primary }) => (
+                {accountOptions.map(({ account, info, label, providerName }) => (
                   <MultiFilterOption
-                    key={integration.id}
-                    selected={accountFilter.includes(integration.id)}
+                    key={account.id}
+                    selected={accountFilter.includes(account.id)}
                     onToggle={() =>
-                      onAccountFilterChange(toggleFilterId(accountFilter, integration.id))
+                      onAccountFilterChange(toggleFilterId(accountFilter, account.id))
                     }
                   >
                     <div className="flex min-w-0 items-center gap-2">
                       {info ? (
                         <ProviderBadge
                           color={info.color}
-                          name={primary}
+                          name={providerName}
                           domain={info.domain}
                           size={16}
                           radius={5}
                         />
                       ) : null}
-                      <span className="truncate">{primary}</span>
+                      <span className="min-w-0 truncate">
+                        <span className="truncate">{label}</span>
+                        <span className="ms-1 text-xs text-muted-foreground">{providerName}</span>
+                      </span>
                     </div>
                   </MultiFilterOption>
                 ))}
@@ -598,7 +598,7 @@ export function TransactionsTable({
                       <TableCell className="hidden md:table-cell">
                         <TransactionSourceCell
                           provider={txn.provider}
-                          accountLabel={txn.accountLabel}
+                          accountLabel={txn.accountName ?? txn.accountLabel}
                         />
                       </TableCell>
                       <TableCell
