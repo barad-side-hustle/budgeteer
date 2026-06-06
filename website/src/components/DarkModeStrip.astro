@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+import dashboardDark from '../assets/screenshots/dashboard-dark.png';
+import BalanceCard from './overlays/BalanceCard.astro';
+---
+<section class="dark budgeteer-fade-up">
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">After hours</div>
+			<h2 class="display">
+				<span class="budgeteer-sans-bold">Dark mode</span>
+				<span class="budgeteer-serif-ital">is built in.</span>
+			</h2>
+			<p>Forest stays forest. The same sense of calm, in a quieter room.</p>
+		</div>
+
+		<div class="stage">
+			<div class="frame">
+				<Image src={dashboardDark} alt="Budgeteer dashboard in dark mode" loading="lazy" decoding="async" />
+			</div>
+			<BalanceCard
+				label="Balance"
+				amount="₪12,840"
+				trend="+₪430 today"
+				dark
+				rotate={2}
+				delay={0}
+				class="balance-overlay"
+			/>
+		</div>
+	</div>
+</section>
+
+<style>
+	.dark {
+		padding: 5rem 0;
+		background: var(--budgeteer-primary-dark);
+		color: #fff;
+	}
+	.dark :global(.budgeteer-eyebrow) { color: rgba(255, 255, 255, 0.6); }
+	.dark :global(.budgeteer-eyebrow::before) { background: rgba(255, 255, 255, 0.5); }
+	.dark :global(.budgeteer-sans-bold) { color: #fff; }
+	.dark :global(.budgeteer-serif-ital) { color: var(--budgeteer-vibrant); }
+	.intro {
+		max-width: 36rem;
+		margin: 0 auto 2rem;
+		text-align: center;
+	}
+	.display {
+		font-size: clamp(1.9rem, 3.8vw, 2.6rem);
+		line-height: 1.05;
+		margin: 0 0 0.85rem;
+	}
+	.intro p {
+		font-family: var(--budgeteer-font-sans);
+		color: rgba(255, 255, 255, 0.7);
+		max-width: 28rem;
+		font-size: 0.95rem;
+		line-height: 1.6;
+		margin: 0 auto;
+	}
+	.stage {
+		position: relative;
+	}
+	.frame {
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: var(--budgeteer-radius);
+		overflow: hidden;
+		box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.55);
+	}
+	.frame :global(img) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.stage :global(.balance-overlay) {
+		top: 24px;
+		right: -10px;
+	}
+	@media (max-width: 48rem) {
+		.stage :global(.balance-overlay) {
+			right: 8px;
+			top: 8px;
+		}
+	}
+</style>

@@ -1,0 +1,378 @@
+---
+// Pivoted from "Setup in 3 minutes" (which overlapped with the How-it-works section)
+// to "Menu-bar app" — showcasing the always-on quick-glance pattern.
+---
+<section class="setup budgeteer-fade-up">
+	<div class="deco deco-cream-a" aria-hidden="true"></div>
+	<div class="deco deco-vibrant" aria-hidden="true"></div>
+	<div class="deco deco-ring" aria-hidden="true"></div>
+
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">Menu-bar native</div>
+			<h2 class="display">
+				<span class="budgeteer-sans-bold">Always there.</span>
+				<span class="budgeteer-serif-ital"> Never in the way.</span>
+			</h2>
+			<p class="lede">
+				Budgeteer lives quietly in your menu bar. One click for a glance, two for the full dashboard.
+				Your money should be a quick check, not a full-time chore.
+			</p>
+		</div>
+
+		<div class="stage">
+			<!-- Desktop window with macOS menu bar -->
+			<div class="desktop">
+				<!-- macOS top menu bar -->
+				<div class="menubar">
+					<div class="mb-left">
+						<span class="mb-apple"></span>
+						<span class="mb-menu strong">Budgeteer</span>
+						<span class="mb-menu">File</span>
+						<span class="mb-menu">Edit</span>
+						<span class="mb-menu">View</span>
+						<span class="mb-menu">Help</span>
+					</div>
+					<div class="mb-right">
+						<span class="mb-icon">⌃</span>
+						<span class="mb-icon">⏵</span>
+						<span class="mb-icon">⌘</span>
+						<!-- Budgeteer icon, highlighted -->
+						<span class="mb-spent active">
+							<span class="mb-budgeteer-dot"></span>
+							<span class="mb-budgeteer-amt">₪3,154</span>
+						</span>
+						<span class="mb-icon">📶</span>
+						<span class="mb-icon">🔋</span>
+						<span class="mb-time">14:23</span>
+					</div>
+				</div>
+
+				<!-- Anchor arrow pointing from menu bar Budgeteer icon down to popover -->
+				<div class="anchor-arrow" aria-hidden="true"></div>
+
+				<!-- Popover dropdown -->
+				<div class="popover">
+					<div class="pop-head">
+						<div>
+							<div class="pop-eyebrow">THIS MAY</div>
+							<div class="pop-amount">₪3,154</div>
+						</div>
+						<span class="pop-trend">↓ 12% vs April</span>
+					</div>
+					<div class="pop-bar"><div class="pop-bar-fill" style="width: 73%"></div></div>
+					<div class="pop-meta"><span>73% of ₪4,300</span><span>17 days to payday</span></div>
+
+					<div class="pop-divider"></div>
+
+					<div class="pop-cash">
+						<div class="pop-cash-row">
+							<span class="pop-cash-l">↗ IN</span>
+							<span class="pop-cash-v pos">₪6,175</span>
+						</div>
+						<div class="pop-cash-row">
+							<span class="pop-cash-l">↘ OUT</span>
+							<span class="pop-cash-v">₪5,599</span>
+						</div>
+						<div class="pop-cash-row">
+							<span class="pop-cash-l net">NET</span>
+							<span class="pop-cash-v net">+₪576</span>
+						</div>
+					</div>
+
+					<div class="pop-divider"></div>
+
+					<div class="pop-actions">
+						<span class="pop-status">
+							<span class="pop-status-dot"></span>
+							Synced 4m ago
+						</span>
+						<span class="pop-open">Open dashboard ↗</span>
+					</div>
+				</div>
+
+				<!-- Soft desktop backdrop (subtle gradient hint of a wallpaper) -->
+				<div class="desktop-fill" aria-hidden="true">
+					<div class="dock" aria-hidden="true">
+						<span class="dock-app dock-app-1"></span>
+						<span class="dock-app dock-app-2"></span>
+						<span class="dock-app dock-app-3"></span>
+						<span class="dock-app dock-app-4 active"></span>
+						<span class="dock-app dock-app-5"></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Side notes pointing to the menu-bar interaction -->
+			<div class="note note-left">
+				<span class="note-num">01</span>
+				<span class="note-text">One click on the menu bar</span>
+			</div>
+			<div class="note note-right">
+				<span class="note-num">02</span>
+				<span class="note-text">Quick stats, never a tab</span>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.setup {
+		padding: 5rem 0 6rem;
+		background: var(--budgeteer-pink);
+		color: var(--budgeteer-primary);
+		position: relative;
+		overflow: hidden;
+	}
+	.setup :global(.budgeteer-eyebrow) { color: var(--budgeteer-primary); }
+	.setup :global(.budgeteer-eyebrow::before),
+	.setup :global(.budgeteer-eyebrow.center::after) { background: var(--budgeteer-primary); }
+	.setup :global(.budgeteer-sans-bold), .setup :global(.budgeteer-serif-ital) { color: var(--budgeteer-primary); }
+
+	.deco { position: absolute; pointer-events: none; }
+	.deco-cream-a { top: 12%; left: 6%; width: 64px; height: 64px; border-radius: 50%; background: rgba(250, 241, 220, 0.55); }
+	.deco-vibrant { bottom: 20%; right: 8%; width: 48px; height: 48px; border-radius: 50%; background: rgba(40, 199, 91, 0.3); }
+	.deco-ring    { top: 22%; right: 6%; width: 56px; height: 56px; border-radius: 50%; border: 3px solid rgba(31, 77, 51, 0.25); }
+	@media (max-width: 48rem) { .deco { display: none; } }
+
+	.intro { max-width: 38rem; margin: 0 auto 3rem; text-align: center; }
+	.display { font-size: clamp(1.9rem, 3.8vw, 2.6rem); line-height: 1.05; margin: 0 0 0.85rem; }
+	.lede {
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.95rem; line-height: 1.55;
+		color: var(--budgeteer-primary);
+		opacity: 0.85;
+		max-width: 32rem; margin: 0 auto;
+	}
+
+	/* === Stage with desktop mockup === */
+	.stage {
+		position: relative;
+		max-width: 52rem;
+		margin: 0 auto;
+	}
+
+	.desktop {
+		position: relative;
+		background: var(--budgeteer-bg);
+		border-radius: var(--budgeteer-radius);
+		box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.45);
+		overflow: hidden;
+		min-height: 380px;
+	}
+
+	/* macOS menu bar */
+	.menubar {
+		background: rgba(255, 255, 255, 0.75);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border-bottom: 1px solid var(--budgeteer-border);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.4rem 0.85rem;
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.7rem;
+		color: var(--budgeteer-fg);
+		position: relative;
+		z-index: 2;
+	}
+	.mb-left, .mb-right { display: flex; align-items: center; gap: 0.85rem; }
+	.mb-right { gap: 0.5rem; }
+	.mb-apple {
+		width: 12px; height: 12px;
+		background: var(--budgeteer-primary);
+		border-radius: 50%;
+	}
+	.mb-menu { color: var(--budgeteer-fg); }
+	.mb-menu.strong { font-weight: 700; }
+	.mb-icon {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.65rem;
+		color: var(--budgeteer-fg-muted);
+		opacity: 0.8;
+	}
+	.mb-time {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.65rem;
+		color: var(--budgeteer-fg);
+		font-weight: 600;
+	}
+	.mb-spent {
+		display: inline-flex; align-items: center; gap: 0.3rem;
+		padding: 0.2rem 0.5rem;
+		border-radius: 6px;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--budgeteer-fg);
+	}
+	.mb-spent.active {
+		background: var(--budgeteer-primary);
+		color: var(--budgeteer-bg);
+	}
+	.mb-budgeteer-dot {
+		width: 7px; height: 7px; border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+	}
+	.mb-budgeteer-amt { font-weight: 700; letter-spacing: 0.02em; }
+
+	/* Arrow connecting menu bar Budgeteer icon to popover */
+	.anchor-arrow {
+		position: absolute;
+		top: 30px;
+		right: 82px;
+		width: 14px; height: 14px;
+		background: #fff;
+		border: 1px solid var(--budgeteer-border);
+		border-bottom-color: transparent;
+		border-right-color: transparent;
+		transform: rotate(45deg);
+		z-index: 4;
+	}
+
+	/* Popover */
+	.popover {
+		position: absolute;
+		top: 38px;
+		right: 24px;
+		width: 280px;
+		background: #fff;
+		border: 1px solid var(--budgeteer-border);
+		border-radius: 12px;
+		padding: 1rem 1.1rem;
+		box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		color: var(--budgeteer-fg);
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+	}
+	.pop-head {
+		display: flex; justify-content: space-between; align-items: flex-start;
+		margin-bottom: 0.5rem;
+	}
+	.pop-eyebrow {
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		letter-spacing: 0.14em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.pop-amount {
+		font-family: var(--budgeteer-font-serif); font-style: italic;
+		font-size: 1.6rem; color: var(--budgeteer-fg); font-weight: 500;
+		line-height: 1; margin-top: 0.2rem;
+	}
+	.pop-trend {
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		color: var(--budgeteer-vibrant); font-weight: 600;
+		background: rgba(40, 199, 91, 0.15);
+		padding: 3px 8px; border-radius: 100px;
+		align-self: center;
+	}
+	.pop-bar {
+		height: 5px; background: var(--budgeteer-bg-soft);
+		border-radius: 100px; overflow: hidden; margin-bottom: 0.3rem;
+	}
+	.pop-bar-fill { height: 100%; background: var(--budgeteer-vibrant); border-radius: 100px; }
+	.pop-meta {
+		display: flex; justify-content: space-between;
+		font-family: var(--budgeteer-font-mono); font-size: 0.5rem;
+		color: var(--budgeteer-fg-muted);
+	}
+	.pop-divider { height: 1px; background: var(--budgeteer-border); margin: 0.7rem 0; }
+
+	.pop-cash { display: flex; flex-direction: column; gap: 0.2rem; }
+	.pop-cash-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: 0.15rem 0;
+	}
+	.pop-cash-l {
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		color: var(--budgeteer-fg-muted); font-weight: 600; letter-spacing: 0.06em;
+	}
+	.pop-cash-v {
+		font-family: var(--budgeteer-font-mono); font-size: 0.7rem;
+		color: var(--budgeteer-fg); font-weight: 600;
+	}
+	.pop-cash-v.pos, .pop-cash-l.net, .pop-cash-v.net { color: var(--budgeteer-vibrant); }
+
+	.pop-actions {
+		display: flex; justify-content: space-between; align-items: center;
+	}
+	.pop-status {
+		display: inline-flex; align-items: center; gap: 0.35rem;
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		color: var(--budgeteer-fg-muted);
+	}
+	.pop-status-dot {
+		width: 6px; height: 6px; border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+	}
+	.pop-open {
+		font-family: var(--budgeteer-font-sans); font-size: 0.7rem;
+		color: var(--budgeteer-primary); font-weight: 600;
+		padding: 0.25rem 0.55rem;
+		background: rgba(40, 199, 91, 0.15);
+		border-radius: 100px;
+	}
+
+	/* Desktop backdrop */
+	.desktop-fill {
+		position: absolute;
+		inset: 30px 0 0 0;
+		background: linear-gradient(180deg, var(--budgeteer-bg) 0%, var(--budgeteer-bg-soft) 100%);
+		z-index: 1;
+	}
+	.dock {
+		position: absolute;
+		bottom: 14px; left: 50%; transform: translateX(-50%);
+		display: flex; gap: 0.45rem;
+		padding: 0.4rem 0.6rem;
+		background: rgba(255, 255, 255, 0.85);
+		backdrop-filter: blur(6px);
+		-webkit-backdrop-filter: blur(6px);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: 12px;
+		box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.25);
+	}
+	.dock-app {
+		width: 28px; height: 28px;
+		border-radius: 7px;
+	}
+	.dock-app-1 { background: var(--budgeteer-vibrant); }
+	.dock-app-2 { background: var(--budgeteer-blue); }
+	.dock-app-3 { background: var(--budgeteer-orange); }
+	.dock-app-4 {
+		background: var(--budgeteer-primary);
+		position: relative;
+	}
+	.dock-app-4.active::after {
+		content: '';
+		position: absolute;
+		bottom: -8px; left: 50%; transform: translateX(-50%);
+		width: 3px; height: 3px; border-radius: 50%;
+		background: var(--budgeteer-primary);
+	}
+	.dock-app-5 { background: var(--budgeteer-pink); }
+
+	/* Side notes */
+	.note {
+		position: absolute;
+		display: flex; align-items: center; gap: 0.5rem;
+		font-family: var(--budgeteer-font-mono); font-size: 0.65rem;
+		color: var(--budgeteer-primary); font-weight: 600;
+		background: rgba(250, 241, 220, 0.85);
+		padding: 0.35rem 0.65rem;
+		border-radius: 100px;
+		box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.2);
+	}
+	.note-num {
+		display: inline-flex; align-items: center; justify-content: center;
+		width: 18px; height: 18px; border-radius: 50%;
+		background: var(--budgeteer-primary); color: var(--budgeteer-pink);
+		font-size: 0.55rem;
+	}
+	.note-left  { top: 10%; left: -8%; transform: rotate(-3deg); }
+	.note-right { bottom: 28%; right: -8%; transform: rotate(2deg); }
+	@media (max-width: 60rem) {
+		.note { display: none; }
+	}
+</style>

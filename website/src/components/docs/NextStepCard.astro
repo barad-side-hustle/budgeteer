@@ -1,0 +1,15 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  label?: string;
+}
+const { href, title, label = 'Next' } = Astro.props;
+---
+<a class="docs-nextstep" href={href}>
+  <span>
+    <span class="label">{label}</span>
+    <span class="title">{title}</span>
+  </span>
+  <span class="arrow" aria-hidden="true">→</span>
+</a>

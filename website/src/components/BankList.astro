@@ -1,0 +1,191 @@
+---
+import { Image } from 'astro:assets';
+import { BANKS } from '../data/banks.ts';
+
+// Eager-glob every bank logo we have. Astro picks them up at build time.
+// Banks without a matching file fall back to the colored letter-tile.
+const logoModules = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/banks/*.png',
+	{ eager: true }
+);
+
+// Build a map: bank id → ImageMetadata
+const logos: Record<string, ImageMetadata> = {};
+for (const [filepath, mod] of Object.entries(logoModules)) {
+	const fileName = filepath.split('/').pop()!;
+	const id = fileName.replace(/\.png$/, '');
+	logos[id] = mod.default;
+}
+---
+<section class="banks budgeteer-fade-up">
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">Supported institutions</div>
+			<h2 class="display">
+				<span class="budgeteer-serif-ital">Banks Budgeteer </span>
+				<span class="budgeteer-sans-bold">already speaks to.</span>
+			</h2>
+		</div>
+
+		<div class="grid">
+			{BANKS.map((b) => {
+				const logo = logos[b.id];
+				return (
+					<div class="bank">
+						<div class="art">
+							{logo ? (
+								<Image
+									src={logo}
+									alt={`${b.name} logo`}
+									class="logo"
+									loading="lazy"
+								/>
+							) : (
+								<div class="initial" style={`background: ${b.color};`}>
+									{b.name.charAt(0)}
+								</div>
+							)}
+						</div>
+						<span class="name">{b.name}</span>
+						<span class="badge">READY</span>
+					</div>
+				);
+			})}
+			<div class="bank off">
+				<div class="art">
+					<div class="initial plus">+</div>
+				</div>
+				<span class="name">Yours next?</span>
+				<a class="badge contrib" href="https://github.com/barad-side-hustle/budgeteer/issues">
+					CONTRIBUTE
+				</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.banks {
+		padding: 5rem 0;
+		background: var(--budgeteer-blue);
+		color: #fff;
+	}
+	.banks :global(.budgeteer-eyebrow) { color: rgba(255, 255, 255, 0.75); }
+	.banks :global(.budgeteer-eyebrow::before) { background: rgba(255, 255, 255, 0.65); }
+	.banks :global(.budgeteer-sans-bold),
+	.banks :global(.budgeteer-serif-ital) { color: #fff; }
+	.intro {
+		max-width: 38rem;
+		margin: 0 auto 2rem;
+		text-align: center;
+	}
+	.display {
+		font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+		line-height: 1.05;
+		margin: 0;
+	}
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75rem;
+	}
+	@media (min-width: 36rem) {
+		.grid { grid-template-columns: repeat(3, 1fr); }
+	}
+	@media (min-width: 60rem) {
+		.grid { grid-template-columns: repeat(4, 1fr); gap: 0.85rem; }
+	}
+
+	.bank {
+		background: var(--budgeteer-card);
+		border-radius: 14px;
+		padding: 1.1rem 0.9rem 0.85rem;
+		text-align: center;
+		font-family: var(--budgeteer-font-sans);
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		align-items: center;
+		transition: transform 180ms ease, box-shadow 180ms ease;
+		height: 130px;
+		justify-content: center;
+	}
+	.bank:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.3);
+	}
+
+	.art {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 44px;
+		flex-shrink: 0;
+	}
+	.art :global(.logo) {
+		max-width: 100%;
+		max-height: 44px !important;
+		height: auto !important;
+		width: auto !important;
+		object-fit: contain;
+		display: block;
+	}
+
+	.initial {
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-size: 1.25rem;
+		font-weight: 500;
+		color: #fff;
+		flex-shrink: 0;
+	}
+	.initial.plus {
+		background: var(--budgeteer-bg-soft);
+		color: var(--budgeteer-fg-muted);
+		font-family: var(--budgeteer-font-sans);
+		font-style: normal;
+		font-weight: 600;
+		font-size: 1.4rem;
+	}
+
+	.bank .name {
+		font-size: 0.78rem;
+		line-height: 1.2;
+		color: var(--budgeteer-fg);
+		font-weight: 600;
+	}
+
+	.bank .badge {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.55rem;
+		color: var(--budgeteer-primary);
+		letter-spacing: 0.12em;
+		font-weight: 600;
+		text-decoration: none;
+		background: rgba(40, 199, 91, 0.18);
+		padding: 0.18rem 0.55rem;
+		border-radius: 100px;
+	}
+
+	.bank.off {
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px dashed rgba(255, 255, 255, 0.25);
+	}
+	.bank.off .name { color: rgba(255, 255, 255, 0.7); }
+	.bank.off .badge.contrib {
+		color: rgba(255, 255, 255, 0.85);
+		background: rgba(255, 255, 255, 0.12);
+	}
+	.bank.off .badge.contrib:hover {
+		color: var(--budgeteer-vibrant);
+		background: rgba(40, 199, 91, 0.18);
+	}
+</style>

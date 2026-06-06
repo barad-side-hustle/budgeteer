@@ -1,0 +1,17 @@
+---
+interface Props {
+  variant?: 'note' | 'gotcha' | 'for-developers';
+  label?: string;
+}
+const { variant = 'note', label } = Astro.props;
+const defaultLabels = {
+  'note': 'Note',
+  'gotcha': 'Heads up',
+  'for-developers': 'For developers',
+};
+const resolvedLabel = label ?? defaultLabels[variant];
+---
+<aside class={`docs-callout docs-callout--${variant}`}>
+  <div class="label">{resolvedLabel}</div>
+  <slot />
+</aside>

@@ -1,0 +1,158 @@
+---
+title: Troubleshooting
+description: Common problems and how to solve them.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import ForDevelopers from '../../components/docs/ForDevelopers.astro';
+
+<DocsHero
+  eyebrow="REFERENCE"
+  titleBold="When something"
+  titleItalic="isn't working."
+  lede="Grouped by where the problem shows up. Start with the section that matches your situation."
+/>
+
+## During install
+
+### `npm install` fails on Windows
+
+<Callout variant="gotcha">
+*"MSB8020"* or other native-compile errors — Budgeteer depends on **better-sqlite3**, which compiles natively. The `npm run setup` script handles the build-tool prompt; if you ran `npm install` from a non-elevated PowerShell first, the compile may not have been able to register the .NET 8 SDK.
+</Callout>
+
+**Fix:** Close PowerShell, reopen as Administrator, run `npm install` again. If still failing, restart the machine first.
+
+### "node is not recognized as an internal or external command"
+
+Node.js isn't on your `PATH`. Close the terminal, open a new one. If it still happens, rerun the Node installer accepting the defaults — one of them adds Node to PATH.
+
+### Permission errors during `npm install` on macOS
+
+Lots of `EACCES`? You installed Node as root somewhere along the line. Reinstall via [nvm](https://github.com/nvm-sh/nvm) which puts Node in your home directory and avoids `sudo`.
+
+### Setup script aborted partway
+
+The setup script is **idempotent** — safe to re-run. Check what state you're in:
+
+```sh
+npm run service:status
+```
+
+Then just `npm run setup` again. It picks up where it left off without re-doing finished steps.
+
+### "Budgeteer.app is from an unidentified developer" (macOS)
+
+Right-click `Budgeteer.app` in `~/Applications`, choose **Open**, then **Open** in the dialog. After the first launch, double-click works.
+
+### Windows Defender flags the tray app
+
+Click **More info → Run anyway**. The binary is built from the source code in `menubar/windows/`. You can inspect or rebuild it yourself.
+
+### `budgeteer.local` doesn't resolve
+
+The setup script edits `hosts` only when it has admin/sudo. If you ran setup non-elevated, the entry was skipped.
+
+- **Mac/Linux:** `echo "127.0.0.1 budgeteer.local" | sudo tee -a /etc/hosts`
+- **Windows (elevated PowerShell):** `npm run service:install` re-runs the hosts step.
+
+Either way, `http://127.0.0.1:2412` always works.
+
+## During sync
+
+### "Login failed — check credentials"
+
+Most common causes:
+
+- Your bank password changed recently. Update it in *Settings → Banks*.
+- Your bank requires 2FA, which Budgeteer can't do (except One Zero). Disable 2FA on the bank's side.
+- The bank's website is down. Try again in an hour.
+
+### Sync hangs or times out
+
+The bank's website is being slow. Budgeteer waits up to **5 minutes** per login. If it consistently times out, increase the timeout in *Settings → Advanced* or sync at a different time of day.
+
+### "Connection refused" when calling Ollama
+
+Ollama isn't running. Open a terminal:
+
+```sh
+ollama serve
+```
+
+On macOS Ollama usually starts automatically; on Windows you may need to launch it from the Start menu.
+
+### Anthropic API returns 401
+
+Your Claude API key is invalid or revoked. Generate a new one at `console.anthropic.com`, paste it into *Settings → AI*, and re-sync.
+
+## With the dashboard
+
+### "Cannot connect to localhost:2412"
+
+The background service isn't running:
+
+```sh
+npm run service:status
+npm run service:start
+```
+
+If `service:start` reports success but the page still won't load, check the logs:
+
+```sh
+npm run service:logs
+```
+
+### Transactions are missing
+
+Some banks expose limited history. Yahav, in particular, only goes back about **6 months**. Older data isn't reachable via the website Budgeteer scrapes.
+
+### Dashboard looks broken after an update
+
+Clear your browser cache for `localhost:2412`. The dashboard's assets are cached aggressively.
+
+## With your data
+
+### "Where is my data?"
+
+In `data/budgeteer.db` (a SQLite file) and `data/.encryption-key`. Both live inside your Budgeteer install folder.
+
+### How do I delete all my data?
+
+Stop the service, delete the `data/` folder:
+
+```sh
+npm run service:stop
+rm -rf data/
+npm run service:start
+```
+
+A fresh empty database is created on next start.
+
+### How do I move Budgeteer to a new computer?
+
+1. Install Budgeteer on the new machine ([macOS](/budgeteer/install/mac) / [Windows](/budgeteer/install/windows) / [Linux](/budgeteer/install/linux)).
+2. Before the first run, copy `data/budgeteer.db` **and** `data/.encryption-key` from the old computer into the new install's `data/` folder.
+3. Start the service. Budgeteer picks up where it left off.
+
+<ForDevelopers summary="Backing up via SQLite tools">
+
+`data/budgeteer.db` is a standard SQLite database in WAL mode. Any tool that respects WAL works:
+
+```sh
+sqlite3 data/budgeteer.db ".backup data/budgeteer-backup.db"
+```
+
+Or copy the `.db`, `.db-wal`, and `.db-shm` files together while the service is stopped. The encryption key is a separate concern — back it up like a password.
+
+</ForDevelopers>
+
+## Still stuck?
+
+Open an issue on [GitHub](https://github.com/barad-side-hustle/budgeteer/issues) with:
+
+- Your operating system and version
+- What you were doing when it broke
+- The relevant error message (copy-pasted, not screenshotted)
+- The output of `npm run service:logs`

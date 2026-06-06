@@ -1,0 +1,17 @@
+---
+interface Props {
+  eyebrow: string;
+  titleBold: string;
+  titleItalic: string;
+  lede?: string;
+}
+const { eyebrow, titleBold, titleItalic, lede } = Astro.props;
+---
+<header class="docs-hero">
+  <div class="eyebrow">{eyebrow}</div>
+  <h1 class="title">
+    <span class="bold">{titleBold}</span>
+    <span class="italic">{titleItalic}</span>
+  </h1>
+  {lede && <p class="lede">{lede}</p>}
+</header>

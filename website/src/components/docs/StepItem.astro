@@ -1,0 +1,15 @@
+---
+interface Props {
+  i: number;
+  title: string;
+}
+const { i, title } = Astro.props;
+const num = String(i).padStart(2, '0');
+---
+<li class="docs-stepitem" data-i={i}>
+  <span class="num" aria-hidden="true">{num}</span>
+  <div class="body">
+    <h3>{title}</h3>
+    <slot />
+  </div>
+</li>

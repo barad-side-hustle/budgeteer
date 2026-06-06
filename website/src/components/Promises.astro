@@ -1,0 +1,191 @@
+---
+import { Image } from 'astro:assets';
+import PromiseCard from './overlays/PromiseCard.astro';
+
+// Glob-match the workspace photo so the build doesn't fail if the file is absent.
+// Accepts any image extension so the user can drop in .jpg/.jpeg/.png/.webp.
+const matches = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/landing/workspace-cozy.{jpg,jpeg,png,webp}',
+	{ eager: true }
+);
+const workspaceImg = Object.values(matches)[0]?.default ?? null;
+---
+<section class="promises budgeteer-fade-up">
+	<div class="budgeteer-wrap">
+		<div class="header">
+			<div class="budgeteer-eyebrow center">Three quiet promises</div>
+			<h2 class="display">
+				<span class="budgeteer-serif-ital">It lives on your machine, </span>
+				<span class="budgeteer-sans-bold">not ours.</span>
+			</h2>
+			<p>
+				No cloud account, no server-side database, no hidden telemetry.
+				The thing that should know your finances is the thing on your desk.
+			</p>
+		</div>
+	</div>
+
+	<div class="stage-wrap">
+		<div class="stage">
+			{workspaceImg ? (
+				<Image src={workspaceImg} alt="A cozy workspace with a laptop running Budgeteer" class="photo" loading="lazy" />
+			) : (
+				<div class="photo placeholder" aria-hidden="true">
+					<div class="ph-label">workspace-cozy.jpg goes here</div>
+				</div>
+			)}
+
+			<PromiseCard
+				title="Lives on your computer"
+				body="Runs as a small background service. Dashboard opens at localhost."
+				badge="LOCALHOST ONLY"
+				icon="computer"
+				rotate={-3}
+				delay={0}
+				class="p1"
+			/>
+			<PromiseCard
+				title="Password stays put"
+				body="Credentials encrypted with AES-256 in a local SQLite database."
+				badge="AES-256-GCM"
+				icon="lock"
+				rotate={2}
+				delay={-2}
+				class="p2"
+			/>
+			<PromiseCard
+				title="You choose the AI"
+				body="Claude, Ollama, or none. Categorization is your call."
+				badge="CLAUDE · OLLAMA · OFF"
+				icon="sparkle"
+				rotate={-1}
+				delay={-4}
+				class="p3"
+			/>
+
+			<div class="chip chip-a">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+				NO TRACKING
+			</div>
+			<div class="chip chip-b">
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+				OFFLINE CAPABLE
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.promises {
+		padding: 4rem 0 5rem;
+		border-bottom: 1px solid var(--budgeteer-border);
+		background: var(--budgeteer-bg);
+	}
+	.header { max-width: 40rem; margin: 0 auto 2.25rem; text-align: center; }
+	.header p { margin: 0 auto; }
+	.display {
+		font-size: clamp(1.9rem, 3.8vw, 2.6rem);
+		line-height: 1.05;
+		margin: 0 0 0.85rem;
+	}
+	.header p {
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.95rem;
+		line-height: 1.6;
+		color: var(--budgeteer-fg-muted);
+		max-width: 30rem;
+		margin: 0;
+	}
+
+	.stage-wrap {
+		padding: 0 1rem;
+	}
+	@media (min-width: 60rem) {
+		.stage-wrap { padding: 0 2rem; max-width: 72rem; margin: 0 auto; }
+	}
+
+	.stage {
+		position: relative;
+		border-radius: 18px;
+		overflow: hidden;
+		min-height: 500px;
+		aspect-ratio: 16 / 10;
+	}
+
+	.photo {
+		width: 100%;
+		height: 100%;
+		min-height: inherit;
+		object-fit: cover;
+		display: block;
+	}
+	.photo.placeholder {
+		background:
+			radial-gradient(ellipse at 30% 20%, rgba(255, 220, 180, 0.45) 0%, transparent 55%),
+			radial-gradient(ellipse at 70% 80%, rgba(40, 80, 50, 0.3) 0%, transparent 50%),
+			#8B7355;
+		min-height: 460px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.ph-label {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.75rem;
+		color: rgba(255, 255, 255, 0.85);
+		background: rgba(0, 0, 0, 0.4);
+		padding: 6px 14px;
+		border-radius: 100px;
+		letter-spacing: 0.06em;
+	}
+
+	/* Position promise cards in the photo's empty zones:
+	   top strip (plants/cabinet) and bottom strip (table with pencils).
+	   Faces and bodies live in the middle band and are left clear. */
+	.stage :global(.promise.p1) { top: 3%; left: 2%; }        /* top-left, on plant above daughter */
+	.stage :global(.promise.p2) { top: 31%; left: 79%; }      /* right side, beside dad on cabinet */
+	.stage :global(.promise.p3) { bottom: 3%; left: 32%; }    /* bottom-center, on table among pencils */
+
+	@media (max-width: 60rem) {
+		.stage :global(.promise) {
+			position: relative !important;
+			top: auto !important;
+			left: auto !important;
+			right: auto !important;
+			bottom: auto !important;
+			margin: 0.75rem auto;
+			width: 90% !important;
+			transform: none !important;
+			animation: none !important;
+		}
+		.stage { padding: 1rem; }
+		.photo { position: absolute; inset: 0; }
+		.photo.placeholder { position: absolute; inset: 0; }
+	}
+
+	.chip {
+		position: absolute;
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		border-radius: 100px;
+		padding: 6px 12px;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		color: var(--budgeteer-primary);
+		letter-spacing: 0.08em;
+		box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+		z-index: 4;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		animation: budgeteer-float 6s ease-in-out infinite;
+	}
+	.chip svg { color: var(--budgeteer-vibrant); }
+	/* Chips also live in clean strips only. */
+	.chip-a { --budgeteer-rot: rotate(-4deg); transform: var(--budgeteer-rot); bottom: 8%; left: 5%; animation-delay: -1s; }
+	.chip-b { --budgeteer-rot: rotate(2deg); transform: var(--budgeteer-rot); top: 2%; right: 4%; animation-delay: -3s; }
+	@media (max-width: 60rem) {
+		.chip { display: none; }
+	}
+</style>

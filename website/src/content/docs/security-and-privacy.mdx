@@ -1,0 +1,84 @@
+---
+title: Security & privacy
+description: The full story on how Budgeteer handles your credentials, transactions, and AI queries.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="REFERENCE"
+  titleBold="Security &"
+  titleItalic="privacy."
+  lede="Where data lives, who can read it, and what happens when something goes wrong."
+/>
+
+Budgeteer is built to be the kind of finance app you'd actually trust with your bank password. That means a clear story.
+
+## What Budgeteer stores, and where
+
+Everything Budgeteer saves lives inside the `data/` folder of your install directory. Two files:
+
+- **`data/budgeteer.db`** — a SQLite database with your encrypted bank credentials, transactions, categories, and settings.
+- **`data/.encryption-key`** — a 32-byte random key generated on first run.
+
+Both files are local. Budgeteer never uploads them. There is no "Budgeteer cloud."
+
+## How credentials are encrypted
+
+Bank passwords (and your Claude API key, if you use one) are encrypted with **AES-256-GCM** before being written to the database. The 32-byte key in `data/.encryption-key` is the one used to encrypt and decrypt.
+
+This means:
+
+- If someone copies just `data/budgeteer.db` off your computer, they cannot read your passwords.
+- If you delete `data/.encryption-key`, your saved credentials are unrecoverable — the next sync will fail until you re-enter passwords.
+
+<Callout variant="gotcha">
+**For backups: copy both files together** and treat the encryption key like a password.
+</Callout>
+
+## What goes over the network
+
+Three kinds of traffic happen during a sync:
+
+1. **Bank logins** — Budgeteer opens a headless Chromium tab and logs into your bank's website using the credentials you provided. This traffic goes directly between your computer and your bank.
+2. **AI categorization** — if you chose Claude, **only the merchant name and amount** of each new transaction are sent to Anthropic's API in batches of 50. Your bank credentials are never sent. If you chose Ollama, this traffic stays on your machine.
+3. **No analytics, no telemetry, no crash reports.** Budgeteer does not phone home. Ever.
+
+## The threat model
+
+<Callout variant="note">
+**Protects against:** a casual attacker who reads your database file (without the key, passwords stay encrypted). An attacker with the key alone but no DB. Network eavesdroppers (all traffic is HTTPS).
+</Callout>
+
+<Callout variant="gotcha">
+**Does NOT protect against:** an attacker with full control of your computer. A malicious npm dependency. These are true of every local app.
+</Callout>
+
+## The bank-side risk
+
+Logging into your bank's website with an automation tool is **not the same** as using the official app. Banks may, in principle:
+
+- Lock your account temporarily if fraud detection sees something unusual.
+- Terminate your relationship with them if they consider it a breach of terms.
+
+In practice, this is rare for read-only scraping that happens infrequently. But it's a real risk and you should know about it. Read the [Disclaimer](/budgeteer/disclaimer) for the full version.
+
+## Reporting a vulnerability
+
+If you find a security issue, please **don't** open a public issue. Email the maintainer (address in `SECURITY.md` in the repo). We'll respond within 72 hours.
+
+For non-security bugs, [GitHub Issues](https://github.com/barad-side-hustle/budgeteer/issues) is the right place.
+
+## Auditing the code yourself
+
+Budgeteer is open source. Relevant files:
+
+- `src/server/lib/encryption.ts` — the AES-256-GCM helpers.
+- `src/server/scrapers/index.ts` — the bank scraping wrapper.
+- `src/server/ai/prompts.ts` — the exact prompt sent to AI providers.
+
+You are encouraged to read it, and to fork it.
+
+<NextStepCard href="/budgeteer/disclaimer" title="Disclaimer" />

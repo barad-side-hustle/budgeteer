@@ -1,0 +1,113 @@
+---
+title: Install on Windows
+description: Three commands. The setup script handles the rest.
+---
+
+import DocsHero from '../../../components/docs/DocsHero.astro';
+import StepList from '../../../components/docs/StepList.astro';
+import StepItem from '../../../components/docs/StepItem.astro';
+import Callout from '../../../components/docs/Callout.astro';
+import ForDevelopers from '../../../components/docs/ForDevelopers.astro';
+import NextStepCard from '../../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="INSTALL · WINDOWS"
+  titleBold="Install Budgeteer"
+  titleItalic="on Windows."
+  lede="Three commands. The setup script handles the service, the menubar, and the auto-start."
+/>
+
+## What you'll need
+
+- Windows 10 or 11.
+- About **500 MB** of disk space (plus ~200 MB for the .NET 8 SDK if you don't have it).
+- Your bank login credentials.
+- An **elevated PowerShell** (right-click → *Run as Administrator*) for the first run, so setup can edit `hosts` and register the service.
+
+<StepList>
+
+<StepItem i={1} title="Install Node.js">
+
+Go to **[nodejs.org](https://nodejs.org)**, download the **Windows Installer (.msi)** for the **LTS** version, and run it.
+
+When the installer asks *"Automatically install the necessary tools"* near the end, **leave that box unchecked** — Budgeteer's setup will handle the right build tools for you.
+
+</StepItem>
+
+<StepItem i={2} title="Get Budgeteer">
+
+Open **PowerShell** (as Administrator) and clone:
+
+```powershell
+git clone https://github.com/barad-side-hustle/budgeteer.git $env:USERPROFILE\Budgeteer
+cd $env:USERPROFILE\Budgeteer
+```
+
+No Git? Install it with `winget install Git.Git`, restart PowerShell, then run the clone above.
+
+</StepItem>
+
+<StepItem i={3} title="Install and run setup">
+
+```powershell
+npm install
+npm run setup
+```
+
+`npm install` takes 3-5 minutes the first time. `npm run setup` does everything else: builds the app, registers the Windows service, builds the tray icon, places startup shortcuts, and opens the dashboard.
+
+</StepItem>
+
+</StepList>
+
+<Callout variant="note">
+**Setup may pause to install the .NET 8 SDK** via `winget` if it's not present (~200 MB, 2-5 min). The SDK is needed to build the tray app. Decline if you want to skip the tray; the web app still installs.
+</Callout>
+
+<Callout variant="gotcha">
+**Not running as Administrator?** Setup will continue, but skip the hosts entry. `http://127.0.0.1:2412` still works; `http://budgeteer.local:2412` won't resolve. Re-run setup from an elevated shell later to add the friendly hostname.
+</Callout>
+
+<ForDevelopers summary="What `npm run setup` actually does">
+
+On Windows, in order:
+
+1. **Builds the Next.js app** (`npm run build`).
+2. **Adds `127.0.0.1 budgeteer.local` to `C:\Windows\System32\drivers\etc\hosts`** (skipped if not elevated).
+3. **Registers a Task Scheduler logon trigger** that runs `next start -H 127.0.0.1 -p 2412` whenever you log in. Server is only reachable from loopback.
+4. **Builds `Budgeteer.exe`** from `menubar/windows/` (C#, .NET 8). Auto-installs the SDK via `winget install Microsoft.DotNet.SDK.8` if missing.
+5. **Copies `Budgeteer.exe` to `%LOCALAPPDATA%\Programs\Budgeteer\`** and drops a `.lnk` in `shell:startup` so the tray app shows up after reboot.
+6. **Polls `/api/health`** until ready, then opens the browser.
+
+Source: `scripts/setup.mjs`.
+
+</ForDevelopers>
+
+## First launch
+
+Windows Defender may flag the unsigned tray binary on first run:
+
+<Callout variant="gotcha">
+*"Windows protected your PC"* — Click **More info → Run anyway**. The binary is built from the source code in `menubar/windows/` and you can inspect it before running.
+</Callout>
+
+## Day-to-day commands
+
+```powershell
+npm run service:status   # is the background service running?
+npm run service:start    # start it
+npm run service:stop     # stop it
+npm run service:reload   # rebuild + restart
+npm run service:logs     # tail the server logs
+npm run service:open     # open the dashboard
+```
+
+## Uninstall
+
+```powershell
+npm run uninstall
+```
+
+Removes the service, hosts entry, tray binary, and startup shortcut. Your `data/` folder is preserved.
+
+<NextStepCard href="/budgeteer/connect-bank" title="Connect your bank" />

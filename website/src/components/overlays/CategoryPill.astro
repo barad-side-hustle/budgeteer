@@ -1,0 +1,42 @@
+---
+interface Props {
+	name: string;
+	color: string;
+	percentage?: string;
+	rotate?: number;
+	delay?: number;
+	class?: string;
+}
+const { name, color, percentage, rotate = 3, delay = 0, class: className = '' } = Astro.props;
+const style = `--budgeteer-rot: rotate(${rotate}deg); transform: var(--budgeteer-rot); animation-delay: ${delay}s;`;
+---
+<div class={`overlay-card overlay-cat ${className}`} style={style}>
+	<span class="dot" style={`background: ${color};`} aria-hidden="true"></span>
+	<span class="name">{name}</span>
+	{percentage && <span class="pct">{percentage}</span>}
+</div>
+
+<style>
+	.overlay-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 100px;
+		padding: 10px 14px;
+		box-shadow: var(--budgeteer-shadow-overlay);
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.75rem;
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+	.name { font-weight: 600; color: var(--budgeteer-fg); }
+	.pct {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		color: var(--budgeteer-fg-muted);
+		margin-left: 4px;
+	}
+</style>

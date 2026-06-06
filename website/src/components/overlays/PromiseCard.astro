@@ -1,0 +1,93 @@
+---
+interface Props {
+	title: string;
+	body: string;
+	badge: string;
+	icon: 'computer' | 'lock' | 'sparkle';
+	rotate?: number;
+	delay?: number;
+	class?: string;
+}
+const { title, body, badge, icon, rotate = -2, delay = 0, class: className = '' } = Astro.props;
+const style = `--budgeteer-rot: rotate(${rotate}deg); transform: var(--budgeteer-rot); animation-delay: ${delay}s;`;
+---
+<div class={`overlay-card promise ${className}`} style={style}>
+	<div class="icon" aria-hidden="true">
+		{icon === 'computer' && (
+			<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+				<rect x="2" y="3" width="20" height="14" rx="2"/>
+				<line x1="8" y1="21" x2="16" y2="21"/>
+				<line x1="12" y1="17" x2="12" y2="21"/>
+			</svg>
+		)}
+		{icon === 'lock' && (
+			<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+				<rect x="3" y="11" width="18" height="11" rx="2"/>
+				<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+			</svg>
+		)}
+		{icon === 'sparkle' && (
+			<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="12" cy="12" r="4"/>
+				<path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+			</svg>
+		)}
+	</div>
+	<h4>{title}</h4>
+	<p>{body}</p>
+	<span class="badge">{badge}</span>
+</div>
+
+<style>
+	.overlay-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 14px;
+		padding: 14px 16px;
+		box-shadow: 0 28px 60px -22px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		z-index: 5;
+		width: 196px;
+		animation: budgeteer-float 6s ease-in-out infinite;
+	}
+	.icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+		background: var(--budgeteer-vibrant);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 9px;
+		color: var(--budgeteer-primary);
+	}
+	.icon svg { width: 20px; height: 20px; }
+	h4 {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-weight: 500;
+		font-size: 1.0625rem;
+		margin: 0 0 4px;
+		color: var(--budgeteer-fg);
+		line-height: 1.2;
+	}
+	p {
+		font-size: 0.7rem;
+		line-height: 1.45;
+		margin: 0;
+		color: var(--budgeteer-fg-muted);
+	}
+	.badge {
+		margin-top: 8px;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5rem;
+		color: var(--budgeteer-vibrant);
+		letter-spacing: 0.1em;
+		background: rgba(40, 199, 91, 0.12);
+		padding: 3px 7px;
+		border-radius: 100px;
+	}
+</style>

@@ -1,0 +1,77 @@
+---
+title: Categories & budgets
+description: How Budgeteer groups your spending, sets targets, and detects transfers.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="USING SPENT"
+  titleBold="Categories"
+  titleItalic="and budgets."
+  lede="How Budgeteer groups your spending, where the colors come from, and how 'ahead of pace' is calculated."
+/>
+
+## The category set
+
+Budgeteer ships with 16 curated categories:
+
+- *Groceries*
+- *Restaurants*
+- *Transport*
+- *Shopping*
+- *Entertainment*
+- *Health*
+- *Education*
+- *Bills & Utilities*
+- *Subscriptions*
+- *Travel*
+- *Cash & ATM*
+- *Transfers*
+- *Insurance*
+- *Home*
+- *Personal Care*
+- *Uncategorized* (the fallback)
+
+Each has its own color, used everywhere in the dashboard (badges, charts, the budget card).
+
+<Callout variant="note">
+Custom categories are planned for v2. For now, the set is fixed — you can't add or rename.
+</Callout>
+
+## Re-categorizing
+
+Click any category badge in the transactions list to change it. Budgeteer remembers the correction and applies it the next time it sees a similar merchant.
+
+## Merchant memory
+
+Once you correct an AI categorization, Budgeteer caches the merchant-to-category mapping. The next batch of transactions from the same merchant goes straight to the right category without another call to the AI.
+
+This is how Budgeteer stays cheap on Claude — most ongoing sync calls only categorize *new* merchants.
+
+## Budget pacing
+
+The *Budget* area of the dashboard shows a "spent this month vs. target" view, with a hero card calling out whether you're **on track**, **heads-up** (over the daily pace), or **over** (already past target).
+
+The math:
+
+- *Daily pace* = monthly target ÷ days in the month.
+- *Expected so far* = daily pace × days elapsed.
+- If *spent so far* > *expected so far*: heads-up.
+- If *spent so far* > *target*: over.
+
+Set targets per category in *Settings → Budgets*.
+
+## Auto-detected transfers
+
+Credit card payments (e.g. an Isracard bill paid from your Hapoalim account) show up twice — once as the card statement, once as the bank withdrawal. Budgeteer's matching pass detects these and categorizes them as *Transfers* so they're excluded from spending totals.
+
+The same logic handles inter-account moves between two banks you've connected.
+
+<Callout variant="note">
+If you spot a real expense miscategorized as a transfer, re-categorize it manually. Budgeteer will not "correct itself" in the other direction — your manual choice wins.
+</Callout>
+
+<NextStepCard href="/budgeteer/hebrew-and-rtl" title="Hebrew & RTL" />

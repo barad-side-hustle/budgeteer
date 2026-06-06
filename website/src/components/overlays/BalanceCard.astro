@@ -1,0 +1,71 @@
+---
+interface Props {
+	label: string;
+	amount: string;
+	trend?: string;
+	dark?: boolean;
+	rotate?: number;
+	delay?: number;
+	class?: string;
+}
+const { label, amount, trend, dark = false, rotate = 2, delay = 0, class: className = '' } = Astro.props;
+const style = `--budgeteer-rot: rotate(${rotate}deg); transform: var(--budgeteer-rot); animation-delay: ${delay}s;`;
+---
+<div class={`overlay-card overlay-balance ${dark ? 'dark' : ''} ${className}`} style={style}>
+	<div class="lr">{label}</div>
+	<div class="amount">{amount}</div>
+	{trend && (
+		<div class="trend">
+			<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<path d="M7 14l5-5 5 5z"/>
+			</svg>
+			{trend}
+		</div>
+	)}
+</div>
+
+<style>
+	.overlay-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 12px;
+		padding: 16px 20px;
+		box-shadow: var(--budgeteer-shadow-overlay);
+		font-family: var(--budgeteer-font-sans);
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		min-width: 170px;
+	}
+	.overlay-card.dark {
+		background: #1A2A20;
+		color: #fff;
+		box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.6);
+	}
+	.lr {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5625rem;
+		color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		margin-bottom: 6px;
+	}
+	.overlay-card.dark .lr { color: rgba(255, 255, 255, 0.5); }
+	.amount {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-size: 1.75rem;
+		color: var(--budgeteer-fg);
+		font-weight: 500;
+		line-height: 1;
+	}
+	.overlay-card.dark .amount { color: #fff; }
+	.trend {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		color: var(--budgeteer-vibrant);
+		margin-top: 4px;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+	}
+</style>

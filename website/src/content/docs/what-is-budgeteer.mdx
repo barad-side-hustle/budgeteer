@@ -1,0 +1,45 @@
+---
+title: What is Budgeteer?
+description: One-pager about the project, philosophy, and trade-offs.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="WELCOME"
+  titleBold="A finance tracker"
+  titleItalic="for Israel."
+  lede="Lives on your computer, talks directly to your bank, and quietly keeps your finances in order."
+/>
+
+## Why Budgeteer exists
+
+Israeli banks have terrible exports. YNAB doesn't speak ILS gracefully. Every "cloud finance" app wants you to hand over your bank password to a server you don't control. Budgeteer is the answer for people who'd rather just run something on their own laptop.
+
+Your transactions are pulled directly from your bank with the open-source [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers) library, stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider **you choose**: paid Claude (Anthropic), free local Ollama, or nothing at all.
+
+## The trade-off, honestly
+
+You self-host. You trust the scraper. You accept that banks may not love automation — some restrict it in their terms.
+
+In return you get a fast, beautiful, fully offline dashboard that never phones home.
+
+<Callout variant="gotcha">
+Budgeteer is **read-only**. It cannot transfer funds, pay bills, or change settings inside your bank account. It only reads transaction data the bank's website already shows you.
+</Callout>
+
+## Architecture, in one sentence
+
+A Next.js app + a SQLite file + a headless Chromium tab that drives your bank's login + your choice of AI for categorization, all on `127.0.0.1`.
+
+## Status
+
+**Beta.** Built by [Alon Barad](https://github.com/alon710) for personal use first and then released. MIT licensed. Issues and PRs welcome on [GitHub](https://github.com/barad-side-hustle/budgeteer).
+
+Things that work today: Isracard, Hapoalim, Max, Visa Cal, Leumi, Mizrahi, Discount, FIBI group, Yahav, One Zero (with OTP), Beyahad Bishvilha. Light + dark themes. Hebrew + English UI.
+
+Things that don't yet: custom categories, exports, multi-user, mobile.
+
+<NextStepCard href="/budgeteer/install/mac" title="Install on macOS" />

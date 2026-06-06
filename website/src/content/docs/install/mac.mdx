@@ -1,0 +1,116 @@
+---
+title: Install on macOS
+description: Three commands, about ten minutes.
+---
+
+import DocsHero from '../../../components/docs/DocsHero.astro';
+import StepList from '../../../components/docs/StepList.astro';
+import StepItem from '../../../components/docs/StepItem.astro';
+import Callout from '../../../components/docs/Callout.astro';
+import ForDevelopers from '../../../components/docs/ForDevelopers.astro';
+import NextStepCard from '../../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="INSTALL · MACOS"
+  titleBold="Install Budgeteer"
+  titleItalic="on your Mac."
+  lede="Three commands, about ten minutes. Budgeteer will install itself as a background service and put a small icon in your menu bar."
+/>
+
+## What you'll need
+
+- macOS 12 (Monterey) or newer.
+- About **500 MB** of disk space.
+- Your bank login credentials (have them ready).
+
+<StepList>
+
+<StepItem i={1} title="Install Node.js">
+
+Budgeteer runs on Node.js, a small runtime you install once. Go to **[nodejs.org](https://nodejs.org)**, download the **LTS** installer for macOS, and run it. Click through the defaults.
+
+If you prefer Homebrew:
+
+```sh
+brew install node@20
+```
+
+</StepItem>
+
+<StepItem i={2} title="Get Budgeteer">
+
+Open **Terminal** (in *Applications → Utilities*) and clone the repo:
+
+```sh
+git clone https://github.com/barad-side-hustle/budgeteer.git ~/budgeteer
+cd ~/budgeteer
+```
+
+No Git? Install it first with `brew install git` (after [installing Homebrew](https://brew.sh)), then run the clone above.
+
+</StepItem>
+
+<StepItem i={3} title="Install and run setup">
+
+```sh
+npm install
+npm run setup
+```
+
+`npm install` takes 2-3 minutes the first time. `npm run setup` does everything else: builds the app, installs the background service, builds the menubar, registers everything to start at login, and opens the dashboard.
+
+</StepItem>
+
+</StepList>
+
+<Callout variant="note">
+**Setup may pause to install Xcode Command Line Tools** if you don't have them yet. That's a 1 GB, 5-15 minute system download. You can say no and skip the menubar (web app still installs). Re-run `npm run setup` later to add it.
+</Callout>
+
+<ForDevelopers summary="What `npm run setup` actually does">
+
+In order:
+
+1. **Builds the Next.js app** (`npm run build`).
+2. **Adds `127.0.0.1 budgeteer.local` to `/etc/hosts`** so you can reach the dashboard at `http://budgeteer.local:2412`. Asks for `sudo` once.
+3. **Registers a LaunchAgent** at `~/Library/LaunchAgents/io.budgeteer.app.plist` that starts the server on login. Server binds to `127.0.0.1:2412` only.
+4. **Builds `Budgeteer.app`** from `menubar/mac/` (Swift). Needs Xcode Command Line Tools (offered for install if missing).
+5. **Copies `Budgeteer.app` to `~/Applications/`** and registers it as a Login Item so the menubar shows up after reboot.
+6. **Polls `/api/health`** until the server is ready, then opens the browser.
+
+Source: `scripts/setup.mjs`.
+
+</ForDevelopers>
+
+## First launch
+
+The first time you click the menubar icon, macOS Gatekeeper will balk:
+
+<Callout variant="gotcha">
+*"Budgeteer.app can't be opened because it is from an unidentified developer."* — Right-click `Budgeteer.app` in `~/Applications`, choose **Open**, then **Open** in the dialog. After the first launch, double-click works normally.
+</Callout>
+
+## Day-to-day commands
+
+Once installed, you mostly forget the terminal. But these are useful:
+
+```sh
+npm run service:status   # is the background service running?
+npm run service:start    # start it
+npm run service:stop     # stop it
+npm run service:reload   # rebuild + restart (after a code change)
+npm run service:logs     # tail the server logs
+npm run service:open     # open the dashboard in the browser
+```
+
+## Uninstall
+
+To remove the service, hosts entry, menubar, and login item:
+
+```sh
+npm run uninstall
+```
+
+Your `data/` folder is left alone so you can reinstall later.
+
+<NextStepCard href="/budgeteer/connect-bank" title="Connect your bank" />

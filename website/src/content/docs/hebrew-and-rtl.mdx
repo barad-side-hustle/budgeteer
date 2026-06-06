@@ -1,0 +1,51 @@
+---
+title: Hebrew & RTL
+description: Switching Budgeteer to Hebrew and how the right-to-left layout works.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="USING SPENT"
+  titleBold="Hebrew"
+  titleItalic="& RTL."
+  lede="Budgeteer's UI is available in Hebrew with full right-to-left layout. Switch any time."
+/>
+
+## Switching language
+
+*Settings → Preferences → Language* gives you two options:
+
+- **English** (left-to-right)
+- **עברית** (right-to-left)
+
+Your choice is saved per browser via `localStorage`.
+
+## What flips
+
+- **Layout direction** — sidebar moves to the right; tables, badges, and breadcrumbs all flip.
+- **Dates** — formatted Israeli-style (`17.5.2026` rather than `5/17/2026`).
+- **Numbers** — currency still leads with `₪` but commas and digit grouping match Hebrew conventions.
+- **Category names** — translated.
+
+## What does not flip
+
+- **Bank logos** — kept as-is, since logos have a "correct" reading direction baked in.
+- **The screenshots in these docs** — left as English so the docs read consistently. The Hebrew layout looks like a mirror of these screenshots.
+- **Merchant names** — preserved as the bank reports them. A Hebrew merchant stays Hebrew, an English one stays English.
+
+<Callout variant="note">
+The transaction list mixes scripts naturally: Hebrew merchants like "ארומה" sit next to English ones like "Wolt" in the same list. The list direction is RTL when the UI is in Hebrew, but each merchant name renders in its native direction.
+</Callout>
+
+## Known limitations
+
+- Tooltips in Hebrew can wrap awkwardly on very narrow screens.
+- Charts (Recharts) don't fully mirror — the y-axis stays on the left.
+- Date inputs in some browsers still pop their picker in LTR.
+
+If any of these block you, please file an issue on [GitHub](https://github.com/barad-side-hustle/budgeteer/issues).
+
+<NextStepCard href="/budgeteer/troubleshooting" title="Troubleshooting" />

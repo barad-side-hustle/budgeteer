@@ -1,0 +1,81 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<aside class="disclaimer-band" role="note">
+	<div class="budgeteer-wrap row">
+		<div class="badge" aria-hidden="true">
+			<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+				<line x1="12" y1="9" x2="12" y2="13"/>
+				<line x1="12" y1="17" x2="12.01" y2="17"/>
+			</svg>
+			<span>Heads-up</span>
+		</div>
+		<p>
+			Budgeteer automates your bank's own website on your behalf — some banks restrict this in their
+			terms, and you're responsible for using it within them. The app never moves money.
+			<a href={`${base}/disclaimer`}>Read the full disclaimer →</a>
+		</p>
+	</div>
+</aside>
+
+<style>
+	.disclaimer-band {
+		background: var(--budgeteer-bg-soft);
+		border-top: 1px solid var(--budgeteer-border);
+		border-bottom: 1px solid var(--budgeteer-border);
+		padding: 0.85rem 0;
+		font-family: var(--budgeteer-font-sans);
+	}
+	.row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		align-items: flex-start;
+	}
+	@media (min-width: 50rem) {
+		.row {
+			flex-direction: row;
+			align-items: center;
+			gap: 1rem;
+		}
+	}
+
+	.badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.7rem;
+		border-radius: 100px;
+		background: rgba(255, 139, 106, 0.15);
+		color: var(--budgeteer-orange);
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.65rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		font-weight: 600;
+		flex-shrink: 0;
+	}
+	.badge svg { color: var(--budgeteer-orange); }
+
+	.disclaimer-band p {
+		margin: 0;
+		font-size: 0.825rem;
+		line-height: 1.55;
+		color: var(--budgeteer-fg-muted);
+	}
+
+	.disclaimer-band a {
+		color: var(--budgeteer-primary);
+		font-weight: 500;
+		text-decoration: underline;
+		text-decoration-color: var(--budgeteer-vibrant);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 3px;
+		white-space: nowrap;
+	}
+	.disclaimer-band a:hover {
+		color: var(--budgeteer-primary-dark);
+		text-decoration-thickness: 3px;
+	}
+</style>

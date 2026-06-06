@@ -1,0 +1,25 @@
+---
+interface Props {
+  eyebrow: string;
+  title: string;
+  desc: string;
+  href: string;
+  accent?: 'vibrant' | 'pink' | 'blue' | 'orange' | 'sage';
+  arrow?: string;
+}
+const { eyebrow, title, desc, href, accent = 'sage', arrow = 'Read →' } = Astro.props;
+
+const accentVar = {
+  vibrant: 'var(--budgeteer-vibrant)',
+  pink: 'var(--budgeteer-pink)',
+  blue: 'var(--budgeteer-blue)',
+  orange: 'var(--budgeteer-orange)',
+  sage: 'var(--budgeteer-primary)',
+}[accent];
+---
+<a class="docs-card" href={href} style={`--card-accent: ${accentVar};`}>
+  <span class="eyebrow">{eyebrow}</span>
+  <h3 class="title">{title}</h3>
+  <p class="desc">{desc}</p>
+  <span class="arrow">{arrow}</span>
+</a>

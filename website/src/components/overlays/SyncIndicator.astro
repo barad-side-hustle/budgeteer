@@ -1,0 +1,50 @@
+---
+interface Props {
+	title: string;
+	detail?: string;
+	rotate?: number;
+	delay?: number;
+	class?: string;
+}
+const { title, detail, rotate = 3, delay = 0, class: className = '' } = Astro.props;
+const style = `--budgeteer-rot: rotate(${rotate}deg); transform: var(--budgeteer-rot); animation-delay: ${delay}s;`;
+---
+<div class={`overlay-card overlay-sync ${className}`} style={style}>
+	<span class="pulse-dot" aria-hidden="true"></span>
+	<div class="body">
+		<div class="title">{title}</div>
+		{detail && <div class="detail">{detail}</div>}
+	</div>
+</div>
+
+<style>
+	.overlay-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 12px;
+		padding: 12px 14px;
+		box-shadow: var(--budgeteer-shadow-overlay);
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.75rem;
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.pulse-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+		animation: budgeteer-pulse 2s infinite;
+		flex-shrink: 0;
+	}
+	.body { display: flex; flex-direction: column; gap: 2px; }
+	.title { color: var(--budgeteer-fg); font-weight: 500; }
+	.detail {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		color: var(--budgeteer-fg-muted);
+	}
+</style>

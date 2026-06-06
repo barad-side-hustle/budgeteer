@@ -1,0 +1,60 @@
+---
+interface Props {
+	label: string;
+	text: string;
+	rotate?: number;
+	delay?: number;
+	class?: string;
+}
+const { label, text, rotate = -1, delay = 0, class: className = '' } = Astro.props;
+const style = `--budgeteer-rot: rotate(${rotate}deg); transform: var(--budgeteer-rot); animation-delay: ${delay}s;`;
+---
+<div class={`overlay-card overlay-ai ${className}`} style={style}>
+	<div class="star" aria-hidden="true">
+		<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+			<path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/>
+		</svg>
+	</div>
+	<div class="body">
+		<span class="lr">{label}</span>
+		<span class="sug">{text}</span>
+	</div>
+</div>
+
+<style>
+	.overlay-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 12px;
+		padding: 12px 14px;
+		box-shadow: var(--budgeteer-shadow-overlay);
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.75rem;
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-width: 220px;
+	}
+	.star {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: var(--budgeteer-primary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		color: var(--budgeteer-vibrant);
+	}
+	.body { display: flex; flex-direction: column; gap: 2px; }
+	.lr {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5625rem;
+		color: var(--budgeteer-vibrant);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+	.sug { font-weight: 500; color: var(--budgeteer-fg); }
+</style>

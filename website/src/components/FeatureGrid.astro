@@ -1,0 +1,188 @@
+---
+const features = [
+	{
+		code: '01 / SCRAPE',
+		title: 'Scrapes 18 banks',
+		body: 'Real bank logins in a headless browser on a schedule. Israeli banks and cards covered.',
+		color: 'vibrant',
+		icon: 'check',
+	},
+	{
+		code: '02 / SSE',
+		title: 'Watch it sync',
+		body: 'Real-time progress as Budgeteer talks to your bank, transaction by transaction.',
+		color: 'pink',
+		icon: 'refresh',
+	},
+	{
+		code: '03 / AI',
+		title: 'Batch categorize',
+		body: 'Up to 50 transactions per AI call. Claude or local Ollama. Faster, cheaper, smarter.',
+		color: 'blue',
+		icon: 'star',
+	},
+	{
+		code: '04 / FX',
+		title: 'Multi-currency aware',
+		body: 'ILS, USD, EUR — each transaction tagged with its original currency.',
+		color: 'orange',
+		icon: 'globe',
+	},
+];
+---
+<section class="features budgeteer-fade-up">
+	<div class="deco deco-blob-pink" aria-hidden="true"></div>
+	<div class="deco deco-dot-vibrant" aria-hidden="true"></div>
+	<div class="deco deco-ring-orange" aria-hidden="true"></div>
+
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">More than meets the eye</div>
+			<h2 class="display">
+				<span class="budgeteer-sans-bold">Small details,</span>
+				<span class="budgeteer-serif-ital">considered.</span>
+			</h2>
+		</div>
+
+		<div class="grid">
+			{features.map((f) => (
+				<article class="card">
+					<div class={`icon bg-${f.color}`} aria-hidden="true">
+						{f.icon === 'check' && (
+							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="20 6 9 17 4 12"/>
+							</svg>
+						)}
+						{f.icon === 'refresh' && (
+							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M21 12a9 9 0 1 1-3.5-7.1"/>
+								<polyline points="21 4 21 10 15 10"/>
+							</svg>
+						)}
+						{f.icon === 'star' && (
+							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<polygon points="12 2 15 8.5 22 9.3 17 14 18.2 21 12 17.8 5.8 21 7 14 2 9.3 9 8.5 12 2"/>
+							</svg>
+						)}
+						{f.icon === 'globe' && (
+							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="12" cy="12" r="10"/>
+								<line x1="2" y1="12" x2="22" y2="12"/>
+								<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+							</svg>
+						)}
+					</div>
+					<div class="copy">
+						<div class="code">{f.code}</div>
+						<h3>{f.title}</h3>
+						<p>{f.body}</p>
+					</div>
+				</article>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.features {
+		padding: 5rem 0;
+		background: var(--budgeteer-bg);
+		border-bottom: 1px solid var(--budgeteer-border);
+		position: relative;
+		overflow: hidden;
+	}
+	.deco {
+		position: absolute;
+		pointer-events: none;
+	}
+	.deco-blob-pink {
+		top: 12%; right: 6%;
+		width: 64px; height: 64px;
+		border-radius: 50%;
+		background: var(--budgeteer-pink);
+	}
+	.deco-dot-vibrant {
+		bottom: 20%; left: 7%;
+		width: 14px; height: 14px;
+		border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+	}
+	.deco-ring-orange {
+		top: 28%; left: 4%;
+		width: 48px; height: 48px;
+		border-radius: 50%;
+		border: 3px solid var(--budgeteer-orange);
+	}
+	@media (max-width: 48rem) {
+		.deco { display: none; }
+	}
+	.intro {
+		max-width: 38rem;
+		margin: 0 auto 2rem;
+		text-align: center;
+	}
+	.display {
+		font-size: clamp(1.9rem, 3.8vw, 2.6rem);
+		line-height: 1.05;
+		margin: 0;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 0.85rem;
+	}
+	@media (min-width: 50rem) {
+		.grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+	}
+	.card {
+		background: var(--budgeteer-card);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: var(--budgeteer-radius);
+		padding: 1.4rem;
+		font-family: var(--budgeteer-font-sans);
+		display: grid;
+		grid-template-columns: 48px 1fr;
+		gap: 1rem;
+		align-items: center;
+		transition: transform 180ms ease, box-shadow 180ms ease;
+	}
+	.card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 14px 30px -22px rgba(31, 77, 51, 0.4);
+	}
+	.icon {
+		width: 48px;
+		height: 48px;
+		border-radius: 12px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+	.icon.bg-vibrant { background: var(--budgeteer-vibrant); color: var(--budgeteer-primary); }
+	.icon.bg-pink    { background: var(--budgeteer-pink);    color: #fff; }
+	.icon.bg-blue    { background: var(--budgeteer-blue);    color: #fff; }
+	.icon.bg-orange  { background: var(--budgeteer-orange);  color: #fff; }
+
+	.code {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		color: var(--budgeteer-primary);
+		letter-spacing: 0.1em;
+		margin-bottom: 0.2rem;
+	}
+	.card h3 {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-weight: 500;
+		font-size: 1.15rem;
+		margin: 0 0 0.25rem;
+		color: var(--budgeteer-fg);
+	}
+	.card p {
+		font-size: 0.8rem;
+		line-height: 1.55;
+		color: var(--budgeteer-fg-muted);
+		margin: 0;
+	}
+</style>

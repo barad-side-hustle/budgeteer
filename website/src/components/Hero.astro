@@ -1,0 +1,516 @@
+---
+import CategoryPill from './overlays/CategoryPill.astro';
+import AISuggestion from './overlays/AISuggestion.astro';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const REPO_URL = 'https://github.com/barad-side-hustle/budgeteer';
+
+const heroCats = [
+	{ name: 'Home & Bills', amt: '₪3,342', pct: 60, color: '#28C75B' },
+	{ name: 'Lifestyle',    amt: '₪1,138', pct: 38, color: '#F4A8A6' },
+	{ name: 'Food',         amt: '₪678',   pct: 24, color: '#FF8B6A' },
+	{ name: 'Transport',    amt: '₪398',   pct: 13, color: '#4960E5' },
+];
+const heroMonths = [22, 38, 12, 18, 4, 28, 70, 92];
+---
+<section class="hero">
+	<div class="budgeteer-wrap inner">
+		<!-- Scattered flat decorative shapes -->
+		<div class="shape shape-dot-a" aria-hidden="true"></div>
+		<div class="shape shape-dot-b" aria-hidden="true"></div>
+		<div class="shape shape-dot-c" aria-hidden="true"></div>
+		<div class="shape shape-circle-a" aria-hidden="true"></div>
+		<div class="shape shape-circle-b" aria-hidden="true"></div>
+		<div class="shape shape-ring-a" aria-hidden="true"></div>
+		<div class="shape shape-ring-b" aria-hidden="true"></div>
+		<div class="shape shape-cross" aria-hidden="true"></div>
+
+		<!-- OSS chip -->
+		<a class="oss-chip" href={REPO_URL}>
+			<span class="pulse" aria-hidden="true"></span>
+			Free &amp; open source
+			<span class="mono">· MIT</span>
+		</a>
+
+		<div class="budgeteer-eyebrow center">A finance tracker for Israel</div>
+
+		<h1 class="display">
+			<span class="line budgeteer-sans-bold">Money,</span>
+			<span class="line budgeteer-serif-ital">but <u class="budgeteer-accent-u">pleasant</u>.</span>
+		</h1>
+
+		<p class="sub">
+			Lives on your computer, talks directly to your bank, and quietly keeps your finances in order.
+		</p>
+
+		<div class="ctas">
+			<a class="budgeteer-btn budgeteer-btn-primary" href={`${base}/install/mac`}>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<path d="M16.365 1.43c0 1.14-.46 2.27-1.22 3.1-.82.9-2.15 1.6-3.27 1.5-.15-1.1.43-2.27 1.18-3.07.8-.86 2.18-1.5 3.31-1.53zM20.2 17.36c-.55 1.27-.82 1.83-1.52 2.95-.97 1.56-2.36 3.5-4.08 3.51-1.53.01-1.92-1-3.99-.99-2.07.01-2.5 1-4.03.98-1.72-.02-3.04-1.77-4.01-3.33C.07 15.69-.22 10.5 1.41 7.55 2.55 5.5 4.4 4.18 6.45 4.14c1.55-.03 3.01 1.05 3.99 1.05.97 0 2.74-1.3 4.62-1.11.78.03 2.99.31 4.41 2.38-3.88 2.13-3.25 7.71.73 8.9z"/>
+				</svg>
+				Get for Mac
+			</a>
+			<a class="budgeteer-btn budgeteer-btn-ghost" href={`${base}/install/windows`}>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+					<path d="M0 3.5L9.5 2v9.3H0V3.5zm0 8.7h9.5V22L0 20.5v-8.3zM10.5 1.9L24 0v11.3H10.5V1.9zm0 10.3H24V24l-13.5-1.7V12.2z"/>
+				</svg>
+				Get for Windows
+			</a>
+		</div>
+
+		<div class="meta-strip">
+			<span><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>100% local</span>
+			<span><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>No tracking</span>
+			<span><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Self-hosted</span>
+			<span><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>MIT license</span>
+		</div>
+
+		<!-- LAYERED HERO COMPOSITION -->
+		<div class="composition">
+			<!-- Backdrop dotted grid pattern -->
+			<div class="grid-pattern" aria-hidden="true"></div>
+
+			<!-- LEFT widget: Cash Flow -->
+			<div class="hw hw-cash">
+				<div class="hw-eyebrow">CASH FLOW · MAY</div>
+				<div class="hw-cash-row">
+					<span class="hw-l">↗ IN</span>
+					<span class="hw-v hw-pos">₪6,175</span>
+				</div>
+				<div class="hw-cash-row">
+					<span class="hw-l">↘ OUT</span>
+					<span class="hw-v">₪5,599</span>
+				</div>
+				<div class="hw-divider"></div>
+				<div class="hw-cash-row">
+					<span class="hw-l hw-net">NET</span>
+					<span class="hw-v hw-net">+₪576</span>
+				</div>
+			</div>
+
+			<!-- CENTER widget: Dashboard summary (the hero piece) -->
+			<div class="hw hw-dash">
+				<div class="hw-top">
+					<div>
+						<div class="hw-eyebrow">THIS MAY</div>
+						<div class="hw-amount">₪3,154</div>
+					</div>
+					<span class="hw-trend">↓ 12% vs April</span>
+				</div>
+				<div class="hw-bar"><div class="hw-bar-fill" style="width: 73%"></div></div>
+				<div class="hw-meta"><span>73% of ₪4,300</span><span>17 days to payday</span></div>
+
+				<div class="hw-divider"></div>
+
+				<div class="hw-cats">
+					{heroCats.map((c) => (
+						<div class="hw-cat">
+							<span class="hw-cat-dot" style={`background:${c.color}`}></span>
+							<span class="hw-cat-name">{c.name}</span>
+							<div class="hw-cat-bar"><span class="hw-cat-bar-fill" style={`width:${c.pct}%; background:${c.color}`}></span></div>
+							<span class="hw-cat-amt">{c.amt}</span>
+						</div>
+					))}
+				</div>
+
+				<div class="hw-chart">
+					{heroMonths.map((h, i) => (
+						<div class="hw-bar-col" style={`height:${h}%`} data-current={i === heroMonths.length - 1}></div>
+					))}
+				</div>
+			</div>
+
+			<!-- RIGHT-TOP: Donut chart widget -->
+			<div class="hw hw-donut">
+				<div class="hw-eyebrow">BY CATEGORY</div>
+				<div class="hw-donut-stage">
+					<div class="hw-donut-ring"></div>
+					<div class="hw-donut-center">
+						<span class="hw-donut-label">SPENT</span>
+						<span class="hw-donut-amount">₪5,564</span>
+					</div>
+				</div>
+				<div class="hw-donut-legend">
+					<div><span class="d-dot" style="background:#28C75B"></span><span>Groceries</span><strong>35%</strong></div>
+					<div><span class="d-dot" style="background:#F4A8A6"></span><span>Lifestyle</span><strong>30%</strong></div>
+					<div><span class="d-dot" style="background:#FF8B6A"></span><span>Coffee</span><strong>20%</strong></div>
+				</div>
+			</div>
+
+			<!-- RIGHT stack: floating transaction cards -->
+			<div class="hw hw-tx hw-tx-1">
+				<div class="hw-tx-ico" style="background:rgba(255,139,106,0.18); color: #FF8B6A;">☕</div>
+				<div class="hw-tx-body">
+					<span class="hw-tx-name">Aroma · Rothschild</span>
+					<span class="hw-tx-cat" style="color: #FF8B6A;">● Coffee</span>
+				</div>
+				<span class="hw-tx-amt">−₪14.50</span>
+			</div>
+			<div class="hw hw-tx hw-tx-2">
+				<div class="hw-tx-ico" style="background:rgba(40,199,91,0.18); color: var(--budgeteer-vibrant);">🛒</div>
+				<div class="hw-tx-body">
+					<span class="hw-tx-name">Shufersal Deal</span>
+					<span class="hw-tx-cat" style="color: var(--budgeteer-vibrant);">● Groceries</span>
+				</div>
+				<span class="hw-tx-amt">−₪284.20</span>
+			</div>
+
+			<!-- Smaller overlay pills -->
+			<CategoryPill
+				name="Groceries"
+				color="#28C75B"
+				percentage="24%"
+				rotate={-2}
+				delay={-1}
+				class="hero-pill-cat"
+			/>
+			<AISuggestion
+				label="AI CATEGORIZED"
+				text="47 transactions · 0.4s"
+				rotate={2}
+				delay={-3}
+				class="hero-pill-ai"
+			/>
+
+			<!-- Live "syncing" badge -->
+			<div class="sync-pill">
+				<span class="sync-dot"></span>
+				<span>Synced just now</span>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		position: relative;
+		padding: 1.5rem 0 4.5rem;
+		background: var(--budgeteer-bg);
+		overflow: hidden;
+		text-align: center;
+	}
+	@media (min-width: 60rem) {
+		.hero { padding-bottom: 6rem; }
+	}
+	.inner { position: relative; }
+
+	/* === Scattered decorative shapes === */
+	.shape { position: absolute; pointer-events: none; }
+	.shape-dot-a   { top: 60px;  right: 7%;  width: 14px; height: 14px; border-radius: 50%; background: var(--budgeteer-vibrant); }
+	.shape-dot-b   { top: 140px; right: 16%; width: 8px;  height: 8px;  border-radius: 50%; background: var(--budgeteer-orange); }
+	.shape-dot-c   { top: 220px; left: 14%;  width: 10px; height: 10px; border-radius: 50%; background: var(--budgeteer-blue); }
+	.shape-circle-a{ bottom: 24%; left: 3%;  width: 56px; height: 56px; border-radius: 50%; background: var(--budgeteer-pink); opacity: 0.85; }
+	.shape-circle-b{ top: 16%;   left: 4%;   width: 38px; height: 38px; border-radius: 50%; background: var(--budgeteer-vibrant); opacity: 0.2; }
+	.shape-ring-a  { top: 130px; left: 5%;   width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--budgeteer-blue); }
+	.shape-ring-b  { bottom: 18%; right: 4%; width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--budgeteer-orange); }
+	.shape-cross   { top: 50px;  left: 24%;  width: 18px; height: 18px; }
+	.shape-cross::before, .shape-cross::after { content: ''; position: absolute; background: var(--budgeteer-orange); }
+	.shape-cross::before { width: 100%; height: 3px; top: 50%; transform: translateY(-50%); }
+	.shape-cross::after  { width: 3px; height: 100%; left: 50%; transform: translateX(-50%); }
+	@media (max-width: 60rem) {
+		.shape { transform: scale(0.7); }
+	}
+	@media (max-width: 48rem) {
+		.shape { display: none; }
+	}
+
+	/* === Text content === */
+	.oss-chip {
+		display: inline-flex; align-items: center; gap: 0.5rem;
+		padding: 0.35rem 0.85rem;
+		border: 1px solid var(--budgeteer-primary);
+		background: #fff; border-radius: 100px;
+		font-family: var(--budgeteer-font-sans); font-size: 0.7rem;
+		color: var(--budgeteer-primary); font-weight: 500;
+		margin-bottom: 1rem;
+		text-decoration: none;
+		position: relative; z-index: 2;
+	}
+	.oss-chip:hover { background: var(--budgeteer-vibrant); border-color: var(--budgeteer-vibrant); }
+	.oss-chip .pulse {
+		width: 7px; height: 7px; border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+		animation: budgeteer-pulse 2s infinite;
+	}
+	.oss-chip .mono { font-family: var(--budgeteer-font-mono); color: var(--budgeteer-fg-muted); }
+
+	.display {
+		font-size: clamp(2.5rem, 6.5vw, 4.25rem);
+		line-height: 0.98; letter-spacing: -0.02em;
+		margin: 0 0 1.1rem; position: relative; z-index: 2;
+	}
+	.line { display: block; }
+
+	.sub {
+		font-family: var(--budgeteer-font-sans);
+		font-size: clamp(1rem, 1.4vw, 1.05rem);
+		line-height: 1.55; color: var(--budgeteer-fg-muted);
+		max-width: 28rem; margin: 0 auto 1.5rem;
+		position: relative; z-index: 2;
+	}
+
+	.ctas {
+		display: flex; flex-wrap: wrap; gap: 0.65rem;
+		justify-content: center; align-items: center;
+		position: relative; z-index: 2;
+	}
+
+	.meta-strip {
+		display: flex; flex-wrap: wrap; justify-content: center;
+		gap: 1.25rem; margin-top: 1.5rem;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem; color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.1em; text-transform: uppercase;
+		position: relative; z-index: 2;
+	}
+	.meta-strip span { display: inline-flex; align-items: center; gap: 0.4rem; }
+	.meta-strip svg { color: var(--budgeteer-vibrant); }
+
+	/* === Composition area === */
+	.composition {
+		position: relative;
+		max-width: 72rem;
+		margin: 3rem auto 0;
+		padding: 0 1rem;
+		height: 480px;
+	}
+	@media (min-width: 60rem) {
+		.composition { height: 560px; }
+	}
+
+	.grid-pattern {
+		position: absolute;
+		inset: 0;
+		background-image: radial-gradient(circle, rgba(31, 77, 51, 0.08) 1px, transparent 1px);
+		background-size: 24px 24px;
+		mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+		-webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+		pointer-events: none;
+	}
+
+	/* Generic hero widget shell */
+	.hw {
+		position: absolute;
+		background: #fff;
+		border-radius: 14px;
+		padding: 1rem 1.1rem;
+		box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		animation: budgeteer-float 6s ease-in-out infinite;
+		z-index: 3;
+	}
+	.hw-eyebrow {
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		letter-spacing: 0.14em; color: var(--budgeteer-fg-muted);
+		font-weight: 600; margin-bottom: 0.5rem;
+	}
+	.hw-divider { height: 1px; background: var(--budgeteer-border); margin: 0.85rem 0; }
+
+	/* CASH FLOW (left-top) */
+	.hw-cash {
+		width: 190px;
+		top: 10%; left: 2%;
+		transform: rotate(-3deg);
+		animation-delay: -2s;
+	}
+	.hw-cash-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: 0.2rem 0;
+	}
+	.hw-l {
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		letter-spacing: 0.06em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.hw-v {
+		font-family: var(--budgeteer-font-mono); font-size: 0.78rem;
+		color: var(--budgeteer-fg); font-weight: 600;
+	}
+	.hw-pos, .hw-net { color: var(--budgeteer-vibrant); }
+
+	/* DASHBOARD (center-left, biggest) */
+	.hw-dash {
+		width: 400px;
+		left: 22%; top: 3%;
+		transform: rotate(0.5deg);
+		z-index: 4;
+		padding: 1.2rem 1.4rem;
+	}
+	@media (max-width: 60rem) {
+		.hw-dash { left: 50%; transform: translateX(-50%) rotate(0.5deg); width: min(380px, 90%); }
+	}
+	.hw-top {
+		display: flex; justify-content: space-between; align-items: flex-start;
+		margin-bottom: 0.5rem;
+	}
+	.hw-amount {
+		font-family: var(--budgeteer-font-serif); font-style: italic;
+		font-size: 2.4rem; color: var(--budgeteer-fg); font-weight: 500;
+		line-height: 1;
+	}
+	.hw-trend {
+		font-family: var(--budgeteer-font-mono); font-size: 0.65rem;
+		color: var(--budgeteer-vibrant); font-weight: 600;
+		background: rgba(40,199,91,0.15); padding: 4px 9px; border-radius: 100px;
+		align-self: center;
+	}
+	.hw-bar {
+		height: 6px; background: var(--budgeteer-bg-soft);
+		border-radius: 100px; overflow: hidden; margin-bottom: 0.4rem;
+	}
+	.hw-bar-fill { height: 100%; background: var(--budgeteer-vibrant); border-radius: 100px; }
+	.hw-meta {
+		display: flex; justify-content: space-between;
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		color: var(--budgeteer-fg-muted);
+	}
+
+	.hw-cats { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 0.85rem; }
+	.hw-cat {
+		display: grid; grid-template-columns: 10px 1fr 80px auto;
+		gap: 0.5rem; align-items: center; font-size: 0.7rem;
+	}
+	.hw-cat-dot { width: 8px; height: 8px; border-radius: 50%; }
+	.hw-cat-name { color: var(--budgeteer-fg); }
+	.hw-cat-bar {
+		height: 4px; background: var(--budgeteer-bg-soft);
+		border-radius: 100px; overflow: hidden;
+	}
+	.hw-cat-bar-fill { display: block; height: 100%; border-radius: 100px; }
+	.hw-cat-amt {
+		font-family: var(--budgeteer-font-mono); font-size: 0.65rem;
+		color: var(--budgeteer-fg); font-weight: 600;
+	}
+
+	.hw-chart {
+		display: flex; align-items: flex-end; justify-content: space-between;
+		gap: 0.3rem; height: 36px;
+	}
+	.hw-bar-col {
+		flex: 1; background: var(--budgeteer-fg-muted);
+		opacity: 0.4; border-radius: 2px 2px 0 0; min-height: 4px;
+	}
+	.hw-bar-col[data-current="true"] {
+		background: var(--budgeteer-vibrant); opacity: 1;
+	}
+
+	/* TRANSACTIONS (right column, below donut) */
+	.hw-tx {
+		display: grid; grid-template-columns: 28px 1fr auto;
+		gap: 0.5rem; align-items: center;
+		padding: 0.7rem 0.85rem;
+		width: 220px;
+	}
+	.hw-tx-1 { top: 56%; right: 4%; transform: rotate(2deg);  animation-delay: -1s; }
+	.hw-tx-2 { bottom: 8%; right: 1%; transform: rotate(-2deg); animation-delay: -4s; }
+	@media (max-width: 60rem) {
+		.hw-tx-1, .hw-tx-2 { display: none; }
+	}
+
+	/* DONUT (right-top) */
+	.hw-donut {
+		width: 200px;
+		top: 6%; right: 2%;
+		transform: rotate(2deg);
+		animation-delay: -3s;
+		padding: 0.95rem 1rem;
+	}
+	.hw-donut-stage {
+		position: relative;
+		width: 88px; height: 88px;
+		margin: 0 auto 0.7rem;
+	}
+	.hw-donut-ring {
+		width: 100%; height: 100%; border-radius: 50%;
+		background: conic-gradient(
+			var(--budgeteer-vibrant) 0% 35%,
+			var(--budgeteer-pink) 35% 65%,
+			var(--budgeteer-orange) 65% 85%,
+			var(--budgeteer-blue) 85% 100%
+		);
+		-webkit-mask: radial-gradient(circle, transparent 53%, black 54%);
+		        mask: radial-gradient(circle, transparent 53%, black 54%);
+	}
+	.hw-donut-center {
+		position: absolute; inset: 0;
+		display: flex; flex-direction: column;
+		align-items: center; justify-content: center;
+		gap: 2px;
+	}
+	.hw-donut-label {
+		font-family: var(--budgeteer-font-mono); font-size: 0.45rem;
+		letter-spacing: 0.12em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.hw-donut-amount {
+		font-family: var(--budgeteer-font-serif); font-style: italic;
+		font-size: 0.9rem; font-weight: 600; color: var(--budgeteer-fg);
+	}
+	.hw-donut-legend {
+		display: flex; flex-direction: column; gap: 0.3rem;
+		font-size: 0.6rem; color: var(--budgeteer-fg);
+	}
+	.hw-donut-legend > div { display: flex; align-items: center; gap: 0.35rem; }
+	.hw-donut-legend .d-dot {
+		width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+	}
+	.hw-donut-legend > div > span:not(.d-dot) { flex: 1; }
+	.hw-donut-legend strong {
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		font-weight: 600; color: var(--budgeteer-fg);
+	}
+	@media (max-width: 60rem) {
+		.hw-donut { display: none; }
+	}
+	.hw-tx-ico {
+		width: 28px; height: 28px; border-radius: 50%;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.85rem;
+	}
+	.hw-tx-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+	.hw-tx-name {
+		font-size: 0.7rem; color: var(--budgeteer-fg); font-weight: 600;
+		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
+	.hw-tx-cat {
+		font-family: var(--budgeteer-font-mono); font-size: 0.5rem;
+		letter-spacing: 0.08em; font-weight: 600;
+	}
+	.hw-tx-amt {
+		font-family: var(--budgeteer-font-mono); font-size: 0.7rem;
+		color: var(--budgeteer-orange); font-weight: 600;
+	}
+
+	/* Small floating pills */
+	.composition :global(.hero-pill-cat) { bottom: 16%; left: 4%; z-index: 5; }
+	.composition :global(.hero-pill-ai)  { bottom: 4%; left: 30%; z-index: 5; }
+
+	/* Sync indicator */
+	.sync-pill {
+		position: absolute;
+		bottom: 2%; left: 50%; transform: translateX(-50%);
+		display: inline-flex; align-items: center; gap: 0.5rem;
+		padding: 0.4rem 0.85rem;
+		background: rgba(255, 255, 255, 0.92);
+		backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+		border-radius: 100px;
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		color: var(--budgeteer-fg); font-weight: 600; letter-spacing: 0.08em;
+		box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.2);
+		z-index: 6;
+	}
+	.sync-dot {
+		width: 8px; height: 8px; border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+		animation: budgeteer-pulse 2s infinite;
+	}
+
+	/* === Mobile: stack widgets vertically, less drama === */
+	@media (max-width: 48rem) {
+		.composition { height: auto; padding: 0 1rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-top: 2rem; }
+		.grid-pattern { display: none; }
+		.hw, .composition :global(.hero-pill-cat), .composition :global(.hero-pill-ai), .sync-pill {
+			position: static; transform: none; animation: none;
+		}
+		.hw-cash, .hw-dash, .hw-tx { width: 100%; max-width: 22rem; }
+		.composition :global(.hero-pill-cat), .composition :global(.hero-pill-ai) { display: none; }
+	}
+</style>

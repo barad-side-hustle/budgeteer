@@ -1,0 +1,50 @@
+---
+title: Getting started
+description: A local-only personal finance tracker for Israeli banks. Beautiful, private, open source.
+---
+
+import { Image } from 'astro:assets';
+import dashboardShot from '../../assets/screenshots/dashboard-light.png';
+import DocsHero from '../../components/docs/DocsHero.astro';
+import DocsCardGrid from '../../components/docs/DocsCardGrid.astro';
+import DocsCard from '../../components/docs/DocsCard.astro';
+import Callout from '../../components/docs/Callout.astro';
+
+<DocsHero
+  eyebrow="WELCOME"
+  titleBold="Budgeteer"
+  titleItalic="in five minutes."
+  lede="A local-only personal finance tracker for Israeli banks. Beautiful, private, open source."
+/>
+
+Budgeteer runs entirely on your own computer. It signs into your Israeli banks for you, pulls down the last few months of transactions, sorts them into categories, and shows you a calm dashboard at `localhost`. No cloud, no accounts, no telemetry.
+
+<figure class="doc-figure">
+  <Image src={dashboardShot} alt="The Budgeteer dashboard, showing monthly spending, category totals, and recent transactions" class="doc-shot" />
+  <figcaption>The dashboard you'll wake up to every morning.</figcaption>
+</figure>
+
+## What you'll need
+
+- A Mac, Windows PC, or Linux machine.
+- About **10 minutes** to install and 5 to connect a bank.
+- Your **bank login credentials** (same ones you use on the bank's website).
+- *Optional*: an **Anthropic API key** for Claude, or **Ollama installed locally**. You can also skip AI entirely.
+
+<Callout variant="gotcha">
+Budgeteer automates your bank's website on your behalf. Some banks restrict this in their terms. You're responsible for using Budgeteer within them. Read the full [Disclaimer](/budgeteer/disclaimer) before installing.
+</Callout>
+
+## Pick your path
+
+<DocsCardGrid>
+  <DocsCard eyebrow="START HERE" title="What is Budgeteer?" desc="One-pager about the project, philosophy, and trade-offs." href="/budgeteer/what-is-budgeteer" accent="sage" arrow="Read the intro →" />
+  <DocsCard eyebrow="INSTALL · MACOS" title="On macOS" desc="Three commands, about ten minutes." href="/budgeteer/install/mac" accent="vibrant" arrow="Install →" />
+  <DocsCard eyebrow="INSTALL · WINDOWS" title="On Windows" desc="Three commands, plus a .NET 8 SDK prompt." href="/budgeteer/install/windows" accent="blue" arrow="Install →" />
+  <DocsCard eyebrow="INSTALL · LINUX" title="On Linux" desc="Service-only, no menubar." href="/budgeteer/install/linux" accent="orange" arrow="Install →" />
+  <DocsCard eyebrow="USING SPENT" title="Connect your bank" desc="What credentials each Israeli bank needs." href="/budgeteer/connect-bank" accent="pink" arrow="Connect →" />
+  <DocsCard eyebrow="USING SPENT" title="Categorize with AI" desc="Claude, Ollama, or manual — pick one." href="/budgeteer/ai-categorization" accent="blue" arrow="Choose a provider →" />
+  <DocsCard eyebrow="USING SPENT" title="Sync & dashboard" desc="Day-to-day use, menubar, dark mode." href="/budgeteer/sync-and-dashboard" accent="orange" arrow="Tour the dashboard →" />
+  <DocsCard eyebrow="REFERENCE" title="Security & privacy" desc="How encryption works, what travels the network." href="/budgeteer/security-and-privacy" accent="sage" arrow="Read the details →" />
+  <DocsCard eyebrow="REFERENCE" title="Troubleshooting" desc="Common gotchas, grouped by OS." href="/budgeteer/troubleshooting" accent="pink" arrow="Find your problem →" />
+</DocsCardGrid>

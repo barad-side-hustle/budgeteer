@@ -1,0 +1,69 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+	<div class="budgeteer-wrap inner">
+		<div class="row top">
+			<a class="brand" href={base || '/'}>Budgeteer</a>
+			<nav class="links" aria-label="Footer">
+				<a href="https://github.com/barad-side-hustle/budgeteer">GitHub</a>
+				<a href={`${base}/getting-started`}>Docs</a>
+				<a href={`${base}/security-and-privacy`}>Security</a>
+				<a href={`${base}/disclaimer`}>Disclaimer</a>
+				<a href="https://github.com/barad-side-hustle/budgeteer/blob/main/LICENSE">License</a>
+			</nav>
+		</div>
+		<div class="copyright">
+			© {year} · MIT licensed · Built in Israel · No tracking on this site either
+		</div>
+	</div>
+</footer>
+
+<style>
+	.footer {
+		background: var(--budgeteer-primary-dark);
+		color: var(--budgeteer-bg);
+		padding: 2.25rem 0 1.75rem;
+	}
+	.inner {
+		font-family: var(--budgeteer-font-sans);
+	}
+	.row.top {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1.5rem;
+		flex-wrap: wrap;
+	}
+	.brand {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-weight: 500;
+		font-size: 1.1rem;
+		color: var(--budgeteer-bg);
+		text-decoration: none;
+	}
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 1.1rem;
+		font-size: 0.8rem;
+	}
+	.links a {
+		color: var(--budgeteer-bg);
+		opacity: 0.75;
+		text-decoration: none;
+	}
+	.links a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 3px; }
+
+	.copyright {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid rgba(250, 241, 220, 0.1);
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		opacity: 0.55;
+		letter-spacing: 0.05em;
+	}
+</style>

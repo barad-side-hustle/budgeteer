@@ -1,0 +1,18 @@
+---
+interface Props {
+  variant: 'claude' | 'ollama' | 'manual';
+  name: string;
+  tagline: string;
+  href: string;
+  linkLabel?: string;
+}
+const { variant, name, tagline, href, linkLabel = 'Setup steps →' } = Astro.props;
+---
+<article class={`docs-provider docs-provider--${variant}`}>
+  <span class="tagline">{tagline}</span>
+  <h3 class="name">{name}</h3>
+  <ul class="lines">
+    <slot />
+  </ul>
+  <a class="link" href={href}>{linkLabel}</a>
+</article>

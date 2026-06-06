@@ -1,0 +1,13 @@
+diff --git a/lib/scrapers/discount.js b/lib/scrapers/discount.js
+index 630d9309cf10bacc4053fd60ef48a39c070a6776..fee4e64989f7b47f5a9c3500741dd8afa7d1fc7e 100644
+--- a/lib/scrapers/discount.js
++++ b/lib/scrapers/discount.js
+@@ -88,7 +88,7 @@ async function navigateOrErrorLabel(page) {
+ }
+ function getPossibleLoginResults() {
+   const urls = {};
+-  urls[_baseScraperWithBrowser.LoginResults.Success] = [`${BASE_URL}/apollo/retail/#/MY_ACCOUNT_HOMEPAGE`, `${BASE_URL}/apollo/retail2/#/MY_ACCOUNT_HOMEPAGE`, `${BASE_URL}/apollo/retail2/`];
++  urls[_baseScraperWithBrowser.LoginResults.Success] = [/\/apollo\/retail\d*\/(#\/MY_ACCOUNT_HOMEPAGE)?$/];
+   urls[_baseScraperWithBrowser.LoginResults.InvalidPassword] = [`${BASE_URL}/apollo/core/templates/lobby/masterPage.html#/LOGIN_PAGE`];
+   urls[_baseScraperWithBrowser.LoginResults.ChangePassword] = [`${BASE_URL}/apollo/core/templates/lobby/masterPage.html#/PWD_RENEW`];
+   return urls;

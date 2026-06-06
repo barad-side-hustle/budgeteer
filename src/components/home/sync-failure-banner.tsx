@@ -1,0 +1,100 @@
+"use client";
+
+import { AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
+import { translateProviderName } from "@/lib/i18n-data";
+import type { HomeBankHealthItem } from "@/lib/types";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  items: HomeBankHealthItem[] | null;
+  className?: string;
+}
+
+const TWO_FA_RE = /2fa|otp|verification|change[_ ]?password|invalid[_ ]?password/i;
+
+const ISO_DAY_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jerusalem",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function isToday(iso: string): boolean {
+  const now = new Date();
+  const synced = new Date(`${iso}Z`);
+  return ISO_DAY_FORMAT.format(now) === ISO_DAY_FORMAT.format(synced);
+}
+
+function truncate(s: string, max = 120): string {
+  if (s.length <= max) return s;
+  return `${s.slice(0, max - 1).trimEnd()}…`;
+}
+
+export function SyncFailureBanner({ items, className }: Props) {
+  const t = useTranslations("syncFailureBanner");
+  const tBanks = useTranslations("banks");
+  if (!items) return null;
+  const failures = items.filter(
+    (i) => i.status === "error" && i.lastSyncAt && isToday(i.lastSyncAt),
+  );
+  if (failures.length === 0) return null;
+
+  const firstName = translateProviderName(failures[0].provider, failures[0].providerName, tBanks);
+
+  const headline =
+    failures.length === 1
+      ? t("oneBankTitle", { bank: firstName })
+      : t("multiBankTitle", { count: failures.length });
+
+  const showsTwoFAHint = failures.some((f) => f.errorMessage && TWO_FA_RE.test(f.errorMessage));
+
+  return (
+    <div
+      role="alert"
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-start sm:gap-4 sm:p-5",
+        className,
+      )}
+      style={{
+        background: "color-mix(in oklch, var(--status-over) 12%, var(--card))",
+        borderColor: "color-mix(in oklch, var(--status-over) 40%, var(--border))",
+      }}
+    >
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+        style={{
+          background: "color-mix(in oklch, var(--status-over) 24%, var(--card))",
+          color: "var(--status-over)",
+        }}
+      >
+        <AlertTriangle className="h-5 w-5" strokeWidth={1.75} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-base leading-tight tracking-tight">{headline}</div>
+        <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+          {failures.map((f) => {
+            const name = translateProviderName(f.provider, f.providerName, tBanks);
+            return (
+              <li key={f.provider} className="truncate">
+                <span className="font-medium text-foreground/80">{name}:</span>{" "}
+                {truncate(f.errorMessage ?? t("fallbackErrorMsg"))}
+              </li>
+            );
+          })}
+        </ul>
+        {showsTwoFAHint && <p className="mt-2 text-xs text-muted-foreground">{t("twoFaHelper")}</p>}
+      </div>
+
+      <Button
+        size="sm"
+        nativeButton={false}
+        className="self-start sm:self-auto"
+        render={<Link href="/settings/bank">{t("reconnectBank")}</Link>}
+      />
+    </div>
+  );
+}

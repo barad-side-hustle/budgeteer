@@ -1,0 +1,419 @@
+---
+const steps = [
+	{
+		num: '01',
+		kind: 'Connect',
+		titleBold: 'Paste',
+		titleRest: 'your bank credentials.',
+		body: 'Pick from 18 supported banks and cards. Credentials encrypted with AES-256 and never leave your machine.',
+		kind_id: 'form',
+	},
+	{
+		num: '02',
+		kind: 'Sync',
+		titleBold: 'Watch',
+		titleRest: 'transactions arrive.',
+		body: 'Budgeteer talks to your bank in real time. SSE stream shows progress, transaction by transaction.',
+		kind_id: 'sync',
+	},
+	{
+		num: '03',
+		kind: 'Categorize',
+		titleBold: 'Done.',
+		titleRest: 'Already tagged.',
+		body: 'The AI categorizes 50 transactions per call. Coffee knows it\'s coffee. Groceries know they\'re groceries.',
+		kind_id: 'cat',
+	},
+];
+---
+<section class="how budgeteer-fade-up">
+	<div class="deco deco-blob-pink" aria-hidden="true"></div>
+	<div class="deco deco-ring-vibrant" aria-hidden="true"></div>
+	<div class="deco deco-dot-blue" aria-hidden="true"></div>
+	<div class="deco deco-cross-orange" aria-hidden="true"></div>
+
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">How it works</div>
+			<h2 class="display">
+				<span class="budgeteer-sans-bold">Three steps,</span>
+				<span class="budgeteer-serif-ital">then it runs itself.</span>
+			</h2>
+			<p class="lede">
+				Set it up once. From then on Budgeteer quietly does the work — fetching, deduping,
+				categorizing — while you get on with your day.
+			</p>
+		</div>
+
+		<div class="steps">
+			{steps.map((s, i) => (
+				<div class="step" data-step={i + 1}>
+					<div class="stepnum">{s.num}</div>
+					<div class="stepkind">{s.kind}</div>
+					<h3>
+						<em>{s.titleBold}</em>
+						<span> </span>
+						{s.titleRest}
+					</h3>
+					<p>{s.body}</p>
+
+					{s.kind_id === 'form' && (
+						<div class="frag frag-form">
+							<div class="ftab">
+								<span class="active">Isracard</span>
+								<span>Hapoalim</span>
+								<span>Leumi</span>
+							</div>
+							<div class="row">
+								<label>User ID</label>
+								<div class="field">012345678</div>
+							</div>
+							<div class="row">
+								<label>Password</label>
+								<div class="field pw">••••••••</div>
+							</div>
+							<div class="lock">
+								<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<rect x="3" y="11" width="18" height="11" rx="2"/>
+									<path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+								</svg>
+								Encrypted locally
+							</div>
+						</div>
+					)}
+
+					{s.kind_id === 'sync' && (
+						<div class="frag frag-sync">
+							<div class="row1">
+								<span class="pulse-dot" aria-hidden="true"></span>
+								<span class="name">Syncing Isracard</span>
+							</div>
+							<div class="bar-bg"><div class="bar-fill"></div></div>
+							<div class="stats"><span>23 of 47</span><span>~12s left</span></div>
+							<div class="ticks">
+								<div class="tick">
+									<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+									Connected
+								</div>
+								<div class="tick">
+									<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+									Fetched May
+								</div>
+								<div class="tick pending">
+									<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+									Categorize
+								</div>
+							</div>
+						</div>
+					)}
+
+					{s.kind_id === 'cat' && (
+						<div class="frag frag-cat">
+							<div class="tx-row">
+								<div class="ico cof">☕</div>
+								<div class="body">
+									<span class="merchant">Aroma · Rothschild</span>
+									<span class="cat-pill">✨ Coffee</span>
+								</div>
+								<span class="amount">−₪14.50</span>
+							</div>
+							<div class="tx-row">
+								<div class="ico gro">🛒</div>
+								<div class="body">
+									<span class="merchant">Shufersal Deal</span>
+									<span class="cat-pill">✨ Groceries</span>
+								</div>
+								<span class="amount">−₪284.20</span>
+							</div>
+							<div class="tx-row">
+								<div class="ico tra">🚇</div>
+								<div class="body">
+									<span class="merchant">Rav-Kav</span>
+									<span class="cat-pill">✨ Transport</span>
+								</div>
+								<span class="amount">−₪124.00</span>
+							</div>
+						</div>
+					)}
+				</div>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.how {
+		padding: 5rem 0;
+		border-bottom: 1px solid var(--budgeteer-border);
+		background: var(--budgeteer-bg);
+		position: relative;
+		overflow: hidden;
+	}
+	.deco {
+		position: absolute;
+		pointer-events: none;
+	}
+	.deco-blob-pink {
+		top: 8%; right: 10%;
+		width: 72px; height: 72px;
+		border-radius: 50%;
+		background: var(--budgeteer-pink);
+	}
+	.deco-ring-vibrant {
+		bottom: 18%; left: 5%;
+		width: 56px; height: 56px;
+		border-radius: 50%;
+		border: 3px solid var(--budgeteer-vibrant);
+	}
+	.deco-dot-blue {
+		top: 30%; left: 4%;
+		width: 14px; height: 14px;
+		border-radius: 50%;
+		background: var(--budgeteer-blue);
+	}
+	.deco-cross-orange {
+		bottom: 12%; right: 8%;
+		width: 22px; height: 22px;
+	}
+	.deco-cross-orange::before, .deco-cross-orange::after {
+		content: '';
+		position: absolute;
+		background: var(--budgeteer-orange);
+	}
+	.deco-cross-orange::before { width: 100%; height: 3px; top: 50%; transform: translateY(-50%); }
+	.deco-cross-orange::after  { width: 3px; height: 100%; left: 50%; transform: translateX(-50%); }
+	@media (max-width: 48rem) {
+		.deco { display: none; }
+	}
+	.intro {
+		max-width: 36rem;
+		margin: 0 auto 3rem;
+		text-align: center;
+	}
+	.intro .lede { margin: 0 auto; }
+	.display {
+		font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+		line-height: 1.05;
+		margin: 0 0 0.85rem;
+	}
+	.lede {
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.95rem;
+		line-height: 1.6;
+		color: var(--budgeteer-fg-muted);
+		max-width: 30rem;
+		margin: 0;
+	}
+
+	.steps {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 2rem;
+		position: relative;
+	}
+	@media (min-width: 60rem) {
+		.steps {
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1.5rem;
+		}
+		.steps::before {
+			content: '';
+			position: absolute;
+			top: 80px;
+			left: 16%;
+			right: 16%;
+			height: 1px;
+			background: repeating-linear-gradient(90deg, var(--budgeteer-border) 0, var(--budgeteer-border) 4px, transparent 4px, transparent 10px);
+			z-index: 0;
+		}
+	}
+
+	.step { position: relative; z-index: 1; }
+	.stepnum {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-weight: 400;
+		font-size: 4rem;
+		line-height: 1;
+		letter-spacing: -0.04em;
+		margin-bottom: 0.85rem;
+		opacity: 0.35;
+	}
+	.step[data-step='1'] .stepnum { color: var(--budgeteer-vibrant); }
+	.step[data-step='2'] .stepnum { color: var(--budgeteer-pink); opacity: 0.7; }
+	.step[data-step='3'] .stepnum { color: var(--budgeteer-blue); opacity: 0.55; }
+
+	.stepkind {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.625rem;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		margin-bottom: 0.6rem;
+		font-weight: 500;
+	}
+	.step[data-step='1'] .stepkind { color: var(--budgeteer-vibrant); }
+	.step[data-step='2'] .stepkind { color: #C56865; }
+	.step[data-step='3'] .stepkind { color: var(--budgeteer-blue); }
+	.step h3 {
+		font-family: var(--budgeteer-font-sans);
+		font-weight: 700;
+		letter-spacing: -0.025em;
+		font-size: 1.35rem;
+		color: var(--budgeteer-fg);
+		margin: 0 0 0.6rem;
+		line-height: 1.1;
+		font-style: normal;
+	}
+	.step h3 em {
+		font-style: italic;
+		font-family: var(--budgeteer-font-serif);
+		font-weight: 400;
+	}
+	.step p {
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.825rem;
+		line-height: 1.55;
+		color: var(--budgeteer-fg-muted);
+		margin: 0 0 1.1rem;
+	}
+
+	.frag {
+		background: var(--budgeteer-card);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: 12px;
+		padding: 14px;
+		box-shadow: var(--budgeteer-shadow-card);
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.7rem;
+	}
+
+	/* Form fragment */
+	.frag-form .ftab { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+	.frag-form .ftab span {
+		padding: 4px 10px;
+		border-radius: 100px;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5625rem;
+		color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.06em;
+		background: var(--budgeteer-bg-soft);
+	}
+	.frag-form .ftab span.active { background: var(--budgeteer-primary); color: var(--budgeteer-bg); }
+	.frag-form .row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+	.frag-form .row label {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5625rem;
+		color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.frag-form .row .field {
+		background: var(--budgeteer-bg);
+		border-radius: 6px;
+		padding: 8px 10px;
+		font-family: var(--budgeteer-font-mono);
+		color: var(--budgeteer-fg);
+	}
+	.frag-form .row .field.pw { letter-spacing: 4px; }
+	.frag-form .lock {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 10px;
+		background: rgba(40, 199, 91, 0.15);
+		border-radius: 100px;
+		font-size: 0.625rem;
+		color: var(--budgeteer-primary);
+		font-weight: 500;
+		margin-top: 6px;
+	}
+	.frag-form .lock svg { color: var(--budgeteer-vibrant); }
+
+	/* Sync fragment */
+	.frag-sync .row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+	.frag-sync .pulse-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+		animation: budgeteer-pulse 2s infinite;
+	}
+	.frag-sync .name { font-weight: 600; color: var(--budgeteer-fg); }
+	.frag-sync .bar-bg {
+		height: 8px;
+		background: var(--budgeteer-bg-soft);
+		border-radius: 100px;
+		overflow: hidden;
+		margin-bottom: 8px;
+	}
+	.frag-sync .bar-fill {
+		height: 100%;
+		width: 65%;
+		background: var(--budgeteer-vibrant);
+		border-radius: 100px;
+	}
+	.frag-sync .stats {
+		display: flex;
+		justify-content: space-between;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5625rem;
+		color: var(--budgeteer-fg-muted);
+		margin-bottom: 12px;
+	}
+	.frag-sync .ticks { display: flex; flex-direction: column; gap: 6px; }
+	.frag-sync .tick {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 0.7rem;
+		color: var(--budgeteer-fg);
+	}
+	.frag-sync .tick svg { color: var(--budgeteer-vibrant); flex-shrink: 0; }
+	.frag-sync .tick.pending { color: var(--budgeteer-fg-muted); opacity: 0.5; }
+
+	/* Categorize fragment */
+	.frag-cat { padding: 0; overflow: hidden; }
+	.frag-cat .tx-row {
+		padding: 12px 14px;
+		border-bottom: 1px solid var(--budgeteer-border);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.frag-cat .tx-row:last-child { border-bottom: none; }
+	.frag-cat .ico {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		color: #fff;
+		font-size: 13px;
+	}
+	.frag-cat .ico.cof { background: var(--budgeteer-orange); }
+	.frag-cat .ico.gro { background: var(--budgeteer-vibrant); color: var(--budgeteer-primary); }
+	.frag-cat .ico.tra { background: var(--budgeteer-blue); }
+	.frag-cat .body {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		min-width: 0;
+	}
+	.frag-cat .merchant { font-weight: 600; color: var(--budgeteer-fg); font-size: 0.75rem; }
+	.frag-cat .cat-pill {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5rem;
+		color: var(--budgeteer-vibrant);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.frag-cat .amount {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.7rem;
+		color: var(--budgeteer-orange);
+		font-weight: 600;
+	}
+</style>

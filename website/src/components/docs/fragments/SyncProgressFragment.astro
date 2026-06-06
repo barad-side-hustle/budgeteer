@@ -1,0 +1,82 @@
+---
+interface Tick { label: string; done?: boolean; }
+interface Props {
+  name?: string;
+  done?: number;
+  total?: number;
+  eta?: string;
+  ticks?: Tick[];
+}
+const {
+  name = 'Syncing Isracard',
+  done = 23,
+  total = 47,
+  eta = '~12s left',
+  ticks = [
+    { label: 'Connected', done: true },
+    { label: 'Fetched May', done: true },
+    { label: 'Categorize', done: false },
+  ],
+} = Astro.props;
+const pct = Math.max(0, Math.min(100, (done / total) * 100));
+---
+<div class="docs-frag-sync">
+  <div class="row1">
+    <span class="pulse-dot" aria-hidden="true"></span>
+    <span class="name">{name}</span>
+  </div>
+  <div class="bar-bg"><div class="bar-fill" style={`width: ${pct.toFixed(1)}%;`}></div></div>
+  <div class="stats"><span>{done} of {total}</span><span>{eta}</span></div>
+  <div class="ticks">
+    {ticks.map(t => (
+      <div class={`tick${t.done ? '' : ' pending'}`}>
+        {t.done ? (
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        ) : (
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        )}
+        {t.label}
+      </div>
+    ))}
+  </div>
+</div>
+
+<style>
+.docs-frag-sync {
+  background: var(--budgeteer-card);
+  border: 1px solid var(--budgeteer-border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--budgeteer-shadow-card);
+  font-family: var(--budgeteer-font-sans);
+  font-size: 0.75rem;
+  max-width: 22rem;
+  margin: 1.5rem 0;
+}
+.docs-frag-sync .row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.docs-frag-sync .pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--budgeteer-vibrant);
+  animation: budgeteer-pulse 2s infinite;
+}
+.docs-frag-sync .name { font-weight: 600; color: var(--budgeteer-fg); }
+.docs-frag-sync .bar-bg {
+  height: 8px; background: var(--budgeteer-bg-soft);
+  border-radius: 100px; overflow: hidden; margin-bottom: 8px;
+}
+.docs-frag-sync .bar-fill { height: 100%; background: var(--budgeteer-vibrant); border-radius: 100px; }
+.docs-frag-sync .stats {
+  display: flex; justify-content: space-between;
+  font-family: var(--budgeteer-font-mono);
+  font-size: 0.6rem;
+  color: var(--budgeteer-fg-muted);
+  margin-bottom: 12px;
+}
+.docs-frag-sync .ticks { display: flex; flex-direction: column; gap: 6px; }
+.docs-frag-sync .tick {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.75rem; color: var(--budgeteer-fg);
+}
+.docs-frag-sync .tick svg { color: var(--budgeteer-vibrant); flex-shrink: 0; }
+.docs-frag-sync .tick.pending { color: var(--budgeteer-fg-muted); opacity: 0.5; }
+</style>

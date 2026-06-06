@@ -1,0 +1,89 @@
+---
+title: Sync & dashboard
+description: Day-to-day usage — the dashboard, syncing, and the menubar app.
+---
+
+import { Image } from 'astro:assets';
+import dashboardLight from '../../assets/screenshots/dashboard-light.png';
+import dashboardDark from '../../assets/screenshots/dashboard-dark.png';
+import transactions from '../../assets/screenshots/transactions-light.png';
+import DocsHero from '../../components/docs/DocsHero.astro';
+import SyncProgressFragment from '../../components/docs/fragments/SyncProgressFragment.astro';
+import Callout from '../../components/docs/Callout.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="USING SPENT"
+  titleBold="Sync"
+  titleItalic="and dashboard."
+  lede="What you'll actually do once Budgeteer is installed — sync, browse, re-categorize, sleep."
+/>
+
+## The dashboard
+
+<figure class="doc-figure">
+  <Image src={dashboardLight} alt="The Budgeteer dashboard, with monthly totals at top and recent transactions below" class="doc-shot" />
+  <figcaption>The default view when you open Budgeteer.</figcaption>
+</figure>
+
+Visit `http://localhost:2412` (or `http://budgeteer.local:2412` if you added the hosts entry). The dashboard has four areas:
+
+- **Overview** — monthly totals, "on track / heads-up / over" status pills, top spending categories.
+- **Transactions** — chronological list with merchant, amount, category, date. Click a row to edit.
+- **Budget** — your monthly budget and pacing card.
+- **Settings** — banks, AI provider, sync schedule, preferences.
+
+## Syncing
+
+By default, Budgeteer syncs **once a day at 03:00** local time. Change this in *Settings → Sync schedule*, or trigger a manual sync from the menubar or the dashboard.
+
+A sync does three things, in order:
+
+1. **Scrape** — log into each connected bank and download new transactions.
+2. **Deduplicate** — compare against existing transactions using a content hash (so you don't get duplicates if a bank shifts an old transaction's identifier).
+3. **Categorize** — send uncategorized transactions to your chosen AI provider, in batches of 50.
+
+<SyncProgressFragment />
+
+If any step fails, the dashboard shows the error with a hint about what to do. See [Troubleshooting](/budgeteer/troubleshooting) for the common ones.
+
+## The menubar / tray app
+
+On macOS the menubar app gives you four actions; on Windows it's the same set in the system tray:
+
+- **Open** — opens the dashboard in your default browser.
+- **Sync now** — runs an immediate sync.
+- **Start / Stop service** — pause Budgeteer without uninstalling.
+- **Quit** — quits the menubar (the background service keeps running).
+
+The icon goes to a small animated dot while a sync is running.
+
+<Callout variant="note">
+On Linux there's no native menubar. Use `npm run service:open` or just bookmark `http://127.0.0.1:2412`.
+</Callout>
+
+## Transactions
+
+<figure class="doc-figure">
+  <Image src={transactions} alt="The transactions list, with merchant names, amounts, and category badges" class="doc-shot" />
+  <figcaption>Filter, search, click any row to re-categorize.</figcaption>
+</figure>
+
+Click any category badge to change it. Budgeteer remembers the correction and uses it the next time it sees a similar merchant — no re-training needed.
+
+## Dark mode
+
+Budgeteer ships with a built-in dark theme. Toggle it from *Settings → Preferences*, or let it follow your OS.
+
+<figure class="doc-figure">
+  <Image src={dashboardDark} alt="The same dashboard in dark mode — warm dark background, sage accents preserved" class="doc-shot" />
+  <figcaption>Same dashboard, after sundown.</figcaption>
+</figure>
+
+## Backups
+
+Budgeteer stores everything in `data/budgeteer.db` plus `data/.encryption-key`. To back up: copy those two files together. To restore on a new machine: drop them into the new install's `data/` folder before the first sync.
+
+Any SQLite-friendly backup tool that handles WAL-mode databases works fine.
+
+<NextStepCard href="/budgeteer/categories-and-budgets" title="Categories & budgets" />

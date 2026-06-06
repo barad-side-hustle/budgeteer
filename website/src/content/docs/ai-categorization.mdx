@@ -1,0 +1,106 @@
+---
+title: Categorize with AI
+description: How Budgeteer uses AI to sort transactions, and how to pick a provider.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import ProviderCard from '../../components/docs/ProviderCard.astro';
+import Callout from '../../components/docs/Callout.astro';
+import ForDevelopers from '../../components/docs/ForDevelopers.astro';
+import TransactionListFragment from '../../components/docs/fragments/TransactionListFragment.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="USING SPENT"
+  titleBold="Categorize"
+  titleItalic="with AI."
+  lede="Budgeteer assigns each transaction to a category like Groceries, Restaurants, Transport, or Subscriptions. You pick which model does the work."
+/>
+
+<TransactionListFragment />
+
+## Three options
+
+<div class="docs-providergrid">
+  <ProviderCard variant="claude" name="Claude" tagline="Paid · Excellent" href="#claude">
+    <li><strong>Cost</strong> — about $0.01–$0.05 / month</li>
+    <li><strong>Privacy</strong> — merchant + amount only</li>
+    <li><strong>Quality</strong> — handles Hebrew well</li>
+  </ProviderCard>
+  <ProviderCard variant="ollama" name="Ollama" tagline="Free · Local" href="#ollama">
+    <li><strong>Cost</strong> — free</li>
+    <li><strong>Privacy</strong> — nothing leaves your computer</li>
+    <li><strong>Quality</strong> — very good with `llama3.1:8b`</li>
+  </ProviderCard>
+  <ProviderCard variant="manual" name="Manual" tagline="Free · You" href="#manual">
+    <li><strong>Cost</strong> — free</li>
+    <li><strong>Privacy</strong> — perfect</li>
+    <li><strong>Quality</strong> — depends on you</li>
+  </ProviderCard>
+</div>
+
+You pick one during the setup wizard, and you can switch any time from *Settings → AI*. Previously-categorized transactions stay categorized; only new transactions go through the new provider.
+
+## Claude
+
+Cost-effective for personal use because of Claude Haiku 4.5's pricing and Budgeteer's batching (50 transactions per call).
+
+**Setup:**
+
+1. Go to `console.anthropic.com` and create an API key under *Settings → API Keys*.
+2. Paste it into Budgeteer's setup wizard (or *Settings → AI*).
+3. Done. Your key is encrypted at rest with the same AES-256-GCM that protects your bank credentials.
+
+<Callout variant="note">
+Budgeteer sends Anthropic's API the **merchant name and amount** of each new transaction — no personal IDs, no bank credentials. Anthropic's commercial API does not train on submitted data.
+</Callout>
+
+## Ollama
+
+Runs a language model on your own machine. Slower than Claude, but every byte stays local.
+
+**Setup:**
+
+1. Install Ollama from **[ollama.com/download](https://ollama.com/download)**.
+2. In a terminal:
+   ```sh
+   ollama pull llama3.1:8b
+   ```
+   (4.7 GB download. `qwen2.5:3b` is a smaller alternative.)
+3. In Budgeteer's setup wizard, choose Ollama and pick the model.
+
+Budgeteer talks to Ollama at `http://localhost:11434`, its default.
+
+<Callout variant="gotcha">
+Ollama needs about **6-12 GB of RAM** while running. Smaller models can struggle with Hebrew merchant names — `llama3.1:8b` and `qwen2.5:3b` are the most reliable.
+</Callout>
+
+## Manual
+
+Skip AI entirely. Each transaction starts in *Uncategorized*. You assign categories by clicking the category badge in the dashboard.
+
+Slow, but perfect privacy and perfect accuracy.
+
+## How batching works
+
+When Budgeteer syncs, it groups uncategorized transactions into batches of **50** and sends each batch to the chosen provider in one round-trip. This keeps cost and latency low.
+
+<ForDevelopers summary="What the prompt and retry logic look like">
+
+The prompt (defined in `src/server/ai/prompts.ts`) is shared between Claude and Ollama. It asks the model to return JSON: an array of objects with `merchant`, `category`, and a confidence score.
+
+Budgeteer retries up to **three times** on malformed output. Persistent failures fall back to *Uncategorized* — never to a wrong category.
+
+Default Claude model: `claude-haiku-4-5-20251001`. To upgrade, edit `src/server/ai/providers/claude.ts`.
+
+</ForDevelopers>
+
+## Switching providers
+
+Switch any time from *Settings → AI*. Previously-categorized transactions stay categorized; only new transactions (and ones you've explicitly re-categorized) go through the new provider.
+
+<Callout variant="gotcha">
+**If you switch away from Claude, revoke your API key** in the Anthropic console. Budgeteer will discard it locally, but rotating it is the safe move.
+</Callout>
+
+<NextStepCard href="/budgeteer/sync-and-dashboard" title="Sync & dashboard" />

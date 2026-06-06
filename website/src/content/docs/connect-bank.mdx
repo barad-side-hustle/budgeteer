@@ -1,0 +1,115 @@
+---
+title: Connect your bank
+description: How to connect each supported Israeli bank and credit card.
+---
+
+import DocsHero from '../../components/docs/DocsHero.astro';
+import Callout from '../../components/docs/Callout.astro';
+import BankFormFragment from '../../components/docs/fragments/BankFormFragment.astro';
+import SyncProgressFragment from '../../components/docs/fragments/SyncProgressFragment.astro';
+import NextStepCard from '../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="USING SPENT"
+  titleBold="Connect"
+  titleItalic="your bank."
+  lede="Pick your bank, paste your credentials. Budgeteer encrypts them and never sends them anywhere."
+/>
+
+After you install Budgeteer, opening the dashboard for the first time launches a short setup wizard. The wizard asks for your bank's login the same way the bank's own website does.
+
+<BankFormFragment />
+
+You can connect multiple banks. Run the wizard again from *Settings → Banks*.
+
+## How credentials are stored
+
+Budgeteer stores your bank password (and your Claude API key, if you use one) encrypted with **AES-256-GCM** in a local SQLite database at `data/budgeteer.db`. The encryption key is generated on first run, written to `data/.encryption-key`, and never leaves your computer.
+
+Read the full mechanism in [Security & privacy](/budgeteer/security-and-privacy).
+
+## A note about 2FA
+
+Most Israeli banks **do not** support 2FA in a way that's compatible with automation. If you have 2FA enabled, you'll need to disable it on the bank's side before Budgeteer can log in.
+
+<Callout variant="note">
+**One Zero is the exception** — it supports proper second-factor authentication during sync. Budgeteer pauses and prompts you for the OTP when needed.
+</Callout>
+
+## Per-bank credentials
+
+Each bank asks for slightly different fields. Here's what each wants.
+
+### Credit cards
+
+#### Isracard
+
+- **ID number** — your 9-digit Israeli national ID (Teudat Zehut).
+- **Last 6 digits of your card** — from the front of the card.
+- **Password** — the same password you use on `digital.isracard.co.il`.
+
+#### Visa Cal
+
+- **Username** and **password** from `cal-online.co.il`.
+
+#### Max
+
+- **Username** and **password** from `max.co.il` (formerly Leumi Card).
+
+#### American Express IL
+
+- **Username** and **password** from your Israeli Amex account.
+
+### Banks
+
+#### Bank Hapoalim
+
+- **User code** and **password**. The user code is *not* your ID number — it's the one shown in the bank app's *Personal area*.
+
+#### Bank Leumi
+
+- **Username** and **password**.
+
+#### Mizrahi Tefahot
+
+- **Username** and **password**.
+
+#### Bank Discount, Mercantile Discount
+
+- **ID number**, **password**, and an **account number** (sometimes labeled *num*).
+
+#### First International (FIBI), Otsar Hahayal, Bank Pagi
+
+- **Username** and **password**. All three are FIBI-group banks and share a login pattern.
+
+#### Bank Yahav
+
+- **ID number** and **password**.
+
+<Callout variant="gotcha">
+Yahav only exposes about **6 months** of transaction history through its website. Older data isn't reachable.
+</Callout>
+
+#### Bank Massad, Union Bank
+
+- **Username** and **password**.
+
+#### One Zero
+
+- **Email**, **password**, and an **OTP** delivered to your phone during each sync. Budgeteer will pause and prompt you for the OTP when needed.
+
+### Benefits
+
+#### Beyahad Bishvilha, Behatsdaa
+
+- **Username** and **password** from the benefit-scheme website.
+
+## What happens when you click Sync
+
+Budgeteer opens a headless Chromium tab, logs into the bank using your credentials, and pulls the last 6-12 months of transactions (depending on the bank). The first sync can take a few minutes — subsequent syncs are faster because Budgeteer only processes new transactions.
+
+<SyncProgressFragment />
+
+Sync runs in the background. You don't need to keep the browser open. If a sync fails, Budgeteer shows the error in the dashboard with a hint about what went wrong (see [Troubleshooting](/budgeteer/troubleshooting)).
+
+<NextStepCard href="/budgeteer/ai-categorization" title="Categorize with AI" />

@@ -1,0 +1,113 @@
+---
+title: Install on Linux
+description: Service-only install. No native tray.
+---
+
+import DocsHero from '../../../components/docs/DocsHero.astro';
+import StepList from '../../../components/docs/StepList.astro';
+import StepItem from '../../../components/docs/StepItem.astro';
+import Callout from '../../../components/docs/Callout.astro';
+import ForDevelopers from '../../../components/docs/ForDevelopers.astro';
+import NextStepCard from '../../../components/docs/NextStepCard.astro';
+
+<DocsHero
+  eyebrow="INSTALL · LINUX"
+  titleBold="Install Budgeteer"
+  titleItalic="on Linux."
+  lede="Budgeteer on Linux installs as a user-level systemd service. There's no native menubar — you open the dashboard in your browser."
+/>
+
+## What you'll need
+
+- A modern systemd-based distro (Ubuntu 22.04+, Fedora 38+, Arch, Debian 12+, etc.).
+- **Node.js 20+** from your distro's package manager, [nvm](https://github.com/nvm-sh/nvm), or [Volta](https://volta.sh).
+- About **500 MB** of disk space.
+- Your bank login credentials.
+
+<StepList>
+
+<StepItem i={1} title="Install Node.js">
+
+Use whichever Node distribution you prefer. If you don't have one yet:
+
+```sh
+# nvm (recommended for most users)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+source ~/.bashrc
+nvm install --lts
+
+# OR: Ubuntu/Debian distro package
+sudo apt install nodejs npm   # check `node --version` is >= 20
+
+# OR: Fedora
+sudo dnf install nodejs
+```
+
+</StepItem>
+
+<StepItem i={2} title="Get Budgeteer">
+
+```sh
+git clone https://github.com/barad-side-hustle/budgeteer.git ~/.local/share/budgeteer
+cd ~/.local/share/budgeteer
+```
+
+</StepItem>
+
+<StepItem i={3} title="Install and run setup">
+
+```sh
+npm install
+npm run setup
+```
+
+`npm install` takes 2-3 minutes. `npm run setup` builds the app, registers a systemd `--user` unit, and opens the dashboard.
+
+</StepItem>
+
+</StepList>
+
+<Callout variant="note">
+**No menubar on Linux.** The setup script installs the service only. You'll open the dashboard at `http://127.0.0.1:2412` (or `http://budgeteer.local:2412` if you add the hosts entry manually with `sudo`).
+</Callout>
+
+<ForDevelopers summary="What `npm run setup` actually does">
+
+On Linux, in order:
+
+1. **Builds the Next.js app** (`npm run build`).
+2. **Writes a `--user` systemd unit** at `~/.config/systemd/user/budgeteer.service` and enables it so it starts at login.
+3. **Polls `/api/health`** until the server is ready, then opens the browser via `xdg-open`.
+
+Service management goes through `systemctl --user`; the `npm run service:*` commands shell out to it.
+
+The hosts entry for `budgeteer.local` is **not** added on Linux by default — modifying `/etc/hosts` outside of a package manager is unusual on Linux. Add it manually if you want the friendly name:
+
+```sh
+echo "127.0.0.1 budgeteer.local" | sudo tee -a /etc/hosts
+```
+
+Source: `scripts/setup.mjs`, `scripts/service/install.mjs`.
+
+</ForDevelopers>
+
+## Day-to-day commands
+
+```sh
+npm run service:status   # systemctl --user status budgeteer
+npm run service:start
+npm run service:stop
+npm run service:reload   # rebuild + restart
+npm run service:logs     # journalctl --user -u budgeteer -f
+npm run service:open     # opens the dashboard via xdg-open
+```
+
+## Uninstall
+
+```sh
+npm run uninstall
+```
+
+Disables and removes the systemd unit. Your `data/` folder is preserved.
+
+<NextStepCard href="/budgeteer/connect-bank" title="Connect your bank" />

@@ -1,0 +1,239 @@
+---
+const rows = [
+	{ en: 'Home & Bills', he: 'בית וחשבונות', amt: '₪3,342', color: '#28C75B' },
+	{ en: 'Lifestyle',    he: 'סגנון חיים',   amt: '₪1,138', color: '#F4A8A6' },
+	{ en: 'Food',         he: 'מזון',         amt: '₪678',   color: '#FF8B6A' },
+];
+---
+<section class="bilingual budgeteer-fade-up">
+	<div class="deco deco-orange-ring" aria-hidden="true"></div>
+	<div class="deco deco-blue-dot" aria-hidden="true"></div>
+	<div class="deco deco-pink-blob" aria-hidden="true"></div>
+
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">Bilingual · RTL ready</div>
+			<h2 class="display">
+				<span class="budgeteer-sans-bold">Money,</span>
+				<span class="budgeteer-serif-ital">however <u class="budgeteer-accent-u">you read it</u>.</span>
+			</h2>
+			<p class="lede">
+				Hebrew and English ship side by side. Flip the switch — layout, dates, numbers, and category
+				names mirror in one keystroke. No restart, no setting buried four menus deep.
+			</p>
+		</div>
+
+		<div class="compare">
+			<!-- LTR English card -->
+			<div class="card card-ltr">
+				<div class="lang-tag">EN · LTR →</div>
+				<div class="c-eyebrow">THIS MAY</div>
+				<div class="c-row-amount">
+					<span class="c-amount">₪3,154</span>
+					<span class="c-trend">↓ 12% vs April</span>
+				</div>
+				<div class="c-divider"></div>
+				{rows.map((r) => (
+					<div class="c-row">
+						<span class="c-dot" style={`background:${r.color}`}></span>
+						<span class="c-name">{r.en}</span>
+						<span class="c-amt">{r.amt}</span>
+					</div>
+				))}
+			</div>
+
+			<!-- Center: animated toggle -->
+			<div class="toggle">
+				<div class="t-labels"><span class="en">EN</span><span class="he">עב</span></div>
+				<div class="t-track" aria-hidden="true">
+					<div class="t-knob"></div>
+				</div>
+				<div class="t-hint">Auto-mirror</div>
+			</div>
+
+			<!-- RTL Hebrew card -->
+			<div class="card card-rtl" dir="rtl" lang="he">
+				<div class="lang-tag">← עברית · RTL</div>
+				<div class="c-eyebrow">מאי</div>
+				<div class="c-row-amount">
+					<span class="c-amount">₪3,154</span>
+					<span class="c-trend">↓ 12% מאפריל</span>
+				</div>
+				<div class="c-divider"></div>
+				{rows.map((r) => (
+					<div class="c-row">
+						<span class="c-dot" style={`background:${r.color}`}></span>
+						<span class="c-name">{r.he}</span>
+						<span class="c-amt">{r.amt}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.bilingual {
+		padding: 5rem 0;
+		background: var(--budgeteer-bg);
+		border-bottom: 1px solid var(--budgeteer-border);
+		position: relative;
+		overflow: hidden;
+	}
+	.deco { position: absolute; pointer-events: none; }
+	.deco-orange-ring { top: 14%; right: 7%; width: 48px; height: 48px; border-radius: 50%; border: 3px solid var(--budgeteer-orange); }
+	.deco-blue-dot    { bottom: 18%; left: 8%; width: 14px; height: 14px; border-radius: 50%; background: var(--budgeteer-blue); }
+	.deco-pink-blob   { top: 10%; left: 5%; width: 56px; height: 56px; border-radius: 50%; background: var(--budgeteer-pink); opacity: 0.85; }
+	@media (max-width: 48rem) { .deco { display: none; } }
+
+	.intro { max-width: 38rem; margin: 0 auto 2.5rem; text-align: center; }
+	.display { font-size: clamp(1.9rem, 3.8vw, 2.6rem); line-height: 1.05; margin: 0 0 0.85rem; }
+	.lede {
+		font-family: var(--budgeteer-font-sans);
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: var(--budgeteer-fg-muted);
+		max-width: 32rem;
+		margin: 0 auto;
+	}
+
+	.compare {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		gap: 1.5rem;
+		align-items: center;
+		max-width: 56rem;
+		margin: 0 auto;
+	}
+	@media (max-width: 50rem) {
+		.compare {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+	}
+
+	.card {
+		background: var(--budgeteer-card);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: 14px;
+		padding: 1.25rem 1.35rem;
+		box-shadow: 0 18px 40px -22px rgba(31, 77, 51, 0.3);
+		font-family: var(--budgeteer-font-sans);
+	}
+	.card-rtl { font-family: var(--budgeteer-font-sans); }
+	/* The dir="rtl" attribute mirrors flex/grid + bidi text naturally */
+
+	.lang-tag {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.6rem;
+		color: var(--budgeteer-vibrant);
+		letter-spacing: 0.1em;
+		font-weight: 600;
+		margin-bottom: 0.85rem;
+	}
+	.c-eyebrow {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.55rem;
+		letter-spacing: 0.14em;
+		color: var(--budgeteer-fg-muted);
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+	.c-row-amount {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin-bottom: 0.6rem;
+	}
+	.c-amount {
+		font-family: var(--budgeteer-font-serif);
+		font-style: italic;
+		font-size: 1.7rem;
+		color: var(--budgeteer-fg);
+		font-weight: 500;
+		line-height: 1;
+	}
+	.c-trend {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.6rem;
+		color: var(--budgeteer-vibrant);
+		font-weight: 600;
+		background: rgba(40,199,91,0.15);
+		padding: 3px 8px;
+		border-radius: 100px;
+	}
+	.c-divider { height: 1px; background: var(--budgeteer-border); margin: 0.5rem 0 0.65rem; }
+	.c-row {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.25rem 0;
+		font-size: 0.75rem;
+	}
+	.c-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+	.c-name { flex: 1; color: var(--budgeteer-fg); }
+	.c-amt {
+		font-family: var(--budgeteer-font-mono);
+		color: var(--budgeteer-fg);
+		font-weight: 600;
+		font-size: 0.7rem;
+	}
+
+	/* Animated toggle in the middle */
+	.toggle {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	@media (max-width: 50rem) {
+		.toggle { flex-direction: row; justify-content: center; }
+	}
+	.t-labels {
+		display: flex;
+		gap: 0.8rem;
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.65rem;
+		color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.08em;
+		font-weight: 600;
+	}
+	.t-labels .en, .t-labels .he {
+		transition: color 200ms ease;
+	}
+	.t-track {
+		width: 56px;
+		height: 28px;
+		background: var(--budgeteer-bg-soft);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: 100px;
+		position: relative;
+	}
+	.t-knob {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		background: var(--budgeteer-vibrant);
+		box-shadow: 0 4px 10px -2px rgba(40, 199, 91, 0.6);
+		animation: lang-toggle 5s ease-in-out infinite;
+	}
+	@keyframes lang-toggle {
+		0%, 40%  { left: 2px; }
+		50%, 90% { left: 30px; }
+		100%     { left: 2px; }
+	}
+	.t-hint {
+		font-family: var(--budgeteer-font-mono);
+		font-size: 0.5rem;
+		color: var(--budgeteer-fg-muted);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.t-knob { animation: none; }
+	}
+</style>

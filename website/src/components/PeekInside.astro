@@ -1,0 +1,454 @@
+---
+import { Image } from 'astro:assets';
+
+// Glob-match each peek photo; render a placeholder block if a file is absent.
+const photos = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/landing/peek-*.{jpg,jpeg,png,webp}',
+	{ eager: true }
+);
+const getPhoto = (id: string) => {
+	const match = Object.entries(photos).find(([path]) => path.includes(`peek-${id}.`));
+	return match?.[1]?.default ?? null;
+};
+const homePhoto = getPhoto('home');
+const budgetPhoto = getPhoto('budget');
+const txPhoto = getPhoto('transactions');
+
+// Demo data shapes drive bar widths & list lengths — values themselves don't matter
+// to the message (they're styled as fake demo amounts).
+const homeCats = [
+	{ name: 'Home & Bills', amt: '₪3,342', pct: 60, color: '#28C75B' },
+	{ name: 'Lifestyle',    amt: '₪1,138', pct: 38, color: '#F4A8A6' },
+	{ name: 'Food',         amt: '₪678',   pct: 24, color: '#FF8B6A' },
+	{ name: 'Transport',    amt: '₪398',   pct: 13, color: '#4960E5' },
+];
+const budgetRows = [
+	{ name: 'Home & Bills', spent: '₪3,342', target: '₪3,500', pct: 95, color: '#28C75B', state: 'ok' },
+	{ name: 'Lifestyle',    spent: '₪1,138', target: '₪1,000', pct: 113, color: '#FF8B6A', state: 'over' },
+	{ name: 'Food',         spent: '₪678',   target: '₪900',   pct: 75, color: '#28C75B', state: 'ok' },
+];
+const txRows = [
+	{ icon: '☕', name: 'Aroma · Rothschild', cat: 'Coffee',    amt: '−₪14.50', color: '#FF8B6A' },
+	{ icon: '🛒', name: 'Shufersal Deal',     cat: 'Groceries', amt: '−₪284.20', color: '#28C75B' },
+	{ icon: '🚇', name: 'Rav-Kav',            cat: 'Transport', amt: '−₪124.00', color: '#4960E5' },
+];
+---
+<section class="peek budgeteer-fade-up">
+	<div class="deco deco-blob-blue" aria-hidden="true"></div>
+	<div class="deco deco-circle-orange" aria-hidden="true"></div>
+	<div class="deco deco-ring-pink" aria-hidden="true"></div>
+	<div class="deco deco-dot-vibrant" aria-hidden="true"></div>
+
+	<div class="budgeteer-wrap">
+		<div class="intro">
+			<div class="budgeteer-eyebrow center">A peek inside</div>
+			<h2 class="display">
+				<span class="budgeteer-serif-ital">Built to be </span>
+				<span class="budgeteer-sans-bold"><u class="budgeteer-accent-u">looked at</u>,</span>
+				<span class="budgeteer-serif-ital"> day after day.</span>
+			</h2>
+			<p class="lede">
+				A snapshot for every moment of the day. The dashboard you'd glance at, the budget
+				you'd consult, the transactions you'd review.
+			</p>
+		</div>
+
+		<div class="stage">
+			<!-- MAIN CARD: Home / dashboard widget -->
+			<article class="frame frame-main">
+				<div class="card-photo">
+					{homePhoto ? (
+						<Image src={homePhoto} alt="A calm moment with the dashboard" loading="lazy" />
+					) : (
+						<div class="placeholder ph-home" aria-hidden="true">
+							<span class="ph-label">peek-home.jpg</span>
+						</div>
+					)}
+				</div>
+				<div class="card-tag"><span class="tag-dot"></span>Home</div>
+
+				<div class="widget widget-dash">
+					<div class="w-row">
+						<span class="w-eyebrow">THIS MAY</span>
+						<span class="w-link">Budget detail →</span>
+					</div>
+					<div class="w-headline">
+						<span class="w-amount">₪3,154</span>
+						<span class="w-delta">↓ 12% vs April</span>
+					</div>
+					<div class="w-bar">
+						<div class="w-bar-fill" style="width: 73%"></div>
+					</div>
+					<div class="w-meta"><span>73% of ₪4,300</span><span>17 days to payday</span></div>
+
+					<div class="w-divider"></div>
+
+					<div class="w-cats">
+						{homeCats.map((c) => (
+							<div class="w-cat">
+								<span class="w-cat-dot" style={`background:${c.color}`}></span>
+								<span class="w-cat-name">{c.name}</span>
+								<span class="w-cat-amt">{c.amt}</span>
+							</div>
+						))}
+					</div>
+				</div>
+
+				<div class="widget widget-cash">
+					<div class="w-row">
+						<span class="w-eyebrow">CASH FLOW · MAY</span>
+					</div>
+					<div class="cash-row">
+						<span class="cash-l">↗ IN</span>
+						<span class="cash-v cash-pos">₪6,175</span>
+					</div>
+					<div class="cash-row">
+						<span class="cash-l">↘ OUT</span>
+						<span class="cash-v">₪5,599</span>
+					</div>
+					<div class="cash-divider"></div>
+					<div class="cash-row">
+						<span class="cash-l cash-net">NET</span>
+						<span class="cash-v cash-net">+₪576</span>
+					</div>
+				</div>
+			</article>
+
+			<!-- SIDE CARD 1: Budget — 2 floating budget cards -->
+			<article class="frame frame-side">
+				<div class="card-photo">
+					{budgetPhoto ? (
+						<Image src={budgetPhoto} alt="A casual moment, budget on your mind" loading="lazy" />
+					) : (
+						<div class="placeholder ph-budget" aria-hidden="true">
+							<span class="ph-label">peek-budget.jpg</span>
+						</div>
+					)}
+				</div>
+				<div class="card-tag"><span class="tag-dot"></span>Budgets</div>
+
+				<!-- Card A: Home & Bills (on track) -->
+				<div class="bud-card bud-card-a">
+					<div class="bud-head">
+						<span class="bud-ico bud-ico-green">⌂</span>
+						<div class="bud-meta">
+							<span class="bud-cat">HOME &amp; BILLS</span>
+							<span class="bud-state bud-ok">● On track</span>
+						</div>
+					</div>
+					<div class="bud-amt">₪3,342 <small>/ ₪3,500</small></div>
+					<div class="bud-bar"><div class="bud-bar-fill" style="width: 95%; background: var(--budgeteer-vibrant);"></div></div>
+				</div>
+
+				<!-- Card B: Lifestyle (over) -->
+				<div class="bud-card bud-card-b">
+					<div class="bud-head">
+						<span class="bud-ico bud-ico-pink">✦</span>
+						<div class="bud-meta">
+							<span class="bud-cat">LIFESTYLE</span>
+							<span class="bud-state bud-over">▲ Over by ₪138</span>
+						</div>
+					</div>
+					<div class="bud-amt over">₪1,138 <small>/ ₪1,000</small></div>
+					<div class="bud-bar">
+						<div class="bud-bar-fill" style="width: 88%; background: var(--budgeteer-pink);"></div>
+						<div class="bud-bar-over"></div>
+					</div>
+				</div>
+			</article>
+
+			<!-- SIDE CARD 2: Transactions — 3 floating transaction cards -->
+			<article class="frame frame-side">
+				<div class="card-photo">
+					{txPhoto ? (
+						<Image src={txPhoto} alt="A fresh transaction tagged" loading="lazy" />
+					) : (
+						<div class="placeholder ph-tx" aria-hidden="true">
+							<span class="ph-label">peek-transactions.jpg</span>
+						</div>
+					)}
+				</div>
+				<div class="card-tag"><span class="tag-dot"></span>Transactions</div>
+
+				{txRows.map((t, i) => (
+					<div class={`tx-card tx-card-${i}`}>
+						<div class="tx-ico" style={`background:${t.color}1F;color:${t.color}`}>{t.icon}</div>
+						<div class="tx-body">
+							<span class="tx-name">{t.name}</span>
+							<span class="tx-cat" style={`color:${t.color}`}>● {t.cat}</span>
+						</div>
+						<span class="tx-amt">{t.amt}</span>
+					</div>
+				))}
+			</article>
+		</div>
+	</div>
+</section>
+
+<style>
+	.peek {
+		padding: 5rem 0;
+		background: var(--budgeteer-bg);
+		border-bottom: 1px solid var(--budgeteer-border);
+		position: relative;
+		overflow: hidden;
+	}
+	.deco { position: absolute; pointer-events: none; }
+	.deco-blob-blue     { top: 8%; left: 6%; width: 56px; height: 56px; border-radius: 50%; background: var(--budgeteer-blue); }
+	.deco-circle-orange { top: 22%; right: 5%; width: 64px; height: 64px; border-radius: 50%; background: var(--budgeteer-orange); }
+	.deco-ring-pink     { bottom: 16%; left: 4%; width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--budgeteer-pink); }
+	.deco-dot-vibrant   { bottom: 24%; right: 8%; width: 16px; height: 16px; border-radius: 50%; background: var(--budgeteer-vibrant); }
+	@media (max-width: 48rem) { .deco { display: none; } }
+
+	.intro { max-width: 38rem; margin: 0 auto 2.5rem; text-align: center; }
+	.display { font-size: clamp(1.9rem, 3.8vw, 2.6rem); line-height: 1.05; margin: 0 0 0.85rem; }
+	.lede { font-family: var(--budgeteer-font-sans); font-size: 0.95rem; line-height: 1.55; color: var(--budgeteer-fg-muted); max-width: 30rem; margin: 0 auto; }
+
+	.stage {
+		position: relative;
+		display: grid;
+		gap: 1rem;
+		grid-template-columns: 1fr;
+	}
+	@media (min-width: 60rem) {
+		.stage {
+			grid-template-columns: 1.55fr 1fr;
+			grid-template-rows: auto auto;
+			gap: 1rem;
+		}
+		.frame-main { grid-row: 1 / 3; }
+	}
+
+	.frame {
+		position: relative;
+		background: var(--budgeteer-card);
+		border: 1px solid var(--budgeteer-border);
+		border-radius: var(--budgeteer-radius);
+		overflow: hidden;
+		box-shadow: var(--budgeteer-shadow-card);
+		min-height: 260px;
+	}
+	.frame-main { min-height: 540px; }
+	@media (min-width: 60rem) {
+		.frame-side { min-height: 262px; }
+	}
+
+	.card-photo { position: absolute; inset: 0; }
+	.card-photo :global(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
+	.placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+	.ph-home   { background: radial-gradient(circle at 30% 25%, #D9C8A8, #A89673); }
+	.ph-budget { background: radial-gradient(circle at 70% 40%, #E7C8B8, #B89788); }
+	.ph-tx     { background: radial-gradient(circle at 50% 60%, #C7BFA7, #8E8770); }
+	.ph-label {
+		font-family: var(--budgeteer-font-mono); font-size: 0.7rem;
+		color: rgba(255, 255, 255, 0.9); background: rgba(0, 0, 0, 0.35);
+		padding: 0.3rem 0.7rem; border-radius: 100px; letter-spacing: 0.06em;
+	}
+
+	.card-tag {
+		position: absolute; top: 1rem; left: 1rem; z-index: 2;
+		display: inline-flex; align-items: center; gap: 0.4rem;
+		padding: 0.3rem 0.7rem;
+		background: rgba(255, 255, 255, 0.92);
+		backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+		border-radius: 100px;
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		letter-spacing: 0.1em; text-transform: uppercase;
+		color: var(--budgeteer-primary); font-weight: 600;
+		box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.2);
+	}
+	.tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--budgeteer-vibrant); }
+
+	/* ====== Widget shell (shared) ====== */
+	.widget {
+		position: absolute;
+		background: #fff;
+		border-radius: 14px;
+		box-shadow: 0 28px 60px -22px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		padding: 1rem 1.1rem;
+		z-index: 3;
+		animation: budgeteer-float 6s ease-in-out infinite;
+	}
+
+	.w-row {
+		display: flex; justify-content: space-between; align-items: center;
+		margin-bottom: 0.6rem;
+	}
+	.w-eyebrow {
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		letter-spacing: 0.14em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.w-link {
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		color: var(--budgeteer-vibrant); letter-spacing: 0.06em;
+	}
+	.w-pill {
+		font-family: var(--budgeteer-font-mono); font-size: 0.5rem;
+		letter-spacing: 0.1em; padding: 3px 8px; border-radius: 100px; font-weight: 600;
+	}
+	.w-pill-warn { background: rgba(255,139,106,0.18); color: var(--budgeteer-orange); }
+	.w-pill-ai   { background: rgba(40,199,91,0.18); color: var(--budgeteer-primary); }
+	.w-divider { height: 1px; background: var(--budgeteer-border); margin: 0.85rem 0 0.7rem; }
+
+	/* ====== Dashboard widget (Home) ====== */
+	.widget-dash { width: 320px; }
+	.frame-main .widget-dash { width: 360px; top: 16%; right: 6%; }
+	.w-headline { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem; }
+	.w-amount {
+		font-family: var(--budgeteer-font-serif); font-style: italic;
+		font-size: 1.85rem; color: var(--budgeteer-fg); font-weight: 500; line-height: 1;
+	}
+	.w-delta {
+		font-family: var(--budgeteer-font-mono); font-size: 0.65rem;
+		color: var(--budgeteer-vibrant); font-weight: 600;
+		background: rgba(40,199,91,0.15); padding: 3px 8px; border-radius: 100px;
+	}
+	.w-bar {
+		height: 6px; background: var(--budgeteer-bg-soft);
+		border-radius: 100px; overflow: hidden; margin-bottom: 0.35rem;
+	}
+	.w-bar-fill { height: 100%; background: var(--budgeteer-vibrant); border-radius: 100px; }
+	.w-meta {
+		display: flex; justify-content: space-between;
+		font-family: var(--budgeteer-font-mono); font-size: 0.55rem;
+		color: var(--budgeteer-fg-muted);
+	}
+	/* Cash flow widget on the Home card */
+	.widget-cash {
+		width: 220px;
+		bottom: 12%;
+		left: 6%;
+		padding: 0.9rem 1rem;
+		transform: rotate(-2deg);
+		animation-delay: -3s;
+	}
+	.cash-row {
+		display: flex; justify-content: space-between; align-items: center;
+		padding: 0.3rem 0;
+	}
+	.cash-l {
+		font-family: var(--budgeteer-font-mono); font-size: 0.6rem;
+		letter-spacing: 0.08em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.cash-v {
+		font-family: var(--budgeteer-font-mono); font-size: 0.75rem;
+		color: var(--budgeteer-fg); font-weight: 600;
+	}
+	.cash-pos { color: var(--budgeteer-vibrant); }
+	.cash-net { color: var(--budgeteer-vibrant); }
+	.cash-divider { height: 1px; background: var(--budgeteer-border); margin: 0.2rem 0; }
+
+	.w-cats { display: flex; flex-direction: column; gap: 0.4rem; }
+	.w-cat { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; }
+	.w-cat-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+	.w-cat-name { flex: 1; color: var(--budgeteer-fg); }
+	.w-cat-amt { font-family: var(--budgeteer-font-mono); color: var(--budgeteer-fg); font-weight: 600; font-size: 0.65rem; }
+
+	/* === Bottom-left moment overlay on the Home card === */
+	.frame-main .card-extra { position: absolute; bottom: 14%; left: 6%; z-index: 3; }
+
+	/* ====== Budget — two floating cards ====== */
+	.bud-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 14px;
+		padding: 0.85rem 0.95rem;
+		box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		width: 200px;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		z-index: 3;
+	}
+	.bud-card-a { top: 14%; left: 6%; transform: rotate(-3deg); animation-delay: 0s; }
+	.bud-card-b { bottom: 14%; right: 6%; transform: rotate(2deg); animation-delay: -3s; }
+
+	.bud-head {
+		display: flex; align-items: center; gap: 0.55rem;
+		margin-bottom: 0.45rem;
+	}
+	.bud-ico {
+		width: 28px; height: 28px; border-radius: 8px;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.85rem; font-weight: 600; flex-shrink: 0;
+	}
+	.bud-ico-green { background: rgba(40,199,91,0.15); color: var(--budgeteer-vibrant); }
+	.bud-ico-pink  { background: rgba(244,168,166,0.25); color: #C56865; }
+
+	.bud-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+	.bud-cat {
+		font-family: var(--budgeteer-font-mono); font-size: 0.5rem;
+		letter-spacing: 0.12em; color: var(--budgeteer-fg-muted); font-weight: 600;
+	}
+	.bud-state { font-family: var(--budgeteer-font-mono); font-size: 0.5rem; letter-spacing: 0.08em; font-weight: 600; }
+	.bud-ok   { color: var(--budgeteer-vibrant); }
+	.bud-over { color: var(--budgeteer-orange); }
+
+	.bud-amt {
+		font-family: var(--budgeteer-font-serif); font-style: italic;
+		font-weight: 500; font-size: 1.35rem;
+		color: var(--budgeteer-fg); line-height: 1;
+		margin-bottom: 0.45rem;
+	}
+	.bud-amt small {
+		font-family: var(--budgeteer-font-mono); font-style: normal;
+		font-size: 0.6rem; color: var(--budgeteer-fg-muted);
+		font-weight: 400; margin-left: 0.2rem;
+	}
+	.bud-amt.over { color: var(--budgeteer-orange); }
+
+	.bud-bar {
+		height: 5px; background: var(--budgeteer-bg-soft);
+		border-radius: 100px; position: relative; overflow: visible;
+	}
+	.bud-bar-fill { height: 100%; border-radius: 100px; }
+	.bud-bar-over {
+		position: absolute; right: -12%; top: 0; height: 100%; width: 18%;
+		background: var(--budgeteer-orange);
+		border-radius: 100px;
+	}
+
+	/* ====== Transactions — three floating cards ====== */
+	.tx-card {
+		position: absolute;
+		background: #fff;
+		border-radius: 12px;
+		padding: 0.7rem 0.85rem;
+		box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(31, 77, 51, 0.06);
+		font-family: var(--budgeteer-font-sans);
+		display: grid; grid-template-columns: 30px 1fr auto;
+		gap: 0.6rem; align-items: center;
+		width: 230px;
+		animation: budgeteer-float 6s ease-in-out infinite;
+		z-index: 3;
+	}
+	.tx-card-0 { top: 12%; left: 5%;  transform: rotate(-3deg); animation-delay: 0s; }
+	.tx-card-1 { top: 40%; right: 4%; transform: rotate(2deg);  animation-delay: -2s; }
+	.tx-card-2 { bottom: 10%; left: 8%; transform: rotate(-1deg); animation-delay: -4s; }
+
+	.tx-ico {
+		width: 30px; height: 30px; border-radius: 50%;
+		display: flex; align-items: center; justify-content: center;
+		font-size: 0.85rem; flex-shrink: 0;
+	}
+	.tx-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+	.tx-name {
+		font-size: 0.72rem; color: var(--budgeteer-fg); font-weight: 600;
+		white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	}
+	.tx-cat {
+		font-family: var(--budgeteer-font-mono); font-size: 0.5rem;
+		letter-spacing: 0.08em; font-weight: 600;
+	}
+	.tx-amt {
+		font-family: var(--budgeteer-font-mono); font-size: 0.72rem;
+		color: var(--budgeteer-orange); font-weight: 600;
+	}
+
+	/* === Responsive: hide widgets on mobile, show photos full-bleed === */
+	@media (max-width: 48rem) {
+		.widget, .bud-card, .tx-card { display: none; }
+		.frame-main { min-height: 280px; }
+		.frame-side { min-height: 220px; }
+	}
+</style>
