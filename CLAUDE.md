@@ -29,6 +29,12 @@ Key priorities (in order):
 - Comments only where the "why" isn't obvious.
 - `import "server-only"` at the top of every file in `src/server/`.
 
+## Pull request rules
+
+- Always update the README on every UI change. If a PR alters any user-facing
+  screen, regenerate the affected `public/screenshots/*.png` (and any related
+  README copy) in the same PR so the README never lags the current UI.
+
 ## Architecture
 
 ### Data flow
