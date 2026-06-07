@@ -125,7 +125,7 @@ export function ReviewPage() {
               <div className="flex flex-col gap-5">
                 {groups.flagged.length > 0 && (
                   <ReviewGroup
-                    icon={<HelpCircle className="size-4" />}
+                    icon={<HelpCircle />}
                     title={t("groupFlaggedTitle")}
                     description={t("groupFlaggedDescription")}
                     count={groups.flagged.length}
@@ -148,7 +148,7 @@ export function ReviewPage() {
                 )}
                 {groups.uncategorized.length > 0 && (
                   <ReviewGroup
-                    icon={<Tags className="size-4" />}
+                    icon={<Tags />}
                     title={t("groupUncategorizedTitle")}
                     description={t("groupUncategorizedDescription")}
                     count={groups.uncategorized.length}
@@ -166,7 +166,7 @@ export function ReviewPage() {
                 )}
                 {groups.transfer.length > 0 && (
                   <ReviewGroup
-                    icon={<ArrowLeftRight className="size-4" />}
+                    icon={<ArrowLeftRight />}
                     title={t("groupTransferTitle")}
                     description={t("groupTransferDescription")}
                     count={groups.transfer.length}
@@ -220,7 +220,7 @@ function ProgressSummary({
   ].filter((s) => s.count > 0);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-semibold tracking-tight">{t("summaryTitle")}</h2>
         <span className="text-sm text-muted-foreground">
@@ -264,24 +264,27 @@ function ReviewGroup({
 }) {
   return (
     <section>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-3.5"
+            aria-hidden
+          >
             {icon}
           </span>
-          <div>
-            <h3 className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-              {title}
-              <span className="rounded-full bg-muted px-1.5 text-xs font-medium tabular-nums text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
+              <span className="truncate">{title}</span>
+              <span className="shrink-0 rounded-full bg-muted px-1.5 text-xs font-medium tabular-nums text-muted-foreground">
                 {count}
               </span>
-            </h3>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            </h2>
+            <p className="truncate text-xs text-muted-foreground">{description}</p>
           </div>
         </div>
-        {bulk}
+        {bulk && <div className="shrink-0">{bulk}</div>}
       </div>
-      <div className="flex flex-col gap-2.5">
+      <div className="grid items-start gap-3 sm:grid-cols-2 2xl:grid-cols-3">
         <AnimatePresence initial={false}>{children}</AnimatePresence>
       </div>
     </section>
@@ -472,9 +475,9 @@ function ReviewRow({
       layout
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, height: 0, marginBottom: -10 }}
+      exit={{ opacity: 0, scale: 0.97 }}
       transition={{ duration: 0.2 }}
-      className="rounded-xl border border-border bg-card p-4"
+      className="flex h-full flex-col rounded-xl border border-border bg-card p-4 transition-colors duration-200 ease-out hover:border-foreground/20"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -496,16 +499,18 @@ function ReviewRow({
         <TxnAmount txn={txn} />
       </div>
 
-      <RowActions
-        bucket={bucket}
-        kind={kind}
-        categories={categories}
-        busy={busy}
-        onAccept={accept}
-        onKeepTransfer={keepTransfer}
-        onExclude={exclude}
-        onCategorize={categorize}
-      />
+      <div className="mt-auto">
+        <RowActions
+          bucket={bucket}
+          kind={kind}
+          categories={categories}
+          busy={busy}
+          onAccept={accept}
+          onKeepTransfer={keepTransfer}
+          onExclude={exclude}
+          onCategorize={categorize}
+        />
+      </div>
     </motion.div>
   );
 }
