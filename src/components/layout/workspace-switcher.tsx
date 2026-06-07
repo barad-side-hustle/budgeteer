@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useRouter } from "@/i18n/navigation";
-import { setActiveAccountId } from "@/lib/account-store";
+import { setAccountSelection } from "@/lib/account-store";
 import { listWorkspaces } from "@/lib/api";
 import type { Workspace } from "@/lib/types";
 import { setActiveWorkspaceId, useActiveWorkspaceId } from "@/lib/workspace-store";
@@ -22,7 +22,7 @@ export function useSwitchWorkspace() {
   const queryClient = useQueryClient();
   return (id: number) => {
     setActiveWorkspaceId(id);
-    setActiveAccountId(null);
+    setAccountSelection(null);
     queryClient.invalidateQueries();
   };
 }

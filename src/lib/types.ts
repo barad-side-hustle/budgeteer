@@ -513,6 +513,8 @@ export interface BankAccount {
   balance: number | null;
   balanceCurrency: string | null;
   balanceUpdatedAt: string | null;
+  groupKey: string | null;
+  groupName: string | null;
   createdAt: string;
   updatedAt: string;
 }

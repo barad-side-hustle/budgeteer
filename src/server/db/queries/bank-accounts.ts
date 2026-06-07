@@ -27,6 +27,8 @@ interface BankAccountRow {
   balance: number | null;
   balance_currency: string | null;
   balance_updated_at: string | null;
+  group_key: string | null;
+  group_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +44,8 @@ function mapBankAccountRow(row: BankAccountRow): BankAccount {
     balance: row.balance,
     balanceCurrency: row.balance_currency,
     balanceUpdatedAt: row.balance_updated_at,
+    groupKey: row.group_key,
+    groupName: row.group_name,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -50,13 +54,15 @@ function mapBankAccountRow(row: BankAccountRow): BankAccount {
 const BANK_ACCOUNT_SELECT = `
   SELECT ba.id, ba.credential_id, bc.provider, ba.account_number, ba.name,
          ba.ownership_type, ba.balance, ba.balance_currency, ba.balance_updated_at,
-         ba.created_at, ba.updated_at
+         ba.group_key, ba.group_name, ba.created_at, ba.updated_at
   FROM bank_accounts ba
   JOIN bank_credentials bc ON ba.credential_id = bc.id`;
 
 interface UpsertOptions {
   balance?: number;
   balanceCurrency?: string;
+  groupKey?: string;
+  groupName?: string;
 }
 
 export function upsertBankAccount(
@@ -66,15 +72,20 @@ export function upsertBankAccount(
   options: UpsertOptions = {},
 ): void {
   const db = getDb();
+  const groupKey = options.groupKey ?? null;
+  const groupName = options.groupName ?? null;
+
   if (options.balance != null) {
     db.prepare(
       `INSERT INTO bank_accounts
-         (workspace_id, credential_id, account_number, name, balance, balance_currency, balance_updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+         (workspace_id, credential_id, account_number, name, balance, balance_currency, balance_updated_at, group_key, group_name)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)
        ON CONFLICT(workspace_id, credential_id, account_number) DO UPDATE SET
          balance = excluded.balance,
          balance_currency = excluded.balance_currency,
          balance_updated_at = excluded.balance_updated_at,
+         group_key = COALESCE(excluded.group_key, bank_accounts.group_key),
+         group_name = COALESCE(excluded.group_name, bank_accounts.group_name),
          updated_at = datetime('now')`,
     ).run(
       workspaceId,
@@ -83,15 +94,20 @@ export function upsertBankAccount(
       accountNumber,
       options.balance,
       options.balanceCurrency ?? "ILS",
+      groupKey,
+      groupName,
     );
     return;
   }
 
   db.prepare(
-    `INSERT INTO bank_accounts (workspace_id, credential_id, account_number, name)
-     VALUES (?, ?, ?, ?)
-     ON CONFLICT(workspace_id, credential_id, account_number) DO NOTHING`,
-  ).run(workspaceId, credentialId, accountNumber, accountNumber);
+    `INSERT INTO bank_accounts (workspace_id, credential_id, account_number, name, group_key, group_name)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(workspace_id, credential_id, account_number) DO UPDATE SET
+       group_key = COALESCE(excluded.group_key, bank_accounts.group_key),
+       group_name = COALESCE(excluded.group_name, bank_accounts.group_name),
+       updated_at = datetime('now')`,
+  ).run(workspaceId, credentialId, accountNumber, accountNumber, groupKey, groupName);
 }
 
 export function listBankAccounts(workspaceId: number): BankAccount[] {
@@ -175,7 +191,7 @@ export function getAccountSummaries(
     .prepare(
       `SELECT ba.id, ba.credential_id, bc.provider, ba.account_number, ba.name,
               ba.ownership_type, ba.balance, ba.balance_currency, ba.balance_updated_at,
-              ba.created_at, ba.updated_at,
+              ba.group_key, ba.group_name, ba.created_at, ba.updated_at,
               COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount ELSE 0 END), 0) AS income,
               COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) ELSE 0 END), 0) AS expense,
               COUNT(t.id) AS transaction_count

@@ -247,7 +247,11 @@ async function syncOneCredential(
   );
 
   for (const account of result.accounts) {
-    upsertBankAccount(workspaceId, meta.id, account.accountNumber, { balance: account.balance });
+    upsertBankAccount(workspaceId, meta.id, account.accountNumber, {
+      balance: account.balance,
+      groupKey: account.groupKey,
+      groupName: account.groupName,
+    });
   }
 
   applyMerchantRulesToSyncRun(workspaceId, syncRunId);
