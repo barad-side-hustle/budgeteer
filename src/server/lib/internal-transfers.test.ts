@@ -79,7 +79,6 @@ describe("findInternalTransferPairs", () => {
       row({ id: 3, credentialId: 2, chargedAmount: 300, kind: "income", date: "2026-05-01" }),
     ]);
     expect(pairs).toHaveLength(1);
-    // The same-day debit (id 2) is closest to the credit and is matched.
     expect(pairs[0]).toEqual({ debitId: 2, creditId: 3 });
   });
 

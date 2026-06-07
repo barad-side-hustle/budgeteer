@@ -18,6 +18,7 @@ import {
 } from "@/server/db/queries/home";
 import { getWorkspaceSetting } from "@/server/db/queries/settings";
 import {
+  type AccountFilter,
   getCategoryMonthlySpend,
   getCategorySpendInRange,
   getDailySpendTotals,
@@ -49,14 +50,14 @@ function safe<T>(section: InsightSection, errors: InsightSectionError[], fn: () 
   }
 }
 
-/** Largest current-month merchant per rolled-up category, for the mover "why". */
 function topMerchantByKey(
   workspaceId: number,
   from: string,
   to: string,
   metaById: Map<number, CategoryMeta>,
+  filter: AccountFilter,
 ): Map<number, string> {
-  const rows = getTopMerchantPerCategory(workspaceId, from, to);
+  const rows = getTopMerchantPerCategory(workspaceId, from, to, filter);
   const best = new Map<number, number>();
   const result = new Map<number, string>();
   for (const row of rows) {
@@ -71,12 +72,12 @@ function topMerchantByKey(
   return result;
 }
 
-/** Trailing monthly totals per rolled-up category, for mover sparklines. */
 function trendByKey(
   workspaceId: number,
   metaById: Map<number, CategoryMeta>,
+  filter: AccountFilter,
 ): Map<number, number[]> {
-  const rows = getCategoryMonthlySpend(workspaceId, TREND_MONTHS);
+  const rows = getCategoryMonthlySpend(workspaceId, TREND_MONTHS, filter);
   const months = [...new Set(rows.map((r) => r.month))].sort();
   const monthIndex = new Map(months.map((m, i) => [m, i] as const));
   const trend = new Map<number, number[]>();
@@ -95,12 +96,11 @@ function trendByKey(
   return trend;
 }
 
-/**
- * The single source of truth behind the Home screen. Gathers spend once, rolls
- * leaves to parents once, and derives every insight deterministically so two
- * sections can never disagree about the same number.
- */
-export function buildInsightPayload(workspaceId: number, now: Date): InsightPayload {
+export function buildInsightPayload(
+  workspaceId: number,
+  now: Date,
+  filter: AccountFilter = {},
+): InsightPayload {
   const errors: InsightSectionError[] = [];
   const ranges = computeMonthRanges(now);
 
@@ -116,25 +116,21 @@ export function buildInsightPayload(workspaceId: number, now: Date): InsightPayl
   }
 
   const currentRolled = rollUpByParent(
-    getCategorySpendInRange(workspaceId, ranges.current.from, ranges.current.to),
+    getCategorySpendInRange(workspaceId, ranges.current.from, ranges.current.to, filter),
     metaById,
   );
-  // Movers and breakdown deltas compare against the SAME elapsed window last
-  // month (day-aligned), never the full prior month, so a partial month is not
-  // judged against a complete one. The full prior month is only used for the
-  // burndown baseline curve below.
   const priorRolled = rollUpByParent(
-    getCategorySpendInRange(workspaceId, ranges.priorMtd.from, ranges.priorMtd.to),
+    getCategorySpendInRange(workspaceId, ranges.priorMtd.from, ranges.priorMtd.to, filter),
     metaById,
   );
-  const typicalByKey = rollUpByParent(getAutoBudgetAverage(workspaceId, 3), metaById);
+  const typicalByKey = rollUpByParent(getAutoBudgetAverage(workspaceId, 3, filter), metaById);
   let typicalTotal = 0;
   for (const v of typicalByKey.values()) typicalTotal += v;
   const typicalMonthly = typicalTotal > 0 ? typicalTotal : null;
 
   const verdict = safe<Verdict>("verdict", errors, () => {
-    const spentMtd = getPeriodTotal(workspaceId, ranges.current.from, ranges.current.to);
-    const priorMtd = getPeriodTotal(workspaceId, ranges.priorMtd.from, ranges.priorMtd.to);
+    const spentMtd = getPeriodTotal(workspaceId, ranges.current.from, ranges.current.to, filter);
+    const priorMtd = getPeriodTotal(workspaceId, ranges.priorMtd.from, ranges.priorMtd.to, filter);
     const paydayDay = Number(getWorkspaceSetting(workspaceId, "payday_day") ?? "1");
     const daysUntilPayday = Math.max(0, daysUntil(nextPayday(now, paydayDay), now));
     const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
@@ -162,8 +158,9 @@ export function buildInsightPayload(workspaceId: number, now: Date): InsightPayl
         ranges.current.from,
         ranges.current.to,
         metaById,
+        filter,
       ),
-      trendByKey: trendByKey(workspaceId, metaById),
+      trendByKey: trendByKey(workspaceId, metaById, filter),
     }),
   );
 
@@ -181,12 +178,18 @@ export function buildInsightPayload(workspaceId: number, now: Date): InsightPayl
   );
 
   const burndown = safe("burndown", errors, () => {
-    const cur = getDailySpendTotals(workspaceId, ranges.current.from, ranges.current.to).map(
-      (d) => d.amount,
-    );
-    const pri = getDailySpendTotals(workspaceId, ranges.priorFull.from, ranges.priorFull.to).map(
-      (d) => d.amount,
-    );
+    const cur = getDailySpendTotals(
+      workspaceId,
+      ranges.current.from,
+      ranges.current.to,
+      filter,
+    ).map((d) => d.amount);
+    const pri = getDailySpendTotals(
+      workspaceId,
+      ranges.priorFull.from,
+      ranges.priorFull.to,
+      filter,
+    ).map((d) => d.amount);
     return {
       current: cumulative(cur).slice(0, ranges.elapsedDays),
       prior: cumulative(pri),
@@ -195,13 +198,17 @@ export function buildInsightPayload(workspaceId: number, now: Date): InsightPayl
   });
 
   const cashFlow = safe("cashFlow", errors, () =>
-    getCashFlow(workspaceId, ranges.current.from, ranges.current.to),
+    getCashFlow(workspaceId, ranges.current.from, ranges.current.to, filter),
   );
-  const trend = safe("trend", errors, () => getHistoricalTrend(workspaceId, HISTORICAL_MONTHS));
+  const trend = safe("trend", errors, () =>
+    getHistoricalTrend(workspaceId, HISTORICAL_MONTHS, filter),
+  );
   const recentTransactions = safe("recentTransactions", errors, () =>
-    getRecentTransactionsForHome(workspaceId, RECENT_TXN_LIMIT),
+    getRecentTransactionsForHome(workspaceId, RECENT_TXN_LIMIT, filter),
   );
-  const needsAttention = safe("needsAttention", errors, () => getNeedsAttentionCounts(workspaceId));
+  const needsAttention = safe("needsAttention", errors, () =>
+    getNeedsAttentionCounts(workspaceId, filter),
+  );
   const bankHealth = safe("bankHealth", errors, () => getBankHealth(workspaceId));
 
   return {

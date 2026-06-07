@@ -1,11 +1,6 @@
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 
-/**
- * The small uppercase "eyebrow" label used above card content and section
- * headers across the app. One canonical recipe so every card matches.
- * See docs/design-system.md section 2.
- */
 function CardLabel({ className, ...props }: ComponentProps<"div">) {
   return (
     <div

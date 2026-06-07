@@ -10,18 +10,11 @@ const COLORS = [
   "var(--status-plenty-left)",
 ];
 
-// Deterministic pseudo-random so the burst is varied without calling the impure
-// Math.random during render (react-compiler purity). Seeded by piece index.
 function rand(i: number, salt: number): number {
   const x = Math.sin((i + 1) * 12.9898 + salt * 78.233) * 43758.5453;
   return x - Math.floor(x);
 }
 
-/**
- * A lightweight, dependency-free confetti burst. Pieces fall and drift from the
- * top of the nearest positioned ancestor, so wrap it in a `relative` container.
- * Mounts once (render it conditionally) to play the animation a single time.
- */
 export function Confetti({ count = 70 }: { count?: number }) {
   const pieces = useMemo(
     () =>

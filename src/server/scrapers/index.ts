@@ -31,18 +31,12 @@ function sanitizeError(error: unknown): string {
     return "An unknown error occurred during scraping";
   }
   let msg = error.message;
-  // Strip 5+ digit numbers (likely ID numbers, card digits, etc.)
   msg = msg.replace(/\b\d{5,}\b/g, "[REDACTED]");
-  // Strip password and id values from JSON-like blobs.
-  // Match a key followed by quoted string OR unquoted value, non-greedy.
   msg = msg.replace(/"(password|id|card6Digits|cardSuffix)"\s*:\s*"[^"]*"/gi, '"$1":"[REDACTED]"');
   msg = msg.replace(/\b(password|id|card6Digits|cardSuffix)\s*=\s*\S+/gi, "$1=[REDACTED]");
   return msg;
 }
 
-/**
- * Detect transient errors we should retry, or surface with friendlier copy.
- */
 function classifyError(error: unknown): {
   retryable: boolean;
   friendly: string | null;
@@ -52,9 +46,6 @@ function classifyError(error: unknown): {
   }
   const msg = error.message;
 
-  // Bot-protection block from the bank. The Isracard variant returns
-  // "result: Block Automation" out of the ValidateIdData endpoint, so this
-  // must match BEFORE the ValidateIdData credential check below.
   if (/Block Automation|Cloudflare|captcha|recaptcha/i.test(msg)) {
     return {
       retryable: false,
@@ -63,9 +54,6 @@ function classifyError(error: unknown): {
     };
   }
 
-  // Isracard ValidateIdData returns an empty body when the ID/card-suffix
-  // combination doesn't match a real card. This is almost always a credential
-  // typo (most commonly entering the full ID into the "Last 6 Digits" field).
   if (/reqName=ValidateIdData/.test(msg)) {
     return {
       retryable: false,
@@ -74,7 +62,6 @@ function classifyError(error: unknown): {
     };
   }
 
-  // Empty JSON response from bank - usually transient (rate limit, bot block, flaky endpoint).
   if (/Unexpected end of JSON input/.test(msg) || /fetchPostWithinPage parse error/.test(msg)) {
     return {
       retryable: true,
@@ -135,9 +122,6 @@ async function runScrape(
     "--disable-blink-features=AutomationControlled",
     "--disable-features=IsolateOrigins,site-per-process",
   ];
-  // Chromium's renderer sandbox is on by default on macOS, Windows, and
-  // most Linux installs. Self-hosters running as root or in unprivileged
-  // Docker need to opt out (the sandbox fails to start there).
   if (process.env.BUDGETEER_DISABLE_CHROMIUM_SANDBOX === "1") {
     chromiumArgs.push("--no-sandbox");
   }
@@ -147,14 +131,11 @@ async function runScrape(
     startDate,
     combineInstallments: false,
     showBrowser,
-    // Verbose logs include URLs and posted payloads (incl. credentials).
-    // Only enable when the user is also showing the browser (= they're debugging).
     verbose: showBrowser,
     timeout: 60000,
     args: chromiumArgs,
   });
 
-  // credentials shape varies by provider; the library accepts different types per bank
   const result = await scraper.scrape(credentials as Parameters<typeof scraper.scrape>[0]);
 
   if (!result.success) {
@@ -201,11 +182,6 @@ async function runScrape(
 }
 
 interface ScrapeBankOptions {
-  /**
-   * When true, force showBrowser regardless of the workspace setting. Used for
-   * the per-bank manual-2FA flag so the user can solve a 2FA challenge in the
-   * popup for just that one provider.
-   */
   manualTwoFactor?: boolean;
 }
 

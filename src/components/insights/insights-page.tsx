@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
 import { FixedVsVariableCard } from "@/components/insights/fixed-vs-variable";
 import { RecommendationCard } from "@/components/insights/recommendation-card";
+import { RecurringSpending } from "@/components/insights/recurring-spending";
 import { SavingsList } from "@/components/insights/savings-list";
 import { PageHeader } from "@/components/layout/app-shell";
 import { Link } from "@/i18n/navigation";
@@ -52,19 +53,18 @@ export function InsightsPage() {
               </section>
             )}
 
+            {data.fixedVsVariable ? (
+              <FixedVsVariableCard data={data.fixedVsVariable} />
+            ) : (
+              <CardError label={t("fixedTitle")} onRetry={refetch} />
+            )}
+
             <div className="grid grid-cols-12 gap-4 md:gap-6">
               <div className="col-span-12 lg:col-span-7">
-                <SavingsList savings={data.savings ?? []} totalSavings={data.totalSavings} />
+                <RecurringSpending recurring={data.recurring ?? []} />
               </div>
               <div className="col-span-12 lg:col-span-5">
-                {data.fixedVsVariable ? (
-                  <FixedVsVariableCard
-                    data={data.fixedVsVariable}
-                    recurring={data.recurring ?? []}
-                  />
-                ) : (
-                  <CardError label={t("fixedTitle")} onRetry={refetch} />
-                )}
+                <SavingsList savings={data.savings ?? []} totalSavings={data.totalSavings} />
               </div>
             </div>
           </div>

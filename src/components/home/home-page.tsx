@@ -7,17 +7,15 @@ import { useCallback, useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { SyncButton } from "@/components/dashboard/sync-button";
-import { AttentionStrip } from "@/components/home/attention-strip";
 import { BreakdownSection } from "@/components/home/breakdown-section";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
+import { ConnectedAccounts } from "@/components/home/connected-accounts";
+import { FlaggedTransactions } from "@/components/home/flagged-transactions";
 import { ForecastHero } from "@/components/home/forecast-hero";
-import { ImproveFeed } from "@/components/home/improve-feed";
 import { RecentActivity } from "@/components/home/recent-activity";
-import { SpendingPaceCard } from "@/components/home/spending-pace-card";
 import { SyncFailureBanner } from "@/components/home/sync-failure-banner";
 import { SyncStatusPill } from "@/components/home/sync-status-pill";
-import { TopMovers } from "@/components/home/top-movers";
-import { RecommendationCard } from "@/components/insights/recommendation-card";
+import { TopInsights } from "@/components/home/top-insights";
 import { PageHeader } from "@/components/layout/app-shell";
 import { getActivity, getForecast, getInsights } from "@/lib/api";
 
@@ -56,13 +54,14 @@ export function HomePage() {
     queryClient.invalidateQueries({ queryKey: ["forecast"] });
     queryClient.invalidateQueries({ queryKey: ["summary"] });
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["reviewTransactions"] });
+    queryClient.invalidateQueries({ queryKey: ["accounts"] });
     queryClient.invalidateQueries({ queryKey: ["activity"] });
   }, [queryClient]);
 
   const data = insights.data;
   const insightsLoading = insights.isLoading || !data;
   const forecastLoading = forecast.isLoading || !forecast.data;
-  const recommendations = forecast.data?.recommendations?.slice(0, 3) ?? [];
 
   return (
     <>
@@ -95,24 +94,10 @@ export function HomePage() {
             <ForecastHero forecast={forecast.data.forecast} />
           )}
 
-          {recommendations.length > 0 && (
-            <div className="grid grid-cols-12 gap-4 md:gap-5 lg:gap-6">
-              {recommendations.map((rec) => (
-                <div key={rec.id} className="col-span-12 md:col-span-4">
-                  <RecommendationCard rec={rec} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!insightsLoading && !insights.isError && data.needsAttention && (
-            <AttentionStrip data={data.needsAttention} />
-          )}
-
           <div className="grid grid-cols-12 gap-4 md:gap-5 lg:gap-6">
             <div className="col-span-12 lg:col-span-7">
               {insightsLoading ? (
-                <CardSkeleton label={t("breakdownTitle")} height={260} />
+                <CardSkeleton label={t("breakdownTitle")} height={360} />
               ) : data.breakdown ? (
                 <BreakdownSection items={data.breakdown} />
               ) : (
@@ -121,39 +106,27 @@ export function HomePage() {
             </div>
             <div className="col-span-12 lg:col-span-5">
               {insightsLoading ? (
-                <CardSkeleton label={t("recentActivity")} height={260} />
+                <CardSkeleton label={t("recentActivity")} height={360} />
               ) : data.recentTransactions ? (
                 <RecentActivity items={data.recentTransactions} />
               ) : (
                 <CardError label={t("recentActivity")} onRetry={insights.refetch} />
               )}
             </div>
-            <div className="col-span-12 lg:col-span-6">
-              {insightsLoading ? (
-                <CardSkeleton label={t("moversTitle")} height={260} />
-              ) : data.movers ? (
-                <TopMovers movers={data.movers} />
-              ) : (
-                <CardError label={t("moversTitle")} onRetry={insights.refetch} />
-              )}
+            <div className="col-span-12 lg:col-span-4">
+              <ConnectedAccounts health={data?.bankHealth ?? null} />
             </div>
-            <div className="col-span-12 lg:col-span-6">
+            <div className="col-span-12 lg:col-span-4">
               {insightsLoading ? (
-                <CardSkeleton label={t("improveTitle")} height={260} />
+                <CardSkeleton label={t("topInsightsTitle")} height={260} />
               ) : data.insights ? (
-                <ImproveFeed insights={data.insights} />
+                <TopInsights insights={data.insights} />
               ) : (
-                <CardError label={t("improveTitle")} onRetry={insights.refetch} />
+                <CardError label={t("topInsightsTitle")} onRetry={insights.refetch} />
               )}
             </div>
-            <div className="col-span-12">
-              {insightsLoading ? (
-                <CardSkeleton label={t("burndownTitle")} height={180} />
-              ) : data.burndown ? (
-                <SpendingPaceCard burndown={data.burndown} />
-              ) : (
-                <CardError label={t("burndownTitle")} onRetry={insights.refetch} />
-              )}
+            <div className="col-span-12 lg:col-span-4">
+              <FlaggedTransactions />
             </div>
           </div>
         </div>

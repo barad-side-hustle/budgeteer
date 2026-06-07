@@ -165,9 +165,6 @@ export function replaceChatMessages(
 ): void {
   ensureChatSession(workspaceId, sessionId);
 
-  // De-duplicate by message id, keeping the last (most complete) occurrence.
-  // Multi-step tool runs can emit more than one UI message sharing the same id,
-  // which would otherwise trip the UNIQUE(session_id, message_id) constraint.
   const deduped = [...new Map(messages.map((message) => [message.id, message])).values()];
 
   getOrm().transaction((tx) => {

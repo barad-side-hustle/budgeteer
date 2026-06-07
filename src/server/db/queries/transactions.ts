@@ -143,11 +143,6 @@ interface QueryParams {
   to?: string;
   search?: string;
   category?: number;
-  /**
-   * Multi-id filter for parent-category aggregation. Takes precedence over
-   * `category` when present and non-empty. Use it to fetch transactions
-   * across all children of a parent category.
-   */
   categoryIds?: number[];
   sort?: string;
   order?: "asc" | "desc";
@@ -155,27 +150,16 @@ interface QueryParams {
   offset?: number;
   kind?: TransactionKindFilter;
   provider?: string;
-  /** @deprecated Use credentialIds */
   credentialId?: number;
   credentialIds?: number[];
-  /**
-   * Filter by specific real accounts. Resolved from bank_accounts.id to its
-   * (credentialId, accountNumber) pair by the route. More specific than
-   * credentialIds: when both are present, account keys win.
-   */
   accountKeys?: AccountKey[];
 }
 
-/** A real account identified by its (credentialId, accountNumber) pair. */
 export interface AccountKey {
   credentialId: number;
   accountNumber: string;
 }
 
-/**
- * Optional account scoping shared by the dashboard summary queries. Account keys
- * win over credential ids when both are present (see appendAccountFilter).
- */
 export interface AccountFilter {
   credentialIds?: number[];
   accountKeys?: AccountKey[];
@@ -208,11 +192,6 @@ function appendAccountKeysFilter(
   for (const key of accountKeys) values.push(key.credentialId, key.accountNumber);
 }
 
-/**
- * Apply the account filter (account keys preferred over credential ids), the
- * shared pattern across the list and every summary query. Returns nothing; it
- * mutates conditions/values like the append* helpers.
- */
 function appendAccountFilter(
   conditions: string[],
   values: (string | number)[],
@@ -224,6 +203,18 @@ function appendAccountFilter(
   } else {
     appendCredentialIdsFilter(conditions, values, filter.credentialIds, columnPrefix);
   }
+}
+
+export function buildAccountFilterClause(
+  filter: AccountFilter | undefined,
+  columnPrefix = "",
+): { sql: string; values: (string | number)[] } {
+  if (!filter) return { sql: "", values: [] };
+  const conditions: string[] = [];
+  const values: (string | number)[] = [];
+  appendAccountFilter(conditions, values, filter, columnPrefix);
+  if (conditions.length === 0) return { sql: "", values: [] };
+  return { sql: ` AND ${conditions.join(" AND ")}`, values };
 }
 
 function resolveSortSql(sort: string | undefined): string {
@@ -319,13 +310,12 @@ export function queryTransactions(
   };
 }
 
-/**
- * Transactions waiting for the user's review. Mirrors the "Review" badge in the
- * transactions table: any flagged row (needs_review, regardless of kind or
- * pending/completed status), plus still-uncategorized completed expenses that
- * need a category. Excluded rows are left out.
- */
-export function getReviewTransactions(workspaceId: number, limit = 200): TransactionWithCategory[] {
+export function getReviewTransactions(
+  workspaceId: number,
+  filter: AccountFilter = {},
+  limit = 200,
+): TransactionWithCategory[] {
+  const acct = buildAccountFilterClause(filter, "t.");
   const rows = getDb()
     .prepare(
       `${TRANSACTION_LIST_SELECT}
@@ -333,11 +323,11 @@ export function getReviewTransactions(workspaceId: number, limit = 200): Transac
          AND (
            t.needs_review = 1
            OR (t.category_id IS NULL AND t.kind = 'expense' AND t.status = 'completed')
-         )
+         )${acct.sql}
        ORDER BY t.needs_review DESC, t.date DESC, t.id DESC
        LIMIT ?`,
     )
-    .all(workspaceId, limit);
+    .all(workspaceId, ...acct.values, limit);
   return rows.map(mapTransactionRow);
 }
 
@@ -378,10 +368,6 @@ export function getUncategorizedIdsByKind(
   return rows.map((r) => r.id);
 }
 
-// Ungrouped candidate rows for the matching engine, bounded to the sync window
-// (`from`) for performance. Includes every kind (the engine needs kind='transfer'
-// rows to wrap bank-side card payments) but excludes rows already in an event so
-// re-matching is idempotent. See src/server/lib/matching.ts.
 export function getMatchCandidates(workspaceId: number, from: string): MatchCandidate[] {
   return getOrm()
     .select({
@@ -409,8 +395,6 @@ export function getMatchCandidates(workspaceId: number, from: string): MatchCand
     .all() as MatchCandidate[];
 }
 
-// Uncategorized expense rows, for deterministic "Cash & ATM" filing. Limiting
-// to category_id IS NULL keeps it forward-looking and never re-touches history.
 export function getUncategorizedAtmExpenses(
   workspaceId: number,
 ): { id: number; description: string }[] {
@@ -481,7 +465,6 @@ export function batchUpdateCategories(
           and(
             eq(transactionsTable.workspaceId, workspaceId),
             eq(transactionsTable.id, id),
-            // IS NOT keeps NULL category_source rows eligible (unlike <>).
             sql`${transactionsTable.categorySource} IS NOT 'user'`,
           ),
         )
@@ -522,12 +505,12 @@ export interface CategoryMonthSpend {
   amount: number;
 }
 
-// Per-(month, category) expense totals over a trailing window. Rolled up to
-// parents in the insight engine to draw each top-mover's trend sparkline.
 export function getCategoryMonthlySpend(
   workspaceId: number,
   monthsBack: number,
+  filter: AccountFilter = {},
 ): CategoryMonthSpend[] {
+  const acct = buildAccountFilterClause(filter);
   return getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
@@ -539,11 +522,11 @@ export function getCategoryMonthlySpend(
          AND status = 'completed'
          AND kind = 'expense'
          AND category_id IS NOT NULL
-         AND is_excluded = 0
+         AND is_excluded = 0${acct.sql}
        GROUP BY month, category_id
        ORDER BY month ASC`,
     )
-    .all(workspaceId, monthsBack) as CategoryMonthSpend[];
+    .all(workspaceId, monthsBack, ...acct.values) as CategoryMonthSpend[];
 }
 
 export interface MerchantMonthSpend {
@@ -553,12 +536,12 @@ export interface MerchantMonthSpend {
   amount: number;
 }
 
-// Per-(month, merchant) expense totals over a trailing window. Feeds recurring-
-// charge detection (a merchant billing most months is a fixed commitment).
 export function getMerchantMonthlySpend(
   workspaceId: number,
   monthsBack: number,
+  filter: AccountFilter = {},
 ): MerchantMonthSpend[] {
+  const acct = buildAccountFilterClause(filter);
   return getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
@@ -571,11 +554,11 @@ export function getMerchantMonthlySpend(
          AND status = 'completed'
          AND kind = 'expense'
          AND is_excluded = 0
-         AND description != ''
+         AND description != ''${acct.sql}
        GROUP BY month, description
        ORDER BY month ASC`,
     )
-    .all(workspaceId, monthsBack) as MerchantMonthSpend[];
+    .all(workspaceId, monthsBack, ...acct.values) as MerchantMonthSpend[];
 }
 
 export function getTopMerchants(
@@ -725,7 +708,9 @@ export function getCategorySpendByDay(
   categoryId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): DailySpendPoint[] {
+  const acct = buildAccountFilterClause(filter, "t.");
   return getDb()
     .prepare(
       `WITH RECURSIVE days(d) AS (
@@ -742,20 +727,20 @@ export function getCategorySpendByDay(
          AND t.category_id = ?
          AND t.kind = 'expense'
          AND t.status = 'completed'
-         AND t.is_excluded = 0
+         AND t.is_excluded = 0${acct.sql}
        GROUP BY days.d
        ORDER BY days.d ASC`,
     )
-    .all(from, to, workspaceId, categoryId) as DailySpendPoint[];
+    .all(from, to, workspaceId, categoryId, ...acct.values) as DailySpendPoint[];
 }
 
-// Total expense per calendar day across all categories. Drives the home
-// burndown curve (cumulative pace this month vs last month).
 export function getDailySpendTotals(
   workspaceId: number,
   from: string,
   to: string,
+  filter: AccountFilter = {},
 ): DailySpendPoint[] {
+  const acct = buildAccountFilterClause(filter, "t.");
   return getDb()
     .prepare(
       `WITH RECURSIVE days(d) AS (
@@ -771,11 +756,11 @@ export function getDailySpendTotals(
          AND t.workspace_id = ?
          AND t.kind = 'expense'
          AND t.status = 'completed'
-         AND t.is_excluded = 0
+         AND t.is_excluded = 0${acct.sql}
        GROUP BY days.d
        ORDER BY days.d ASC`,
     )
-    .all(from, to, workspaceId) as DailySpendPoint[];
+    .all(from, to, workspaceId, ...acct.values) as DailySpendPoint[];
 }
 
 export interface TopMerchantForCategory {
@@ -790,7 +775,9 @@ export function getTopMerchantsForCategory(
   from: string,
   to: string,
   limit = 8,
+  filter: AccountFilter = {},
 ): TopMerchantForCategory[] {
+  const acct = buildAccountFilterClause(filter);
   return getDb()
     .prepare(
       `SELECT description as merchant,
@@ -801,12 +788,12 @@ export function getTopMerchantsForCategory(
          AND date >= ? AND date <= ?
          AND status = 'completed'
          AND kind = 'expense'
-         AND is_excluded = 0
+         AND is_excluded = 0${acct.sql}
        GROUP BY description
        ORDER BY amount DESC
        LIMIT ?`,
     )
-    .all(workspaceId, categoryId, from, to, limit) as TopMerchantForCategory[];
+    .all(workspaceId, categoryId, from, to, ...acct.values, limit) as TopMerchantForCategory[];
 }
 
 export function getPeriodTotal(
@@ -999,134 +986,6 @@ export function batchSetNeedsReview(
 export interface NeedsReviewCount {
   categoryId: number;
   count: number;
-}
-
-export interface TransactionsSummary {
-  income: {
-    total: number;
-    count: number;
-    largest: TransactionWithCategory | null;
-  };
-  expense: {
-    total: number;
-    count: number;
-    largest: TransactionWithCategory | null;
-  };
-  net: number;
-  topMerchants: { description: string; total: number; count: number }[];
-  pendingReviewCount: number;
-}
-
-export interface TransactionsSummaryParams {
-  /** @deprecated Use credentialIds */
-  credentialId?: number;
-  credentialIds?: number[];
-  /** More specific than credentialIds: when both are present, account keys win. */
-  accountKeys?: AccountKey[];
-}
-
-export function getTransactionsSummary(
-  workspaceId: number,
-  from: string,
-  to: string,
-  params: TransactionsSummaryParams = {},
-): TransactionsSummary {
-  const db = getDb();
-  const baseConditions = [
-    "workspace_id = ?",
-    "date >= ?",
-    "date <= ?",
-    "status = 'completed'",
-    "is_excluded = 0",
-  ];
-  const baseValues: (string | number)[] = [workspaceId, from, to];
-  const summaryCredentialIds =
-    params.credentialIds && params.credentialIds.length > 0
-      ? params.credentialIds
-      : params.credentialId != null
-        ? [params.credentialId]
-        : undefined;
-  const summaryFilter: AccountFilter = {
-    credentialIds: summaryCredentialIds,
-    accountKeys: params.accountKeys,
-  };
-  appendAccountFilter(baseConditions, baseValues, summaryFilter);
-  const baseWhere = baseConditions.join(" AND ");
-
-  const incomeAgg = db
-    .prepare(
-      `SELECT COALESCE(SUM(charged_amount), 0) as total, COUNT(*) as count
-       FROM transactions
-       WHERE ${baseWhere} AND kind = 'income'`,
-    )
-    .get(...baseValues) as { total: number; count: number };
-
-  const expenseAgg = db
-    .prepare(
-      `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total, COUNT(*) as count
-       FROM transactions
-       WHERE ${baseWhere} AND kind = 'expense'`,
-    )
-    .get(...baseValues) as { total: number; count: number };
-
-  const pickLargest = (sign: "income" | "expense"): TransactionWithCategory | null => {
-    const tConditions = [
-      "t.workspace_id = ?",
-      "t.date >= ?",
-      "t.date <= ?",
-      "t.status = 'completed'",
-      "t.kind = ?",
-      "t.is_excluded = 0",
-    ];
-    const tValues: (string | number)[] = [workspaceId, from, to, sign];
-    appendAccountFilter(tConditions, tValues, summaryFilter, "t.");
-    const row = db
-      .prepare(
-        `${TRANSACTION_LIST_SELECT}
-         WHERE ${tConditions.join(" AND ")}
-         ORDER BY ABS(t.charged_amount) DESC, t.id DESC
-         LIMIT 1`,
-      )
-      .get(...tValues);
-    return row ? mapTransactionRow(row) : null;
-  };
-
-  const topMerchantsRows = db
-    .prepare(
-      `SELECT description,
-              SUM(ABS(charged_amount)) as total,
-              COUNT(*) as count
-       FROM transactions
-       WHERE ${baseWhere} AND kind = 'expense'
-       GROUP BY description
-       ORDER BY total DESC
-       LIMIT 5`,
-    )
-    .all(...baseValues) as { description: string; total: number; count: number }[];
-
-  const pendingReview = db
-    .prepare(
-      `SELECT COUNT(*) as count
-       FROM transactions
-       WHERE ${baseWhere} AND needs_review = 1`,
-    )
-    .get(...baseValues) as { count: number };
-
-  return {
-    income: {
-      total: incomeAgg.total,
-      count: incomeAgg.count,
-      largest: pickLargest("income"),
-    },
-    expense: {
-      total: expenseAgg.total,
-      count: expenseAgg.count,
-      largest: pickLargest("expense"),
-    },
-    net: incomeAgg.total - expenseAgg.total,
-    topMerchants: topMerchantsRows,
-    pendingReviewCount: pendingReview.count,
-  };
 }
 
 export function getNeedsReviewCountByCategory(

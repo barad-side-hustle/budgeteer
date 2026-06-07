@@ -45,8 +45,6 @@ export function BankStep({ onComplete }: BankStepProps) {
     queryFn: listIntegrations,
   });
 
-  // Derive the starting view from the query instead of a set-state effect; user
-  // actions override it via setSubState.
   const sub: Sub | null =
     subState ?? (isPending ? null : integrations.length > 0 ? "ready" : "pick");
 
@@ -99,7 +97,6 @@ export function BankStep({ onComplete }: BankStepProps) {
   function handleRemoved() {
     refetch();
     if (integrations.length <= 1) {
-      // last one being removed, drop back to picker
       setSubState("pick");
     }
   }
@@ -430,9 +427,6 @@ function CredentialForm({
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"idle" | "testing-ok" | "testing-fail" | "saved">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  // No prop->state sync effect needed: the parent remounts this form via a key
-  // that includes credentialId, so the useState initializer above is correct.
 
   useEffect(() => {
     if (!isEdit || credentialId == null) return;

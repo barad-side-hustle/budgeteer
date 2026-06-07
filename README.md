@@ -59,8 +59,8 @@ A daily and weekly amount that keeps you on track, plus friendly, non-judgmental
 </td>
 <td width="33%" valign="top">
 
-### ✅ Review queue
-Transactions the categorizer wasn't sure about land on a dedicated Review page with a clear explanation, so confirming or fixing them takes seconds.
+### ✅ Guided review queue
+Low-confidence guesses, uncategorized rows, and suspected transfers are grouped on a dedicated Review page. Accept, recategorize, or exclude in a click, or enter Focus mode to step through them one at a time.
 
 </td>
 </tr>
@@ -88,7 +88,7 @@ Credentials encrypted with AES-256-GCM. Server binds to `127.0.0.1` only — nev
 <td valign="top">
 
 ### 📊 Budgets with pacing
-Hierarchical categories, monthly targets, "ahead of pace" hero card, and per-category drilldown.
+Hierarchical categories, monthly targets, an "ahead of pace" hero card, per-category drilldown, and a top-bar filter to focus every page on a single account.
 
 </td>
 <td valign="top">
@@ -153,7 +153,7 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 <td align="center"><b>Review queue</b></td>
 </tr>
 <tr>
-<td><img src="public/screenshots/insights-light.png" alt="Insights: recommendations, savings, fixed vs variable"></td>
+<td><img src="public/screenshots/insights-light.png" alt="Insights: recommendations, recurring charges, per-category fixed vs variable, ways to save"></td>
 <td><img src="public/screenshots/review-light.png" alt="Review queue for flagged transactions"></td>
 </tr>
 <tr>

@@ -7,12 +7,10 @@ import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { PageHeader } from "@/components/layout/app-shell";
-import { KpiCards } from "@/components/transactions/kpi-cards";
-import { WidgetsRow } from "@/components/transactions/widgets-row";
 import { QueryError } from "@/components/ui/query-error";
 import type { Locale } from "@/i18n/routing";
 import type { TransactionKindFilter } from "@/lib/api";
-import { getCategories, getTransactions, getTransactionsSummary, listAccounts } from "@/lib/api";
+import { getCategories, getTransactions } from "@/lib/api";
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
 import { expandCategoryFilterIds } from "@/lib/transaction-filters";
 import { nextSortState, type SortOrder, type TransactionSortField } from "@/lib/transaction-sort";
@@ -24,7 +22,6 @@ export function TransactionsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<number[]>([]);
-  const [accountFilter, setAccountFilter] = useState<number[]>([]);
   const [page, setPage] = useState(0);
   const [kind, setKind] = useState<TransactionKindFilter>("all");
   const [sortField, setSortField] = useState<TransactionSortField>("date");
@@ -42,10 +39,6 @@ export function TransactionsPage() {
     queryKey: ["categories"],
     queryFn: () => getCategories(),
   });
-  const accountsQuery = useQuery({
-    queryKey: ["accounts"],
-    queryFn: () => listAccounts(),
-  });
 
   const expandedCategoryIds = expandCategoryFilterIds(
     categoryFilter,
@@ -53,25 +46,13 @@ export function TransactionsPage() {
   );
 
   const transactionsQuery = useQuery({
-    queryKey: [
-      "transactions",
-      from,
-      to,
-      search,
-      categoryFilter,
-      accountFilter,
-      page,
-      kind,
-      sortField,
-      sortOrder,
-    ],
+    queryKey: ["transactions", from, to, search, categoryFilter, page, kind, sortField, sortOrder],
     queryFn: () =>
       getTransactions({
         from,
         to,
         search: search || undefined,
         categoryIds: expandedCategoryIds,
-        accountIds: accountFilter.length > 0 ? accountFilter : undefined,
         limit: 50,
         offset: page * 50,
         kind,
@@ -81,11 +62,6 @@ export function TransactionsPage() {
     placeholderData: keepPreviousData,
   });
 
-  const summaryQuery = useQuery({
-    queryKey: ["transactions-summary", from, to],
-    queryFn: () => getTransactionsSummary({ from, to }),
-  });
-
   const categoriesQuery = useQuery({
     queryKey: ["categories", kind === "income" ? "income" : "expense"],
     queryFn: () => (kind === "income" ? getCategories("income") : getCategories("expense")),
@@ -93,7 +69,6 @@ export function TransactionsPage() {
 
   const monthLabel = formatMonthLabel(selectedDate, locale);
 
-  const summaryInitialLoading = summaryQuery.isPending && summaryQuery.data === undefined;
   const tableInitialLoading = transactionsQuery.isPending && transactionsQuery.data === undefined;
 
   return (
@@ -115,9 +90,6 @@ export function TransactionsPage() {
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
         <AINotConnectedBanner />
-        <KpiCards summary={summaryQuery.data} loading={summaryInitialLoading} />
-
-        <WidgetsRow summary={summaryQuery.data} loading={summaryInitialLoading} />
 
         <div className="flex flex-wrap items-center gap-1.5 rounded-full border border-border bg-card p-1 w-fit">
           {filterOptions.map((opt) => {
@@ -150,7 +122,6 @@ export function TransactionsPage() {
             transactions={transactionsQuery.data?.transactions ?? []}
             total={transactionsQuery.data?.total ?? 0}
             categories={categoriesQuery.data ?? []}
-            accounts={accountsQuery.data ?? []}
             loading={tableInitialLoading}
             isFetching={transactionsQuery.isFetching}
             sortField={sortField}
@@ -166,11 +137,6 @@ export function TransactionsPage() {
             categoryFilter={categoryFilter}
             onCategoryFilterChange={(ids) => {
               setCategoryFilter(ids);
-              setPage(0);
-            }}
-            accountFilter={accountFilter}
-            onAccountFilterChange={(ids) => {
-              setAccountFilter(ids);
               setPage(0);
             }}
             page={page}

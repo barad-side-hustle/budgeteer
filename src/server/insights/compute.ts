@@ -1,8 +1,3 @@
-// Pure, deterministic insight math. No DB access and no `server-only` import so
-// these functions can be unit-tested directly. The engine (engine.ts) gathers
-// data through the query layer and feeds it here. Everything the Home screen
-// frames as "good or bad" is decided by the thresholds in this file.
-
 import type { BreakdownItem, Mover, SpendInsight, Verdict, VerdictStatus } from "@/lib/types";
 
 export interface CategoryMeta {
@@ -28,18 +23,12 @@ function iso(d: Date): string {
 export interface MonthRanges {
   current: { from: string; to: string };
   priorFull: { from: string; to: string };
-  /** The prior month truncated to the same number of elapsed days (like-for-like). */
   priorMtd: { from: string; to: string };
   elapsedDays: number;
   totalDays: number;
   monthLabel: string;
 }
 
-/**
- * Build the comparison windows for "this month vs last month". The prior-month
- * window is day-aligned to the current month-to-date, so a partial month is
- * never compared against a full one (the most common spending-insight mistake).
- */
 export function computeMonthRanges(now: Date): MonthRanges {
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -76,8 +65,6 @@ interface VerdictInput {
   monthlyTarget: number | null;
 }
 
-// A projection within +/-10% of the user's own typical spend reads as "on
-// track"; beyond that it is meaningfully over or under for the month.
 const PACE_BAND_PERCENT = 10;
 
 export function computeVerdict(input: VerdictInput): Verdict {
@@ -112,7 +99,6 @@ export function computeVerdict(input: VerdictInput): Verdict {
   };
 }
 
-/** Roll each leaf category's spend up to its top-level parent (or itself). */
 export function rollUpByParent(
   spend: CategorySpend[],
   metaById: Map<number, CategoryMeta>,
@@ -136,8 +122,6 @@ interface MoversInput {
   limit?: number;
 }
 
-// A change must clear an absolute floor AND a relative floor to count as a
-// mover, so tiny wiggles and rounding never crowd out real shifts.
 const MOVER_MIN_ABS = 150;
 const MOVER_MIN_FRACTION = 0.15;
 
@@ -210,8 +194,6 @@ interface InsightsInput {
   limit?: number;
 }
 
-// An anomaly is a category running well above its own recent norm: at least
-// half again as much AND a material absolute gap, so noise stays quiet.
 const ANOMALY_MIN_RATIO = 1.5;
 const ANOMALY_MIN_ABS = 200;
 
@@ -279,13 +261,9 @@ export function buildInsights(input: InsightsInput): SpendInsight[] {
     }
   }
 
-  // Month-end pacing now lives in the cash-flow forecast (the "This month" hero),
-  // so this feed stays focused on category-level changes (what moved, what's
-  // unusual) and never contradicts the headline verdict.
   return insights.slice(0, limit);
 }
 
-/** Running total of a per-day series, for the burndown curve. */
 export function cumulative(series: number[]): number[] {
   const out: number[] = [];
   let sum = 0;

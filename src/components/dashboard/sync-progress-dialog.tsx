@@ -47,7 +47,6 @@ export function SyncProgressDialog({
   onSubmitOtp,
 }: SyncProgressDialogProps) {
   const t = useTranslations("syncProgress");
-  // Literal t() calls (not a dynamic map) so the i18n checker sees these keys.
   const stageLabel = (s: string): string => {
     switch (s) {
       case "ollama-start":
@@ -84,8 +83,6 @@ export function SyncProgressDialog({
         if (!o && done) onClose();
       }}
     >
-      {/* No `relative` here: it would override the base `fixed` (via tailwind-merge)
-          and knock the popup off-screen. `fixed` already anchors the confetti. */}
       <DialogContent className="max-w-md overflow-hidden p-0 sm:max-w-md" showCloseButton={done}>
         {celebrate && <Confetti />}
         <div className="px-6 pt-6 pb-2">

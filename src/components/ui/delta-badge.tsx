@@ -1,14 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/**
- * The small tinted delta pill used across the dashboard (Budgeteer design
- * system). Shows a signed percentage with an arrow on a soft status-tinted
- * background, in the Efferd KPI style.
- *
- * `goodWhen` encodes the domain meaning: for spending, going *down* is good, so
- * a positive delta reads as "bad" (red). For income, going *up* is good.
- */
 const TONE_FG = {
   good: "var(--status-on-track)",
   bad: "var(--status-over)",

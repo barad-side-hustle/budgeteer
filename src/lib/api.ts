@@ -1,4 +1,5 @@
 import type { UIMessage } from "ai";
+import { getActiveAccountIdSync } from "@/lib/account-store";
 import type {
   AccountOwnershipType,
   AccountSummary,
@@ -21,17 +22,21 @@ import { getActiveWorkspaceIdSync } from "@/lib/workspace-store";
 
 const BASE = "";
 
-function withWorkspaceHeader(init?: RequestInit): RequestInit {
-  const wsId = getActiveWorkspaceIdSync();
+function withScopeHeaders(init?: RequestInit): RequestInit {
   const headers = new Headers(init?.headers);
+  const wsId = getActiveWorkspaceIdSync();
   if (wsId != null && !headers.has("x-workspace-id")) {
     headers.set("x-workspace-id", String(wsId));
+  }
+  const accountId = getActiveAccountIdSync();
+  if (accountId != null && !headers.has("x-account-id")) {
+    headers.set("x-account-id", String(accountId));
   }
   return { ...init, headers };
 }
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${url}`, withWorkspaceHeader(init));
+  const res = await fetch(`${BASE}${url}`, withScopeHeaders(init));
   if (!res.ok) {
     const text = await res.text().catch(() => "Request failed");
     throw new Error(text);
@@ -185,42 +190,6 @@ export function updateSettings(settings: Partial<AppSettings>) {
 export type TransactionKindFilter = "expense" | "income" | "all";
 export type TransactionKind = "expense" | "income" | "transfer";
 export type CategoryKindFilter = "expense" | "income";
-
-export interface TransactionsSummary {
-  income: {
-    total: number;
-    count: number;
-    largest: TransactionWithCategory | null;
-  };
-  expense: {
-    total: number;
-    count: number;
-    largest: TransactionWithCategory | null;
-  };
-  net: number;
-  topMerchants: { description: string; total: number; count: number }[];
-  pendingReviewCount: number;
-}
-
-export function getTransactionsSummary(params: {
-  from: string;
-  to: string;
-  credentialIds?: number[];
-  accountIds?: number[];
-}) {
-  const sp = new URLSearchParams({ from: params.from, to: params.to });
-  if (params.credentialIds?.length) {
-    for (const id of params.credentialIds) {
-      sp.append("credentialIds", String(id));
-    }
-  }
-  if (params.accountIds?.length) {
-    for (const id of params.accountIds) {
-      sp.append("accountIds", String(id));
-    }
-  }
-  return fetchJSON<TransactionsSummary>(`/api/transactions/summary?${sp}`);
-}
 
 export function getTransactions(params: {
   from?: string;
@@ -575,10 +544,6 @@ export interface SyncProgressEvent {
   data: Record<string, unknown>;
 }
 
-/**
- * Reads a server-sent event stream, invoking `onMessage` for each
- * `event:`/`data:` pair. Malformed JSON payloads are skipped.
- */
 async function readSSE(
   res: Response,
   onMessage: (event: string, data: unknown) => void,
@@ -604,9 +569,7 @@ async function readSSE(
       } else if (line.startsWith("data: ") && currentEvent) {
         try {
           onMessage(currentEvent, JSON.parse(line.slice(6)));
-        } catch {
-          // skip malformed JSON
-        }
+        } catch {}
         currentEvent = "";
       }
     }
@@ -623,7 +586,7 @@ export function startSync(
     try {
       const res = await fetch(
         "/api/sync",
-        withWorkspaceHeader({
+        withScopeHeaders({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(credentialId != null ? { credentialId } : {}),
@@ -678,7 +641,7 @@ export function pullOllamaModel(
     try {
       const res = await fetch(
         "/api/ai/ollama/pull",
-        withWorkspaceHeader({
+        withScopeHeaders({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ model, url }),

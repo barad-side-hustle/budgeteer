@@ -5,10 +5,6 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/**
- * Shown when a data query fails, so a failed fetch never masquerades as an
- * innocent empty state. Offers a retry. See docs/design-system.md (UX states).
- */
 export function QueryError({
   onRetry,
   message,

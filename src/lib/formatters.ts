@@ -7,8 +7,6 @@ function bcp47(locale: Locale | "en-IL" | "he-IL" | undefined): string {
   return locale;
 }
 
-// Scrapers sometimes hand us a symbol (₪) or loose alias instead of an ISO 4217
-// code. Normalize the common ones so Intl.NumberFormat doesn't throw.
 const CURRENCY_ALIASES: Record<string, string> = {
   "₪": "ILS",
   NIS: "ILS",
@@ -17,9 +15,6 @@ const CURRENCY_ALIASES: Record<string, string> = {
   "£": "GBP",
 };
 
-// Currency and locale both vary per call, so we can't hoist a single formatter
-// to module scope. Cache by `locale|code` instead so a list of transactions in
-// the same currency reuses one formatter rather than rebuilding it per row.
 const currencyFormatters = new Map<string, Intl.NumberFormat>();
 
 function getCurrencyFormatter(bcp: string, code: string): Intl.NumberFormat {
@@ -48,7 +43,6 @@ export function formatCurrency(amount: number, currency = "ILS", locale?: Locale
   try {
     return getCurrencyFormatter(bcp, code).format(abs);
   } catch {
-    // Unknown/non-ISO currency: show the original token next to the amount.
     return `${currency} ${abs.toLocaleString(bcp, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -96,7 +90,6 @@ export function addMonths(date: Date, months: number): Date {
   return result;
 }
 
-/** True when `date` falls in the current calendar month. Used to cap forward navigation. */
 export function isCurrentMonth(date: Date): boolean {
   const now = new Date();
   return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
@@ -122,7 +115,6 @@ const FALLBACK_LABELS: FormatLastSyncLabels = {
   monthAgo: (n) => `${n}mo ago`,
 };
 
-// The DB returns datetime('now') in UTC without a Z suffix.
 export function formatLastSync(
   iso: string | null,
   labels: FormatLastSyncLabels = FALLBACK_LABELS,
@@ -146,8 +138,6 @@ export function formatLastSync(
   return labels.monthAgo(mo);
 }
 
-// bcp47() only ever returns "en-IL" or "he-IL", so build both formatters once
-// at module scope instead of rebuilding on every call.
 const JERUSALEM_TIME_FORMATS: Record<string, Intl.DateTimeFormat> = {
   "en-IL": new Intl.DateTimeFormat("en-IL", {
     timeZone: "Asia/Jerusalem",

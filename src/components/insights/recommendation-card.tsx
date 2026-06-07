@@ -22,8 +22,6 @@ const CTA_KEY: Record<string, string> = {
 };
 
 export function RecommendationCard({ rec }: { rec: Recommendation }) {
-  // Keys are accessed dynamically (rec_<type>_title/body); they live in the
-  // `recommendations` namespace, which is on the i18n-check dynamic allowlist.
   const t = useTranslations("recommendations");
   const locale = useLocale() as Locale;
   const { Icon, chip } = TONE_STYLE[rec.tone];

@@ -12,10 +12,6 @@ import {
 } from "@/server/db/schema";
 import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
 
-// DB-applying half of the deduplication engine. The pure proposal logic lives in
-// src/server/lib/matching.ts; this module persists events, lists them for review,
-// and reverses them losslessly. See docs/transaction-deduplication-design.md.
-
 const EVENT_TYPES: EventType[] = [
   "internal_transfer",
   "credit_card_payment",
@@ -28,8 +24,6 @@ const EVENT_TYPES: EventType[] = [
   "duplicate",
 ];
 
-// Fallback thresholds for workspaces created before a per-type row exists. Mirror
-// the seed in migration 022_financial_events.sql.
 const DEFAULT_SETTINGS: Record<EventType, MatchSettings> = {
   internal_transfer: mk("internal_transfer", 0.01, 2, 0.8, 0.97, true),
   credit_card_payment: mk("credit_card_payment", 0.01, 5, 0.8, 0.97, true),
@@ -81,12 +75,6 @@ export interface ApplyResult {
   transactionsGrouped: number;
 }
 
-/**
- * Persist proposed events. Idempotent: a proposal whose event_key already exists
- * (including a rejected tombstone) is skipped, so a re-sync never duplicates an
- * event or re-suggests a dismissed one. Grouping legs get their kind flipped and
- * transactions.event_id set; 'purchase' legs are linked but stay spendable.
- */
 export function applyProposedEvents(
   workspaceId: number,
   proposals: readonly ProposedEvent[],
@@ -116,7 +104,7 @@ export function applyProposedEvents(
         .returning({ id: financialEvents.id })
         .all();
 
-      if (inserted.length === 0) continue; // existing event or rejected tombstone
+      if (inserted.length === 0) continue;
       const eventId = inserted[0].id;
       eventsCreated++;
 
@@ -251,7 +239,6 @@ export function listEvents(
   }));
 }
 
-/** Accept a suggested event. Clears the review flag on its grouping legs. */
 export function confirmEvent(workspaceId: number, eventId: number): boolean {
   return getOrm().transaction((tx) => {
     const res = tx
@@ -284,11 +271,6 @@ export function confirmEvent(workspaceId: number, eventId: number): boolean {
   });
 }
 
-/**
- * Reverse an event losslessly: restore each grouping leg's prior kind, detach it,
- * drop the membership rows, and keep the event row as a rejected tombstone so the
- * same match is never re-suggested on the next sync.
- */
 export function rejectEvent(workspaceId: number, eventId: number): boolean {
   return getOrm().transaction((tx) => {
     const exists = tx
@@ -309,7 +291,7 @@ export function rejectEvent(workspaceId: number, eventId: number): boolean {
       .all();
 
     for (const m of members) {
-      if (m.role === "purchase") continue; // never set event_id; nothing to restore
+      if (m.role === "purchase") continue;
       tx.update(transactions)
         .set({
           eventId: null,

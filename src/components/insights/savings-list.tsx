@@ -42,8 +42,6 @@ export function SavingsList({
         <ul className="flex flex-col divide-y divide-border/60">
           {savings.map((s) => {
             const Icon = ICON[s.type];
-            // Title/body must call t() in component scope so i18n-check can trace
-            // the keys (it cannot follow a t passed into a helper function).
             const title =
               s.type === "subscription"
                 ? t("savSubscriptionTitle", { merchant: s.merchant ?? "" })

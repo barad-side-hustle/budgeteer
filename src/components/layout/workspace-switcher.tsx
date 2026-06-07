@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { useRouter } from "@/i18n/navigation";
+import { setActiveAccountId } from "@/lib/account-store";
 import { listWorkspaces } from "@/lib/api";
 import type { Workspace } from "@/lib/types";
 import { setActiveWorkspaceId, useActiveWorkspaceId } from "@/lib/workspace-store";
@@ -21,8 +22,7 @@ export function useSwitchWorkspace() {
   const queryClient = useQueryClient();
   return (id: number) => {
     setActiveWorkspaceId(id);
-    // Every cache key was scoped to the previous workspace, so wipe it all.
-    // Each query refetches against the new X-Workspace-ID.
+    setActiveAccountId(null);
     queryClient.invalidateQueries();
   };
 }
@@ -39,10 +39,6 @@ export function WorkspaceSwitcher() {
     staleTime: 60_000,
   });
 
-  // Bootstrap: if nothing is selected (first load, cleared storage), pick the
-  // lowest-id workspace as soon as the list comes back. This avoids a window
-  // where requests would fall back to the server-side default and ignore the
-  // header entirely.
   useEffect(() => {
     if (activeId == null && workspaces.length > 0) {
       const fallback = workspaces[0];

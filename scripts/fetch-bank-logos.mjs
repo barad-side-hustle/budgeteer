@@ -1,27 +1,8 @@
-/**
- * Download every supported bank / card-company logo and bundle it with the app
- * so the onboarding provider picker renders real logos offline, with no
- * render-time calls to a third-party favicon service.
- *
- * For each provider domain the script tries, in order:
- *   1. the Google S2 favicon (www + apex, 256px then 128px)
- *   2. the site's own /favicon.ico (www + apex)
- * and saves the first valid image to public/bank-logos/<domain>.png. ICO bytes
- * are saved under the .png name; browsers render them in an <img> regardless of
- * extension. Domains that resolve to nothing fall back to the colored letter
- * tile in provider-badge.tsx.
- *
- * Re-run any time (e.g. when a bank changes its logo):
- *   bun scripts/fetch-bank-logos.mjs
- */
-
 import fs from "node:fs/promises";
 import path from "node:path";
 
 const OUT_DIR = path.resolve(new URL(".", import.meta.url).pathname, "../public/bank-logos");
 
-// Every provider domain in BANK_PROVIDERS (src/lib/types.ts). Providers that
-// share a domain (the FIBI group) share one logo file, which is fine.
 const DOMAINS = [
   "isracard.co.il",
   "cal-online.co.il",
@@ -69,7 +50,6 @@ async function tryFetch(url) {
     const ct = res.headers.get("content-type") || "";
     if (!ct.startsWith("image/")) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    // Reject Google's tiny "no favicon" placeholder and empty payloads.
     if (buf.length < 150) return null;
     return buf;
   } catch {

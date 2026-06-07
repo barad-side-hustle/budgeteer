@@ -14,9 +14,6 @@ export async function POST(request: Request) {
   const filterCredentialId =
     body.credentialId != null && Number.isFinite(body.credentialId) ? body.credentialId : undefined;
 
-  // When the request includes X-Workspace-ID we sync only that workspace
-  // (the in-app "Sync now" button). When it's absent we treat it as a
-  // multi-workspace trigger and sync every workspace.
   const headerPresent = hasWorkspaceHeader(request);
 
   const encoder = new TextEncoder();
@@ -25,10 +22,6 @@ export async function POST(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: string, data: Record<string, unknown>) => {
-        // Track sync-run IDs that opened an OTP bridge so we can cancel any
-        // outstanding waits if the SSE stream is aborted (user closes the tab,
-        // hits cancel, etc.). cancelOtpRequest is a no-op for already-resolved
-        // IDs, so over-cancelling is safe.
         if (event === "provider-2fa-needed") {
           const id = Number(data.syncRunId);
           if (Number.isFinite(id) && id > 0) pendingSyncRunIds.add(id);
@@ -59,7 +52,6 @@ export async function POST(request: Request) {
         const firstWarning = summaries.find((w) => w.aiWarning)?.aiWarning ?? null;
 
         if (headerPresent && summaries.length === 1) {
-          // Back-compat shape for the in-app sync UI which expects flat fields.
           const only = summaries[0];
           send("complete", {
             providers: only.providers,

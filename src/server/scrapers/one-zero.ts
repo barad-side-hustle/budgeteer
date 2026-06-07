@@ -3,32 +3,12 @@ import "server-only";
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
 import type { ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
 
-/**
- * OneZero is the only scraper in israeli-bank-scrapers that actually implements
- * programmatic 2FA. The library exposes triggerTwoFactorAuth and
- * getLongTermTwoFactorToken on the base interface but only OneZero's concrete
- * class wires them up.
- *
- * Note: scraper.scrape() does NOT surface the persistent OTP token (it's
- * generated inside login() but dropped before returning). To capture the token
- * we run the two-step explicit flow ourselves:
- *
- *   1. triggerTwoFactorAuth(phoneNumber)   -> sends the SMS
- *   2. await user-supplied OTP via the bridge
- *   3. getLongTermTwoFactorToken(otpCode)  -> returns the long-term token
- *   4. scrape({ ..., otpLongTermToken })   -> actually fetches data
- *
- * The caller persists the token so subsequent syncs skip steps 1-3.
- */
-
 export interface OneZeroFirstSyncOptions {
   email: string;
   password: string;
   phoneNumber: string;
   startDate: Date;
-  /** Awaits the user-supplied OTP. Rejects on cancel/timeout. */
   awaitOtp: () => Promise<string>;
-  /** Called when the OTP is collected so the UI can switch from "awaiting OTP" to "logging in". */
   onOtpSubmitted?: () => void;
 }
 

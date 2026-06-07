@@ -20,7 +20,6 @@ const base: ForecastInput = {
 describe("computeForecast verdict", () => {
   test("projects a surplus month as 'plus'", () => {
     const f = computeForecast(base);
-    // 4000 spent over 15 of 30 days, blended fully onto live pace by day 10 -> 8000.
     expect(f.projectedExpenses).toBeCloseTo(8000);
     expect(f.expectedIncome).toBe(10000);
     expect(f.projectedNet).toBeCloseTo(2000);
@@ -44,7 +43,6 @@ describe("computeForecast verdict", () => {
 describe("computeForecast safe-to-spend", () => {
   test("spreads remaining headroom over the days left", () => {
     const f = computeForecast(base);
-    // ceiling = expectedIncome 10000, spent 4000 -> 6000 left over 15 days.
     expect(f.safeToSpendRemaining).toBe(6000);
     expect(f.safeToSpendPerDay).toBeCloseTo(400);
     expect(f.safeToSpendThisWeek).toBeCloseTo(2800);
@@ -64,10 +62,8 @@ describe("computeForecast safe-to-spend", () => {
 describe("computeForecast balance tier", () => {
   test("projects month-end balance and flags a healthy buffer as 'none'", () => {
     const f = computeForecast({ ...base, balanceToday: 5000 });
-    // remainingIncome 0 (income already received), remainingExpenses 4000.
     expect(f.expectedMonthEnd).toBeCloseTo(1000);
     expect(f.hasBalance).toBe(true);
-    // buffer = max(500, 0.15*8000=1200) -> 1000 < 1200 -> watch
     expect(f.overdraftRisk).toBe("watch");
   });
 
@@ -109,9 +105,6 @@ describe("computeForecast edge cases", () => {
   });
 
   test("counts a big fixed charge once instead of extrapolating it", () => {
-    // Day 3 of 30: rent (5000) + a little variable (300) already spent.
-    // Naive straight-line would project 5300/3*30 = 53,000. With the fixed
-    // split, rent is counted once and only the 300 variable is paced.
     const f = computeForecast({
       ...base,
       elapsedDays: 3,

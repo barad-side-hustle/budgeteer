@@ -9,14 +9,6 @@ import type {
   EventType,
 } from "@/lib/types";
 
-// Drizzle schema for the typed query layer. It mirrors the live database, whose
-// DDL is owned by the .sql migration runner (src/server/db/migrate.ts), NOT by
-// drizzle-kit. Regenerate a reference with `bun run db:pull` after adding a
-// migration, then reconcile column changes here by hand. CHECK constraints and
-// indexes are intentionally omitted: they are enforced by the migrations and do
-// not affect query types. Integer 0/1 flags stay `integer` (number); the query
-// layer maps them to booleans exactly as before.
-
 const createdAt = () => text("created_at").notNull().default(sql`(datetime('now'))`);
 const updatedAt = () => text("updated_at").notNull().default(sql`(datetime('now'))`);
 

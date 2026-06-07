@@ -10,10 +10,7 @@ interface Props {
 }
 
 function onError(err: IntlError) {
-  // Categories, banks, and ollama models include user-generated keys that
-  // may not exist in the bundle — fall through silently to the fallback.
   if (err.code === IntlErrorCode.MISSING_MESSAGE) return;
-  // eslint-disable-next-line no-console
   console.error(err);
 }
 
@@ -27,8 +24,6 @@ function getMessageFallback({
   error: IntlError;
 }): string {
   if (error.code === IntlErrorCode.MISSING_MESSAGE) {
-    // Use the raw key (e.g. "Coffee & Cafes") as the fallback so user-defined
-    // categories display as-is when there's no translation.
     return key;
   }
   return `${namespace ? `${namespace}.` : ""}${key}`;

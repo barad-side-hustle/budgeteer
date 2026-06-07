@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,9 +165,7 @@ function parseDeleteCategoryError(message: string): string[] | null {
     if (body.error === "has-children" && body.children?.length) {
       return body.children.map((c) => c.name);
     }
-  } catch {
-    /* not JSON */
-  }
+  } catch {}
   return null;
 }
 
@@ -299,10 +297,11 @@ function BudgetSection({ category, data }: { category: Category; data: CategoryW
   });
 
   const [amount, setAmount] = useState(data ? String(Math.round(data.budget)) : "");
-
-  useEffect(() => {
+  const [prevData, setPrevData] = useState(data);
+  if (data !== prevData) {
+    setPrevData(data);
     if (data) setAmount(String(Math.round(data.budget)));
-  }, [data]);
+  }
 
   const handleBlur = () => {
     if (!data) return;
@@ -441,9 +440,11 @@ function DescriptionSection({ category }: { category: Category }) {
   const t = useTranslations("settings.categories");
   const queryClient = useQueryClient();
   const [value, setValue] = useState(category.description ?? "");
-  useEffect(() => {
+  const [prevDescription, setPrevDescription] = useState(category.description);
+  if (category.description !== prevDescription) {
+    setPrevDescription(category.description);
     setValue(category.description ?? "");
-  }, [category.description]);
+  }
 
   const mutation = useMutation({
     mutationFn: (next: string | null) => updateCategoryDescription(category.id, next),

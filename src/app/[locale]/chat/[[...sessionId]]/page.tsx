@@ -28,14 +28,23 @@ function firstWorkspaceId(): number {
   return row.id;
 }
 
-export default async function ChatPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function ChatPage({
+  params,
+}: {
+  params: Promise<{ locale: string; sessionId?: string[] }>;
+}) {
+  const { locale, sessionId } = await params;
   if (!anyWorkspaceHasBankCredentials()) {
-    const { locale } = await params;
     redirect(`/${locale}/setup`);
   }
 
   const settings = getAppSettings(firstWorkspaceId());
   const enabled = settings.aiProvider !== "none";
+  const initialSessionId = sessionId?.[0];
 
-  return <AppShell>{enabled ? <ChatClient /> : <ChatDisabled />}</AppShell>;
+  return (
+    <AppShell>
+      {enabled ? <ChatClient initialSessionId={initialSessionId} /> : <ChatDisabled />}
+    </AppShell>
+  );
 }

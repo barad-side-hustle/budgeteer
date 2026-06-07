@@ -1,8 +1,3 @@
-// Pure savings + recommendation logic. No DB access and no `server-only` import
-// so it can be unit-tested directly. This is the behavior-change layer: it turns
-// the forecast and spending shape into a short list of friendly, practical,
-// non-judgmental actions. Tone is deliberately encouraging, never scolding.
-
 import type {
   Forecast,
   Recommendation,
@@ -12,7 +7,6 @@ import type {
   SavingsOpportunity,
 } from "@/lib/types";
 
-// Categories we never suggest "cutting" - they are essential commitments.
 const ESSENTIAL_CATEGORIES = new Set([
   "Bills & Utilities",
   "Insurance",
@@ -21,8 +15,6 @@ const ESSENTIAL_CATEGORIES = new Set([
   "Kids & Childcare",
 ]);
 
-// Classic discretionary recurring buckets, the natural "cancel a subscription"
-// candidates.
 const SUBSCRIPTION_CATEGORIES = new Set(["Subscriptions", "Entertainment"]);
 
 const SUBSCRIPTION_AMOUNT_CAP = 250;
@@ -51,11 +43,6 @@ function isSubscriptionCandidate(r: RecurringCharge): boolean {
   return r.amount <= SUBSCRIPTION_AMOUNT_CAP;
 }
 
-/**
- * Surface concrete ways to free up money: cancellable subscriptions, categories
- * spiking above their usual, the biggest trimmable discretionary categories, and
- * avoidable bank fees. Sorted by estimated monthly saving, largest first.
- */
 export function buildSavings(input: SavingsInput): SavingsOpportunity[] {
   const out: SavingsOpportunity[] = [];
   const spentCategoryIds = new Set<number>();
@@ -150,11 +137,6 @@ const TONE: Record<RecommendationType, RecommendationTone> = {
 
 const MAX_RECOMMENDATIONS = 6;
 
-/**
- * Compose the prioritized recommendation feed. Most urgent first (overdraft, a
- * minus month), then concrete savings, then the safe-to-spend allowance, then
- * encouragement. Capped so the feed stays calm and scannable.
- */
 export function buildRecommendations(input: RecommendationInput): Recommendation[] {
   const { forecast, savings } = input;
   const recs: Recommendation[] = [];
@@ -191,7 +173,6 @@ export function buildRecommendations(input: RecommendationInput): Recommendation
     add("tight-month", { amount: forecast.projectedNet, amount2: forecast.safeToSpendPerDay });
   }
 
-  // Concrete savings actions (most valuable first), at most three.
   for (const s of savings.slice(0, 3)) {
     if (s.type === "subscription") {
       add(
@@ -232,7 +213,6 @@ export function buildRecommendations(input: RecommendationInput): Recommendation
     add("add-balance", { href: "/settings/general" });
   }
 
-  // Stable priority then cap.
   const priority: RecommendationType[] = [
     "overdraft-risk",
     "minus-month",

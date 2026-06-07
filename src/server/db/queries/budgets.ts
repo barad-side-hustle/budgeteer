@@ -3,6 +3,7 @@ import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
+import { type AccountFilter, buildAccountFilterClause } from "@/server/db/queries/transactions";
 import { budgets } from "@/server/db/schema";
 import { toLocalISODate } from "@/server/lib/date-utils";
 
@@ -84,13 +85,11 @@ interface AutoSpend {
   amount: number;
 }
 
-/**
- * Auto-budget default: average monthly spend across the last N completed
- * calendar months (excluding the current month). Divides by months *available*,
- * so a fresh DB with one month of history returns that month's spend, not
- * one-third of it.
- */
-export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3): AutoSpend[] {
+export function getAutoBudgetAverage(
+  workspaceId: number,
+  monthsBack: number = 3,
+  filter: AccountFilter = {},
+): AutoSpend[] {
   const now = new Date();
   const periods: { from: string; to: string }[] = [];
   for (let i = 1; i <= monthsBack; i++) {
@@ -103,6 +102,7 @@ export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3
   }
 
   const db = getDb();
+  const acct = buildAccountFilterClause(filter);
   const totals = new Map<number, number>();
   const monthsSeen = new Map<number, number>();
 
@@ -111,10 +111,10 @@ export function getAutoBudgetAverage(workspaceId: number, monthsBack: number = 3
       .prepare(
         `SELECT category_id as categoryId, SUM(ABS(charged_amount)) as amount
          FROM transactions
-         WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND category_id IS NOT NULL
+         WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND category_id IS NOT NULL${acct.sql}
          GROUP BY category_id`,
       )
-      .all(workspaceId, from, to) as AutoSpend[];
+      .all(workspaceId, from, to, ...acct.values) as AutoSpend[];
 
     for (const r of rows) {
       if (r.amount <= 0) continue;

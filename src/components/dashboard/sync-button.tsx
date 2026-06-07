@@ -4,9 +4,9 @@ import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { type ProviderRow, SyncProgressDialog } from "@/components/dashboard/sync-progress-dialog";
 import { Button } from "@/components/ui/button";
 import { startSync, submitSyncOtp } from "@/lib/api";
-import { type ProviderRow, SyncProgressDialog } from "./sync-progress-dialog";
 
 interface SyncButtonProps {
   onComplete: () => void;
@@ -45,7 +45,7 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
     await submitSyncOtp(syncRunId, code);
   }, []);
 
-  const handleSync = () => {
+  const handleSync = useCallback(() => {
     setSyncing(true);
     setProviders([]);
     setRows([]);
@@ -145,7 +145,7 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
     });
 
     cancelRef.current = cancel;
-  };
+  }, [onComplete, t]);
 
   const autoStartedRef = useRef(false);
   useEffect(() => {
@@ -153,7 +153,6 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
       autoStartedRef.current = true;
       handleSync();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStart, syncing, handleSync]);
 
   return (

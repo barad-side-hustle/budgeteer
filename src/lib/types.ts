@@ -38,12 +38,10 @@ export interface Transaction {
   provider: string;
   credentialId: number | null;
   accountLabel: string | null;
-  /** Friendly per-account name from bank_accounts, when one exists. */
   accountName: string | null;
   syncRunId: number;
   kind: "expense" | "income" | "transfer";
   needsReview: boolean;
-  /** Set when this row is the grouping leg of a financial event. */
   eventId: number | null;
   eventRole: EventRole | null;
   matchConfidence: number | null;
@@ -56,14 +54,6 @@ export interface TransactionWithCategory extends Transaction {
   categoryColor: string | null;
   isExcluded: boolean;
 }
-
-// ---------------------------------------------------------------------------
-// Financial Events: the cross-account deduplication layer. The same real-world
-// money movement (a transfer, a credit card bill payment, an ATM withdrawal)
-// shows up as N transaction rows once several accounts are aggregated; an event
-// groups those rows so spend is counted exactly once. See
-// docs/transaction-deduplication-design.md.
-// ---------------------------------------------------------------------------
 
 export type EventType =
   | "internal_transfer"
@@ -107,7 +97,6 @@ export interface EventMember {
   createdAt: string;
 }
 
-/** A financial event plus the transaction rows it groups, for review and display. */
 export interface FinancialEventWithMembers extends FinancialEvent {
   members: (EventMember & {
     description: string;
@@ -253,6 +242,9 @@ export interface HomeRecentTransaction {
   kind: "expense" | "income" | "transfer";
   categoryName: string | null;
   categoryColor: string | null;
+  provider: string;
+  accountLabel: string | null;
+  accountName: string | null;
 }
 
 export interface HomeNeedsAttention {
@@ -269,60 +261,36 @@ export interface HomeBankHealthItem {
   errorMessage: string | null;
 }
 
-// ---------------------------------------------------------------------------
-// Insights: the single payload behind the redesigned Home. Every field exists
-// to answer one of the five questions: what did I spend on, what changed vs
-// last month, why, is it good or bad, what can I improve. All numbers are
-// computed deterministically server-side (see src/server/insights/).
-// ---------------------------------------------------------------------------
-
-/** How the month is projected to end relative to the user's own typical spend. */
 export type VerdictStatus = "under" | "on-track" | "over";
 
 export interface Verdict {
-  /** Spend so far this month (month-to-date). */
   spent: number;
-  /** Straight-line projection of month-end spend from the current pace. */
   projected: number;
   monthLabel: string;
   elapsedDays: number;
   totalDays: number;
   daysUntilPayday: number;
-  /** Spend over the same number of days last month (like-for-like). */
   priorMtd: number;
-  /** spent - priorMtd (signed; positive means spending more than last month). */
   deltaAmount: number;
-  /** Percent change vs the same window last month, or null when no baseline. */
   deltaPercent: number | null;
-  /** Trailing 3-month average monthly spend, the honest baseline. */
   typicalMonthly: number | null;
-  /** projected vs typicalMonthly, as a percent (signed), or null. */
   vsTypicalPercent: number | null;
-  /** Verdict on the projected month-end vs the user's typical spend. */
   projectedStatus: VerdictStatus;
-  /** Optional explicit monthly target the user set in Settings. */
   monthlyTarget: number | null;
-  /** monthlyTarget - spent when a target exists, else null. */
   remaining: number | null;
 }
 
-/** A category whose spend changed the most vs last month (ranked by magnitude). */
 export interface Mover {
   categoryId: number;
   name: string;
   color: string;
   icon: string | null;
-  /** Spend this month (month-to-date). */
   current: number;
-  /** Spend across the whole prior month. */
   prior: number;
-  /** current - prior (signed). */
   deltaAmount: number;
   deltaPercent: number | null;
   direction: "up" | "down";
-  /** The merchant driving most of this category's spend, for the inline "why". */
   topMerchant: string | null;
-  /** Monthly totals over the trailing window so the row can show creep. */
   trend: number[];
 }
 
@@ -333,7 +301,6 @@ export interface BreakdownItem {
   icon: string | null;
   amount: number;
   percentOfTotal: number;
-  /** Percent change vs the whole prior month, or null. */
   deltaPercent: number | null;
 }
 
@@ -350,16 +317,13 @@ export interface SpendInsight {
   tone: "positive" | "warning" | "neutral";
   categoryId: number | null;
   categoryName: string | null;
-  /** Primary money figure (a delta, an excess, or a projection gap). */
   amount: number | null;
   percent: number | null;
   merchant: string | null;
 }
 
 export interface BurndownPayload {
-  /** Cumulative spend by day for the current month, up to today. */
   current: number[];
-  /** Cumulative spend by day across the whole prior month (the baseline curve). */
   prior: number[];
   totalDays: number;
 }
@@ -396,14 +360,6 @@ export interface InsightPayload {
   errors: InsightSectionError[];
 }
 
-// ---------------------------------------------------------------------------
-// Forecast: the RiseUp-style "bottom line" for the current month. Answers "will
-// I finish the month in the plus or the minus", "how much is safe to spend",
-// and (when a balance is known) "what will my balance be at month end". All
-// computed locally and deterministically; see src/server/insights/forecast.ts.
-// ---------------------------------------------------------------------------
-
-/** plus = projected to finish positive, tight = near zero, minus = projected negative. */
 export type ForecastVerdict = "plus" | "tight" | "minus";
 
 export type OverdraftRisk = "none" | "watch" | "high";
@@ -414,82 +370,67 @@ export interface Forecast {
   totalDays: number;
   daysLeft: number;
   daysUntilPayday: number;
-  /** Income received so far this month. */
   incomeMtd: number;
-  /** Spending so far this month. */
   expensesMtd: number;
-  /** incomeMtd - expensesMtd. */
   netMtd: number;
-  /** Expected total income for the month (counts salary not yet received). */
   expectedIncome: number;
-  /** Projected total spending for the month at the current pace. */
   projectedExpenses: number;
-  /** expectedIncome - projectedExpenses: the month's projected bottom line. */
   projectedNet: number;
   remainingIncome: number;
   remainingExpenses: number;
   verdict: ForecastVerdict;
-  /** How much more can be spent this month while still finishing in the plus (or within target). */
   safeToSpendRemaining: number;
   safeToSpendPerDay: number;
   safeToSpendThisWeek: number;
-  /** Trailing 3-month average monthly spend, the honest baseline. */
   typicalMonthlyExpenses: number | null;
   typicalMonthlyIncome: number | null;
-  /** Optional explicit monthly spending target the user set. */
   monthlyTarget: number | null;
-  /** Tier 2 (only when the user has set a current balance). */
   balanceToday: number | null;
   expectedMonthEnd: number | null;
   overdraftRisk: OverdraftRisk;
-  /** False when there is no income/expense this month and no history: nothing to forecast yet. */
   hasData: boolean;
-  /** True when a current balance is known, unlocking the month-end balance line. */
   hasBalance: boolean;
 }
-
-// ---------------------------------------------------------------------------
-// Recurring charges + fixed vs variable. A merchant that bills you most months
-// (rent, utilities, subscriptions, insurance) is a fixed commitment; everything
-// else is discretionary. See src/server/insights/recurring.ts.
-// ---------------------------------------------------------------------------
 
 export interface RecurringCharge {
   merchant: string;
   categoryId: number | null;
   categoryName: string | null;
-  /** Representative monthly amount (median of the months it appeared in). */
   amount: number;
   monthsPresent: number;
   monthsConsidered: number;
-  /** True when the most recent month is missing it (may have been cancelled). */
   lapsed: boolean;
+  monthly: number[];
+}
+
+export interface FixedVsVariableCategory {
+  categoryId: number;
+  name: string;
+  color: string;
+  icon: string | null;
+  fixed: number;
+  variable: number;
+  current: number;
+  typical: number;
+  deltaPercent: number | null;
 }
 
 export interface FixedVsVariable {
-  /** Sum of recurring commitments per month. */
   fixedMonthly: number;
-  /** typicalMonthly - fixedMonthly (floored at 0): discretionary spend. */
   variableMonthly: number;
   typicalMonthly: number;
+  byCategory: FixedVsVariableCategory[];
 }
-
-// ---------------------------------------------------------------------------
-// Savings opportunities + recommendations: the behavior-change layer. Friendly,
-// non-judgmental, practical actions. See src/server/insights/recommendations.ts.
-// ---------------------------------------------------------------------------
 
 export type SavingsType = "subscription" | "category-spike" | "trim-category" | "fees";
 
 export interface SavingsOpportunity {
   id: string;
   type: SavingsType;
-  /** Potential money freed up per month if acted on. */
   estimatedMonthly: number;
   merchant: string | null;
   categoryId: number | null;
   categoryName: string | null;
-  /** For trim-category: the fraction suggested (e.g. 0.15). */
   fraction: number | null;
 }
 
@@ -512,13 +453,10 @@ export interface Recommendation {
   id: string;
   type: RecommendationType;
   tone: RecommendationTone;
-  /** Primary money figure, raw (the UI formats it for the locale). */
   amount: number | null;
-  /** Secondary figure (e.g. per-day allowance), raw. */
   amount2: number | null;
   categoryName: string | null;
   merchant: string | null;
-  /** Where the card's action links, or null for an informational card. */
   href: string | null;
 }
 
@@ -528,7 +466,6 @@ export interface ForecastPayload {
   recurring: RecurringCharge[] | null;
   savings: SavingsOpportunity[] | null;
   recommendations: Recommendation[] | null;
-  /** Sum of savings.estimatedMonthly. */
   totalSavings: number;
   errors: InsightSectionError[];
 }
@@ -560,24 +497,15 @@ export interface Integration {
   updatedAt: string;
   lastSyncAt: string | null;
   transactionCount: number;
-  /** True when the user has flagged this bank as needing manual 2FA (showBrowser fallback). */
   requiresManualTwoFactor: boolean;
-  /** True when a long-term OTP token is already stored (programmatic 2FA banks only). */
   hasTwoFactorToken: boolean;
 }
 
-/** How an account is owned, set by the user. Drives the account badge/label. */
 export type AccountOwnershipType = "personal" | "joint" | "shared";
 
-/**
- * A real account exposed by a bank connection. One Integration (credential) can
- * own several of these. Pure metadata: transactions stay keyed by
- * (credentialId, accountNumber); see src/server/db/queries/bank-accounts.ts.
- */
 export interface BankAccount {
   id: number;
   credentialId: number;
-  /** Joined from bank_credentials for the provider badge. */
   provider: string;
   accountNumber: string;
   name: string;
@@ -589,7 +517,6 @@ export interface BankAccount {
   updatedAt: string;
 }
 
-/** A BankAccount plus per-account spend aggregates for the dashboard cards. */
 export interface AccountSummary extends BankAccount {
   income: number;
   expense: number;
@@ -604,9 +531,7 @@ export interface SetupStatus {
 }
 
 export interface AppSettings {
-  /** The user's current account balance, the anchor for the month-end forecast. Null when not set. */
   currentBalance: number | null;
-  /** ISO date the balance was accurate as of. Null when no balance is set. */
   balanceDate: string | null;
   monthsToSync: number;
   aiProvider: "claude" | "gemini" | "ollama" | "none";
@@ -660,16 +585,9 @@ export interface BankProviderInfo {
   kind: BankKind;
   color: string;
   blurb: string;
-  /** Domain used to fetch the favicon logo via Google's S2 API. */
   domain: string;
   credentialFields: CredentialField[];
   enabled: boolean;
-  /**
-   * True when the underlying scraper supports OTP-driven login flows that we
-   * can drive in-process. Currently only OneZero — Hapoalim/Leumi/etc. expose
-   * the methods on the base interface but no concrete implementation, so 2FA
-   * on those banks falls back to the manual (showBrowser) path.
-   */
   supportsProgrammaticTwoFactor?: boolean;
 }
 

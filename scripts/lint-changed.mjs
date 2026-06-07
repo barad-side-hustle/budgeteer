@@ -1,10 +1,4 @@
 #!/usr/bin/env bun
-// Strict ESLint, scoped to the files this branch changes versus the base branch.
-//
-// The repository carries a known lint backlog in older UI components (react-compiler
-// rules: static-components, set-state-in-effect, rules-of-hooks). Rather than block
-// every PR on that backlog, we gate only the files a branch actually touches so the
-// backlog is paid down incrementally. Run `bun run lint` for the full-tree view.
 
 import { spawnSync } from "node:child_process";
 
@@ -15,7 +9,6 @@ function git(args) {
   return res.status === 0 ? res.stdout.trim() : "";
 }
 
-// Best-effort: make sure the base ref is present (no-op locally if already fetched).
 spawnSync("git", ["fetch", "--quiet", "origin", BASE.replace(/^origin\//, "")], {
   stdio: "ignore",
 });

@@ -12,10 +12,6 @@ import {
 } from "@/server/db/queries/transactions";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
-/**
- * Preview mode: run AI categorization with proposal-enabled prompt, split by
- * expense vs income so each transaction is offered categories of its own kind.
- */
 export async function POST(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const settings = getAppSettings(workspaceId);
@@ -61,9 +57,6 @@ export async function POST(request: Request) {
     const categories = getAllCategories(workspaceId, kind);
     if (categories.length === 0) continue;
 
-    // Build a parentId -> name lookup so we can attach parent context to
-    // each leaf row. Parents themselves are excluded from the AI-visible
-    // list - the AI must target leaves only.
     const parentNameById = new Map<number, string>();
     for (const c of categories) {
       if (c.parentId === null) parentNameById.set(c.id, c.name);

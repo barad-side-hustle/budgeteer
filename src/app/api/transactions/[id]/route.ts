@@ -36,8 +36,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         "user",
       );
 
-      // If the user just overrode an AI-set category, log it as a correction
-      // so the categorizer learns not to repeat the mistake on similar merchants.
       if (
         before.categorySource === "ai" &&
         before.categoryId != null &&

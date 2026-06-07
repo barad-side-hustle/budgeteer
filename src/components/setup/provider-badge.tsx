@@ -10,12 +10,6 @@ interface ProviderBadgeProps {
   radius?: number;
 }
 
-/**
- * Square provider tile. Prefers the locally bundled logo
- * (public/bank-logos/<domain>.png, populated by scripts/fetch-bank-logos.mjs),
- * falls back to the live Google favicon, and finally to a colored letter tile
- * so every provider always renders something on brand.
- */
 export function ProviderBadge({ color, name, domain, size = 44, radius = 12 }: ProviderBadgeProps) {
   const candidates = useMemo(() => {
     if (!domain) return [] as string[];
@@ -59,7 +53,6 @@ export function ProviderBadge({ color, name, domain, size = 44, radius = 12 }: P
       }}
     >
       {src != null ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           key={src}
           src={src}
@@ -67,8 +60,6 @@ export function ProviderBadge({ color, name, domain, size = 44, radius = 12 }: P
           width={imageSize}
           height={imageSize}
           onLoad={(e) => {
-            // Google returns a 16x16 globe when it has no real favicon; treat
-            // that as a miss and fall through to the letter tile.
             const img = e.currentTarget;
             const isFavicon = src.startsWith("http");
             if (isFavicon && img.naturalWidth <= 16 && img.naturalHeight <= 16) {

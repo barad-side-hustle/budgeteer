@@ -52,7 +52,6 @@ function intlParts(d: Date) {
     year: Number(parts.year),
     month: Number(parts.month),
     day: Number(parts.day),
-    // Some Intl impls report hour 24 at midnight; normalise.
     hour: Number(parts.hour) === 24 ? 0 : Number(parts.hour),
     minute: Number(parts.minute),
     second: Number(parts.second),

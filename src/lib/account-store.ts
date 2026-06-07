@@ -2,8 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "budgeteer.activeWorkspaceId";
-const LEGACY_STORAGE_KEY = "spent.activeWorkspaceId";
+const STORAGE_KEY = "budgeteer.activeAccountId";
 
 let memValue: number | null = readFromStorage();
 const listeners = new Set<() => void>();
@@ -11,11 +10,6 @@ const listeners = new Set<() => void>();
 function readFromStorage(): number | null {
   if (typeof window === "undefined") return null;
   try {
-    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (legacy != null && window.localStorage.getItem(STORAGE_KEY) == null) {
-      window.localStorage.setItem(STORAGE_KEY, legacy);
-      window.localStorage.removeItem(LEGACY_STORAGE_KEY);
-    }
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const n = Number(raw);
@@ -30,14 +24,16 @@ function writeToStorage(value: number | null): void {
   try {
     if (value == null) window.localStorage.removeItem(STORAGE_KEY);
     else window.localStorage.setItem(STORAGE_KEY, String(value));
-  } catch {}
+  } catch {
+    return;
+  }
 }
 
-export function getActiveWorkspaceIdSync(): number | null {
+export function getActiveAccountIdSync(): number | null {
   return memValue;
 }
 
-export function setActiveWorkspaceId(value: number | null): void {
+export function setActiveAccountId(value: number | null): void {
   if (memValue === value) return;
   memValue = value;
   writeToStorage(value);
@@ -51,7 +47,7 @@ function subscribe(fn: () => void): () => void {
   };
 }
 
-export function useActiveWorkspaceId(): number | null {
+export function useActiveAccountId(): number | null {
   return useSyncExternalStore(
     subscribe,
     () => memValue,

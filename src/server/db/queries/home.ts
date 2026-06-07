@@ -11,27 +11,34 @@ import type {
 import { BANK_PROVIDERS } from "@/lib/types";
 import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
+import { type AccountFilter, buildAccountFilterClause } from "@/server/db/queries/transactions";
 import { bankCredentials, syncRuns } from "@/server/db/schema";
 import { toLocalISODate } from "@/server/lib/date-utils";
 
-export function getCashFlow(workspaceId: number, from: string, to: string): HomeCashFlow {
+export function getCashFlow(
+  workspaceId: number,
+  from: string,
+  to: string,
+  filter: AccountFilter = {},
+): HomeCashFlow {
   const db = getDb();
+  const acct = buildAccountFilterClause(filter);
   const income = db
     .prepare(
       `SELECT COALESCE(SUM(charged_amount), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
-         AND status = 'completed' AND kind = 'income' AND is_excluded = 0`,
+         AND status = 'completed' AND kind = 'income' AND is_excluded = 0${acct.sql}`,
     )
-    .get(workspaceId, from, to) as { total: number };
+    .get(workspaceId, from, to, ...acct.values) as { total: number };
   const expenses = db
     .prepare(
       `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
-         AND status = 'completed' AND kind = 'expense' AND is_excluded = 0`,
+         AND status = 'completed' AND kind = 'expense' AND is_excluded = 0${acct.sql}`,
     )
-    .get(workspaceId, from, to) as { total: number };
+    .get(workspaceId, from, to, ...acct.values) as { total: number };
   return {
     income: income.total,
     expenses: expenses.total,
@@ -39,33 +46,34 @@ export function getCashFlow(workspaceId: number, from: string, to: string): Home
   };
 }
 
-/**
- * Average monthly income or expense over the last N completed calendar months
- * (current month excluded). Divides by months *with activity*, so a one-month-
- * old database returns that month's figure rather than a third of it. Powers the
- * forecast's "expected income/expenses this month". Null when there is no
- * history yet.
- */
 export function getTypicalMonthly(
   workspaceId: number,
   kind: "expense" | "income",
   monthsBack = 3,
+  filter: AccountFilter = {},
 ): number | null {
   const db = getDb();
   const now = new Date();
+  const acct = buildAccountFilterClause(filter);
   const sumExpr = kind === "income" ? "SUM(charged_amount)" : "SUM(ABS(charged_amount))";
   const stmt = db.prepare(
     `SELECT COALESCE(${sumExpr}, 0) as total
      FROM transactions
      WHERE workspace_id = ? AND date >= ? AND date <= ?
-       AND status = 'completed' AND kind = ? AND is_excluded = 0`,
+       AND status = 'completed' AND kind = ? AND is_excluded = 0${acct.sql}`,
   );
   let total = 0;
   let monthsSeen = 0;
   for (let i = 1; i <= monthsBack; i++) {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-    const row = stmt.get(workspaceId, toLocalISODate(start), toLocalISODate(end), kind) as {
+    const row = stmt.get(
+      workspaceId,
+      toLocalISODate(start),
+      toLocalISODate(end),
+      kind,
+      ...acct.values,
+    ) as {
       total: number;
     };
     if (row.total > 0) {
@@ -79,9 +87,11 @@ export function getTypicalMonthly(
 export function getHistoricalTrend(
   workspaceId: number,
   monthsBack: number,
+  filter: AccountFilter = {},
 ): HomeHistoricalTrendPoint[] {
   const db = getDb();
   const now = new Date();
+  const acct = buildAccountFilterClause(filter);
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   const months: { key: string; label: string; from: string; to: string }[] = [];
@@ -101,11 +111,11 @@ export function getHistoricalTrend(
     `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
      FROM transactions
      WHERE workspace_id = ? AND date >= ? AND date <= ?
-       AND status = 'completed' AND kind = 'expense' AND is_excluded = 0`,
+       AND status = 'completed' AND kind = 'expense' AND is_excluded = 0${acct.sql}`,
   );
 
   return months.map((m) => {
-    const row = stmt.get(workspaceId, m.from, m.to) as { total: number };
+    const row = stmt.get(workspaceId, m.from, m.to, ...acct.values) as { total: number };
     return {
       month: m.key,
       label: m.label,
@@ -118,54 +128,56 @@ export function getHistoricalTrend(
 export function getRecentTransactionsForHome(
   workspaceId: number,
   limit: number,
+  filter: AccountFilter = {},
 ): HomeRecentTransaction[] {
+  const acct = buildAccountFilterClause(filter, "t.");
   const rows = getDb()
     .prepare(
       `SELECT t.id, t.date, t.description, t.charged_amount as chargedAmount,
-              t.charged_currency as chargedCurrency, t.kind,
-              c.name as categoryName, c.color as categoryColor
+              t.charged_currency as chargedCurrency, t.kind, t.provider,
+              c.name as categoryName, c.color as categoryColor,
+              bc.label as accountLabel, ba.name as accountName
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.id
+       LEFT JOIN bank_credentials bc ON bc.id = t.credential_id
+       LEFT JOIN bank_accounts ba ON ba.workspace_id = t.workspace_id
+         AND ba.credential_id = t.credential_id
+         AND ba.account_number = t.account_number
        WHERE t.workspace_id = ? AND t.status = 'completed' AND t.kind != 'transfer'
-         AND t.is_excluded = 0
+         AND t.is_excluded = 0${acct.sql}
        ORDER BY t.date DESC, t.id DESC
        LIMIT ?`,
     )
-    .all(workspaceId, limit) as Array<{
-    id: number;
-    date: string;
-    description: string;
-    chargedAmount: number;
-    chargedCurrency: string | null;
-    kind: "expense" | "income" | "transfer";
-    categoryName: string | null;
-    categoryColor: string | null;
-  }>;
+    .all(workspaceId, ...acct.values, limit) as HomeRecentTransaction[];
   return rows;
 }
 
-export function getNeedsAttentionCounts(workspaceId: number): HomeNeedsAttention {
+export function getNeedsAttentionCounts(
+  workspaceId: number,
+  filter: AccountFilter = {},
+): HomeNeedsAttention {
   const db = getDb();
+  const acct = buildAccountFilterClause(filter);
   const uncategorized = db
     .prepare(
       `SELECT COUNT(*) as count FROM transactions
        WHERE workspace_id = ? AND category_id IS NULL AND kind = 'expense' AND status = 'completed'
-         AND is_excluded = 0`,
+         AND is_excluded = 0${acct.sql}`,
     )
-    .get(workspaceId) as { count: number };
+    .get(workspaceId, ...acct.values) as { count: number };
   const lowConfidence = db
     .prepare(
       `SELECT COUNT(*) as count FROM transactions
        WHERE workspace_id = ? AND ai_confidence IS NOT NULL AND ai_confidence < 0.5
-         AND category_source = 'ai' AND status = 'completed' AND is_excluded = 0`,
+         AND category_source = 'ai' AND status = 'completed' AND is_excluded = 0${acct.sql}`,
     )
-    .get(workspaceId) as { count: number };
+    .get(workspaceId, ...acct.values) as { count: number };
   const flagged = db
     .prepare(
       `SELECT COUNT(*) as count FROM transactions
-       WHERE workspace_id = ? AND needs_review = 1 AND status = 'completed' AND is_excluded = 0`,
+       WHERE workspace_id = ? AND needs_review = 1 AND status = 'completed' AND is_excluded = 0${acct.sql}`,
     )
-    .get(workspaceId) as { count: number };
+    .get(workspaceId, ...acct.values) as { count: number };
   return {
     uncategorized: uncategorized.count,
     lowConfidence: lowConfidence.count,
@@ -241,7 +253,3 @@ export function getBankHealth(workspaceId: number): HomeBankHealthItem[] {
     };
   });
 }
-
-// Category breakdown for the home screen now lives in the insight engine
-// (src/server/insights/engine.ts), which rolls leaves to parents and attaches
-// month-over-month deltas. Snapshot-with-budget is intentionally gone.

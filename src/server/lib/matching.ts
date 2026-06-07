@@ -10,25 +10,16 @@ import {
   type TransactionKind,
 } from "@/server/lib/transfers";
 
-// Pure matching core. Turns a window of transaction rows into proposed
-// FinancialEvents (group, never delete). No DB and no clock, so it is fully
-// deterministic and unit-testable in isolation, exactly like
-// findInternalTransferPairs. The DB-applying half lives in
-// src/server/db/queries/financial-events.ts and the orchestration in
-// src/server/sync/matching-step.ts. See docs/transaction-deduplication-design.md.
-
 export interface MatchCandidate {
   id: number;
   credentialId: number | null;
   accountNumber: string;
   provider: string;
-  /** ISO date; only the YYYY-MM-DD prefix is compared. */
   date: string;
   chargedAmount: number;
   chargedCurrency: string | null;
   description: string;
   kind: TransactionKind;
-  /** Stable fingerprint parts, used to build a re-sync-stable event_key. */
   dedupHash: string;
   dedupSequence: number;
 }
@@ -36,11 +27,8 @@ export interface MatchCandidate {
 export interface ProposedMember {
   transactionId: number;
   role: EventRole;
-  /** Kind to flip this leg to on apply, or null to leave the kind untouched. */
   flipKindTo: TransactionKind | null;
-  /** Kind the leg held before this event, captured for lossless undo. */
   priorKind: TransactionKind;
-  /** Whether this leg sets transactions.event_id (grouping legs do; purchases do not). */
   grouping: boolean;
 }
 
@@ -50,9 +38,7 @@ export interface ProposedEvent {
   canonicalTransactionId: number | null;
   confidence: number;
   reasons: string[];
-  /** Deterministic, re-sync-stable idempotency key. */
   eventKey: string;
-  /** When true the legs are flagged needs_review (kind is still flipped). */
   needsReview: boolean;
 }
 
@@ -80,8 +66,6 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n));
 }
 
-// Transparent additive score for a transfer pair. Each signal is independent and
-// surfaced as a human-readable reason so the UI can explain the match.
 function scoreInternalTransfer(
   debit: MatchCandidate,
   credit: MatchCandidate,
@@ -127,12 +111,6 @@ function scoreInternalTransfer(
   return { confidence: clamp01(score), reasons };
 }
 
-/**
- * Propose financial events for a window of candidate rows (all rows must be
- * ungrouped: event_id IS NULL). Runs internal-transfer pairing first so a paired
- * leg is never also claimed as a card payment or ATM withdrawal. Greedy and
- * order-stable.
- */
 export function proposeEvents(
   candidates: readonly MatchCandidate[],
   settings: MatchSettingsMap,
@@ -142,9 +120,6 @@ export function proposeEvents(
   const used = new Set<number>();
   const events: ProposedEvent[] = [];
 
-  // 1. Internal transfers: a debit on one account paired with a credit on
-  //    another. findInternalTransferPairs already requires a transfer keyword
-  //    and excludes rows already marked kind='transfer'.
   const it = settings.internal_transfer;
   if (it?.enabled) {
     const pairs = findInternalTransferPairs(candidates, {
@@ -178,8 +153,6 @@ export function proposeEvents(
         confidence,
         reasons,
         eventKey: eventKeyFor("internal_transfer", [debit, credit]),
-        // Heuristic pair: apply (exclude from spend) but flag for confirmation,
-        // matching the pre-event behavior of findInternalTransferPairs.
         needsReview: true,
       });
       used.add(debit.id);
@@ -187,9 +160,6 @@ export function proposeEvents(
     }
   }
 
-  // 2. Credit card bill payments: a bank-side debit that settles a card
-  //    statement. detectKind already flips these to kind='transfer' at insert;
-  //    here we wrap each one in an auditable event (single leg, kind unchanged).
   const cc = settings.credit_card_payment;
   if (cc?.enabled) {
     for (const cand of candidates) {
@@ -220,8 +190,6 @@ export function proposeEvents(
     }
   }
 
-  // 3. ATM cash withdrawals, only when the user tracks cash manually and wants
-  //    them excluded from spend.
   const atm = settings.atm_withdrawal;
   if (opts.treatAtmAsTransfers && atm?.enabled) {
     for (const cand of candidates) {

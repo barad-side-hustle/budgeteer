@@ -10,10 +10,6 @@ const DB_DIR = process.env.BUDGETEER_DATA_DIR
   : path.join(process.cwd(), "data");
 const DB_PATH = path.join(DB_DIR, "budgeteer.db");
 
-// One-time data migration: builds before the Budgeteer rebrand stored the
-// database under the old file name. If only the legacy file is present, move it
-// (with its WAL/SHM siblings) to the new name so existing installs keep their
-// transactions, categories, and settings after upgrading.
 function migrateLegacyDbFile(): void {
   const legacy = path.join(DB_DIR, "spent.db");
   if (fs.existsSync(DB_PATH) || !fs.existsSync(legacy)) return;

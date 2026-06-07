@@ -7,7 +7,6 @@ import { getOrm } from "@/server/db/orm";
 import { bankCredentials } from "@/server/db/schema";
 import { decrypt, encrypt } from "@/server/lib/encryption";
 
-/** Display name only. Must not store secrets (passwords, tokens, keys). */
 export const BANK_CREDENTIAL_LABEL_MAX_LENGTH = 128;
 
 interface SaveOptions {
@@ -227,7 +226,6 @@ export function hasBankCredentials(workspaceId: number): boolean {
   return row.count > 0;
 }
 
-/** True when any workspace has at least one connected bank. Gates first-run setup. */
 export function anyWorkspaceHasBankCredentials(): boolean {
   const row = getDb().prepare("SELECT COUNT(*) as count FROM bank_credentials").get() as {
     count: number;

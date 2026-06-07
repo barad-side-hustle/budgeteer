@@ -61,11 +61,6 @@ export function deleteExcludedMerchantByKey(
   return result.changes > 0;
 }
 
-/**
- * Flags all rows just inserted by the given sync run that match an existing
- * excluded_merchants rule. Called once per sync immediately after
- * insertTransactions returns. Cheap indexed join.
- */
 export function applyMerchantRulesToSyncRun(workspaceId: number, syncRunId: number): number {
   const result = getDb()
     .prepare(
@@ -85,10 +80,6 @@ export function applyMerchantRulesToSyncRun(workspaceId: number, syncRunId: numb
   return result.changes;
 }
 
-/**
- * Flips is_excluded for a single transaction. Used by the row "Hide / Show"
- * action. Does NOT touch the rules table.
- */
 export function setTransactionExcluded(workspaceId: number, id: number, excluded: boolean): void {
   getOrm()
     .update(transactions)

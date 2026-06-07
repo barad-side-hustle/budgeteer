@@ -15,6 +15,7 @@ import {
   getTopMerchantPerCategory,
   getTopMerchants,
 } from "@/server/db/queries/transactions";
+import { getAccountFilterFromRequest } from "@/server/lib/account-context";
 import { toLocalISODate } from "@/server/lib/date-utils";
 import {
   computeStatus,
@@ -41,22 +42,20 @@ export async function GET(request: Request) {
   const to = searchParams.get("to") ?? defaultTo;
   const months = Number(searchParams.get("months") ?? "12");
 
-  // Optional per-account scoping. Resolve the selected bank_accounts.id values to
-  // their (credentialId, accountNumber) pairs so the dashboard can be narrowed to
-  // specific accounts. No accountIds -> unchanged workspace-wide behavior.
   const accountIds = new Set(
     searchParams.getAll("accountIds").flatMap((v) => {
       const n = Number(v);
       return Number.isFinite(n) && n > 0 ? [n] : [];
     }),
   );
-  const accountKeys =
+  const accountFilter: AccountFilter =
     accountIds.size > 0
-      ? listBankAccounts(workspaceId)
-          .filter((a) => accountIds.has(a.id))
-          .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber }))
-      : undefined;
-  const accountFilter: AccountFilter = { accountKeys };
+      ? {
+          accountKeys: listBankAccounts(workspaceId)
+            .filter((a) => accountIds.has(a.id))
+            .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber })),
+        }
+      : (getAccountFilterFromRequest(request, workspaceId) ?? {});
 
   const fromDate = parseISODate(from);
   const monthLabel = fromDate.toLocaleDateString("en-US", { month: "long" });
@@ -71,7 +70,6 @@ export async function GET(request: Request) {
   const payday = nextPayday(today, paydayDay);
   const daysUntilPayday = Math.max(0, daysUntil(payday));
 
-  // Compute previous month's range
   const prevMonthStart = new Date(year, month - 1, 1);
   const prevMonthEnd = new Date(year, month, 0);
   const prevFrom = toLocalISODate(prevMonthStart);
@@ -90,8 +88,6 @@ export async function GET(request: Request) {
   const topMerchantMap = new Map(topMerchants.map((m) => [m.categoryId, m]));
   const budgetMap = new Map(explicitBudgets.map((b) => [b.categoryId, b]));
 
-  // Identify parents (any category that is referenced as parent_id by at
-  // least one other category). Parents get synthetic rollup rows.
   const parentIdSet = new Set<number>();
   const childrenByParent = new Map<number, typeof categories>();
   for (const c of categories) {
@@ -174,16 +170,12 @@ export async function GET(request: Request) {
     };
   }
 
-  // Build leaf rows for all non-parent categories. Parent rows do NOT
-  // appear as leaves - they only appear as synthetic rollup rows.
   const leafRows: CategoryWithData[] = [];
   for (const c of categories) {
     if (!parentIdSet.has(c.id)) leafRows.push(leafRow(c));
   }
   const leafById = new Map(leafRows.map((r) => [r.categoryId, r]));
 
-  // Build a parent rollup row per parent category. Aggregates over its
-  // direct children's leaf rows.
   const parentRows: CategoryWithData[] = [];
   for (const parent of categories) {
     if (!parentIdSet.has(parent.id)) continue;
@@ -196,7 +188,6 @@ export async function GET(request: Request) {
     const prevTotal = kids.reduce((s, k) => s + (prevMap.get(k.id) ?? 0), 0);
     const vsLastMonth = prevTotal > 0 ? ((spent - prevTotal) / prevTotal) * 100 : null;
 
-    // topMerchant: whichever child's top merchant has the largest spend
     let topMerchant: string | null = null;
     let topMerchantAmount = -Infinity;
     for (const k of kids) {
@@ -207,8 +198,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // Budget: parent has its own explicit budget when in "budgeted" mode AND
-    // a budget row exists for it. Otherwise roll up sum of budgeted children.
     const ownExplicit = budgetMap.get(parent.id);
     const usesOwn = parent.budgetMode === "budgeted" && ownExplicit !== undefined;
     let budget = 0;
@@ -258,10 +247,6 @@ export async function GET(request: Request) {
   const periodTotal = getPeriodTotal(workspaceId, from, to, accountFilter);
   const transactionCount = getPeriodCount(workspaceId, from, to, accountFilter);
 
-  // Hero total comes from the workspace-level monthly target. ALL spend
-  // counts against it — tracking-mode is a per-category organizational tag
-  // only and does not exclude spend from the hero verdict. Per-category
-  // budgets continue to drive their own category cards independently.
   const monthlyTargetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
   const monthlyTargetParsed = monthlyTargetRaw != null ? Number(monthlyTargetRaw) : NaN;
   const monthlyTarget =
@@ -269,16 +254,12 @@ export async function GET(request: Request) {
   const totalBudget = monthlyTarget;
   const budgetedSpent = periodTotal;
 
-  // Typical monthly spend for the facts-mode CTA: sum of 3-month
-  // per-category rolling average, rounded to the nearest 100. Null when
-  // there's no completed history yet.
   const autoSource = getAutoBudgetAverage(workspaceId, 3);
   const typicalSum = autoSource.reduce((s, r) => s + (r.amount ?? 0), 0);
   const typicalMonthly = typicalSum > 0 ? Math.round(typicalSum / 100) * 100 : null;
 
   const overallPercentSpent = totalBudget > 0 ? (periodTotal / totalBudget) * 100 : 0;
 
-  // Format the date for hero header (e.g., "Tuesday, May 19")
   const todayLabel = today.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -291,7 +272,6 @@ export async function GET(request: Request) {
     monthlySpend: getMonthlySummary(workspaceId, months, accountFilter),
     topMerchants: getTopMerchants(workspaceId, from, to, 10, accountFilter),
     categoryBreakdown: getCategoryBreakdown(workspaceId, from, to, accountFilter),
-    // New fields for the budgets dashboard:
     categoriesWithData,
     totalBudget,
     budgetedSpent,

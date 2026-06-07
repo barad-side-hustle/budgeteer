@@ -8,8 +8,6 @@ export async function GET(request: Request) {
   const from = searchParams.get("from");
   const to = searchParams.get("to");
 
-  // With a date range, return per-account spend aggregates for the dashboard
-  // cards; otherwise just the account list (for filters and settings).
   if (from && to) {
     return NextResponse.json(getAccountSummaries(workspaceId, from, to));
   }

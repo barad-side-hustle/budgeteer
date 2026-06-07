@@ -26,7 +26,7 @@ Key priorities (in order):
 
 - No em dashes anywhere in code, comments, docs, or commit messages.
 - Conventional commits: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
-- Comments only where the "why" isn't obvious.
+- No comments anywhere in the codebase. Write self-documenting code; refactor away the need for any comment or for lint/type suppression directives (`eslint-disable`, `@ts-expect-error`, `@ts-ignore`, `biome-ignore`) rather than adding one.
 - `import "server-only"` at the top of every file in `src/server/`.
 
 ## Pull request rules
@@ -34,6 +34,13 @@ Key priorities (in order):
 - Always update the README on every UI change. If a PR alters any user-facing
   screen, regenerate the affected `public/screenshots/*.png` (and any related
   README copy) in the same PR so the README never lags the current UI.
+- Never commit or upload real user data to GitHub. Screenshots (`public/screenshots/*.png`)
+  and any committed sample data MUST be generated from synthetic / mock data only,
+  never from a real bank account or your live `data/budgeteer.db`. To regenerate
+  screenshots, seed a throwaway mock database (point the app at it with
+  `BUDGETEER_DATA_DIR`) instead of capturing your own transactions. The `data/`
+  directory (SQLite DB, WAL, `.encryption-key`) is gitignored and must never be
+  force-added, committed, or pushed.
 
 ## Architecture
 

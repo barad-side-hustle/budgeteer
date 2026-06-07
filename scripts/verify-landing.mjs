@@ -1,8 +1,3 @@
-/**
- * Walk the redesigned landing page section by section and snapshot each.
- * Requires the Astro dev server at http://localhost:4321/Budgeteer to be running.
- */
-
 import fs from "node:fs/promises";
 import path from "node:path";
 import puppeteer from "puppeteer";
@@ -12,7 +7,6 @@ const OUT_DIR = path.resolve(new URL(".", import.meta.url).pathname, "../tmp-lan
 
 const VIEWPORT = { width: 1440, height: 900, deviceScaleFactor: 1 };
 
-// Sections in the order they appear on the page
 const SECTION_SELECTORS = [
   { name: "01-hero", selector: ".hero" },
   { name: "01b-disclaimer", selector: ".disclaimer-band" },
@@ -32,7 +26,6 @@ const SECTION_SELECTORS = [
 const waitForImages = async (page) => {
   await page.evaluate(async () => {
     const imgs = Array.from(document.querySelectorAll("img"));
-    // Force any lazy images to load
     imgs.forEach((img) => {
       img.loading = "eager";
     });
@@ -42,7 +35,6 @@ const waitForImages = async (page) => {
         return new Promise((resolve) => {
           img.addEventListener("load", resolve, { once: true });
           img.addEventListener("error", resolve, { once: true });
-          // safety timeout
           setTimeout(resolve, 5000);
         });
       }),
@@ -72,7 +64,6 @@ const waitForImages = async (page) => {
 
     await page.goto(LANDING_URL, { waitUntil: "networkidle2", timeout: 30000 });
 
-    // Reveal all fade-up sections + hide Astro dev toolbar
     await page.evaluate(() => {
       document.querySelectorAll(".spent-fade-up").forEach((el) => el.classList.add("is-visible"));
       const css = document.createElement("style");
@@ -82,7 +73,6 @@ const waitForImages = async (page) => {
       document.head.appendChild(css);
     });
 
-    // Scroll the whole page to trigger lazy loads
     await page.evaluate(async () => {
       const total = document.documentElement.scrollHeight;
       for (let y = 0; y < total; y += 400) {
@@ -95,12 +85,10 @@ const waitForImages = async (page) => {
     await waitForImages(page);
     await new Promise((r) => setTimeout(r, 600));
 
-    // Full-page screenshot
     const fullPath = path.join(OUT_DIR, "00-fullpage.png");
     await page.screenshot({ path: fullPath, fullPage: true });
     console.log(`✓ 00-fullpage.png`);
 
-    // Section-by-section
     const errors = [];
     for (const sec of SECTION_SELECTORS) {
       const el = await page.$(sec.selector);
@@ -108,7 +96,6 @@ const waitForImages = async (page) => {
         errors.push(`✗ ${sec.name}: selector "${sec.selector}" not found`);
         continue;
       }
-      // Scroll the section into view so any lazy images load
       await el.evaluate((node) => {
         node.scrollIntoView({ block: "start" });
       });

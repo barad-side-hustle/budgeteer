@@ -8,8 +8,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  /* Budgeteer ships a single typeface (Geist). The legacy serif token maps to
-     it so any remaining `--font-serif` references resolve to the sans stack. */
+
   --font-serif: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-heading: var(--font-sans);
@@ -56,17 +55,13 @@
 }
 
 :root {
-  /* Budgeteer light theme (Efferd-grounded): a clean, slightly cool near-white
-     canvas, pure-white cards, hairline neutral borders, and a single confident
-     indigo brand accent. Status green/amber/red/blue are reserved for pace and
-     deltas, so the chrome stays calm and the data does the talking. */
   --background: oklch(0.985 0.002 270);
   --foreground: oklch(0.21 0.01 270);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.01 270);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.01 270);
-  /* Budgeteer signature: indigo. */
+
   --primary: oklch(0.51 0.2 277);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.968 0.003 270);
@@ -79,14 +74,13 @@
   --border: oklch(0.918 0.004 270);
   --input: oklch(0.918 0.004 270);
   --ring: oklch(0.51 0.2 277);
-  /* Category encoding palette, anchored on the brand indigo. Used as fallbacks;
-     live category colors come from the DB. */
+
   --chart-1: oklch(0.51 0.2 277);
   --chart-2: oklch(0.62 0.13 200);
   --chart-3: oklch(0.64 0.16 150);
   --chart-4: oklch(0.72 0.15 70);
   --chart-5: oklch(0.62 0.21 18);
-  /* Status colors: green = good/under, amber = heads-up, red = over, blue = plenty. */
+
   --status-on-track: oklch(0.6 0.13 152);
   --status-heads-up: oklch(0.72 0.15 72);
   --status-over: oklch(0.585 0.22 27);
@@ -103,9 +97,6 @@
 }
 
 .dark {
-  /* Budgeteer dark theme (Efferd-grounded): near-black canvas, hairline 10%
-     white borders, cards lifted a hair off the canvas, brand indigo brightened
-     so it reads against the dark. */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.185 0 0);
@@ -143,8 +134,6 @@
   --sidebar-ring: oklch(0.64 0.18 277);
 }
 
-/* Hebrew: use San Francisco everywhere (sans, serif headings, and mono).
-   Higher specificity than next/font's class-based variable definitions. */
 html[lang="he"] {
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Hebrew",
@@ -161,20 +150,17 @@ html[lang="he"] {
   }
   body {
     @apply bg-background text-foreground;
-    /* Geist looks best with default features plus contextual alternates. */
+
     font-feature-settings: "cv01", "ss03";
   }
   html {
     @apply font-sans;
   }
-  /* Hebrew falls back to the system stack, where Geist's stylistic sets don't
-     apply and can confuse fallback rendering. */
+
   html[lang="he"] body {
     font-feature-settings: normal;
   }
-  /* Budgeteer ships one sans typeface (Geist) throughout. The legacy
-     .font-serif heading utility now maps to the sans stack so any remaining
-     references resolve to the new look. */
+
   .font-serif {
     font-family: var(--font-sans);
   }

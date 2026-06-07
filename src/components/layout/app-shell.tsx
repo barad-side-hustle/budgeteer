@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { GlobalAccountFilter } from "@/components/layout/global-account-filter";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -35,9 +36,10 @@ export function PageHeader({
             </>
           )}
         </div>
-        {actions && (
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>
-        )}
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <GlobalAccountFilter />
+          {actions}
+        </div>
       </div>
     </header>
   );

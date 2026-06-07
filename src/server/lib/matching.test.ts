@@ -88,7 +88,6 @@ describe("proposeEvents", () => {
     expect(events[0].needsReview).toBe(false);
     expect(events[0].members).toHaveLength(1);
     expect(events[0].members[0].role).toBe("bill_payment");
-    // The bank leg is already kind='transfer'; the event does not change it.
     expect(events[0].members[0].flipKindTo).toBeNull();
   });
 
@@ -111,8 +110,6 @@ describe("proposeEvents", () => {
   });
 
   test("a leg claimed by a transfer is not also claimed as a card payment", () => {
-    // A transfer debit that also happens to mention a card keyword must not be
-    // double-counted into two events.
     const events = proposeEvents(
       [
         cand({ id: 1, accountNumber: "A", chargedAmount: -1500, description: "העברה ויזה" }),

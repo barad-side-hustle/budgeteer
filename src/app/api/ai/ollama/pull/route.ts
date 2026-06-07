@@ -47,7 +47,6 @@ export async function POST(request: Request) {
           const speed = elapsed > 0 ? completed / elapsed : 0;
           const remaining = total && speed > 0 ? (total - completed) / speed : null;
 
-          // Throttle progress events to ~4/sec to avoid overwhelming the client
           const now = Date.now();
           if (now - lastEmitAt > 250 || completed === total) {
             send("progress", {

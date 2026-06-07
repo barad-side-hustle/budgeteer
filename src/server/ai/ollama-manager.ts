@@ -88,17 +88,13 @@ export async function* pullOllamaModel(
         if (!trimmed) continue;
         try {
           yield JSON.parse(trimmed) as OllamaPullProgress;
-        } catch {
-          // skip malformed lines
-        }
+        } catch {}
       }
     }
     if (buffer.trim()) {
       try {
         yield JSON.parse(buffer.trim()) as OllamaPullProgress;
-      } catch {
-        // ignore
-      }
+      } catch {}
     }
   } finally {
     reader.releaseLock();

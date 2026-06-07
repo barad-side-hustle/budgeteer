@@ -7,11 +7,13 @@ import {
   getTopMerchantsForCategory,
   queryTransactions,
 } from "@/server/db/queries/transactions";
+import { getAccountFilterFromRequest } from "@/server/lib/account-context";
 import { toLocalISODate } from "@/server/lib/date-utils";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const workspaceId = getWorkspaceIdFromRequest(request);
+  const accountFilter = getAccountFilterFromRequest(request, workspaceId) ?? {};
   const { id } = await params;
   const categoryId = Number(id);
   if (!Number.isFinite(categoryId)) {
@@ -37,15 +39,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
-  // Identify children if this category is a parent.
   const children = allCategories.filter((c) => c.parentId === categoryId);
   const isParent = children.length > 0;
 
-  // For parents, aggregate across all child ids. For leaves, behave as before.
   const targetIds = isParent ? children.map((c) => c.id) : [categoryId];
 
-  // Daily spend: sum per-day across the target ids.
-  const perTargetDaily = targetIds.map((tid) => getCategorySpendByDay(workspaceId, tid, from, to));
+  const perTargetDaily = targetIds.map((tid) =>
+    getCategorySpendByDay(workspaceId, tid, from, to, accountFilter),
+  );
   const dailyMap = new Map<string, number>();
   for (const series of perTargetDaily) {
     for (const d of series) {
@@ -59,7 +60,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const spent = dailySpend.reduce((sum, d) => sum + d.amount, 0);
 
   const allBudgets = getAllBudgets(workspaceId);
-  const allAuto = getAutoBudgetAverage(workspaceId, 3);
+  const allAuto = getAutoBudgetAverage(workspaceId, 3, accountFilter);
 
   const isTracking = category.budgetMode === "tracking";
   let budget = 0;
@@ -95,7 +96,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     budgetSource = "leaf";
   }
 
-  // vsTypical: parent rolls up children's typicals when not in own-budget mode.
   let vsTypical: { typical: number; percentDiff: number } | null = null;
   if (isParent) {
     if (budgetSource !== "own") {
@@ -122,7 +122,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   const prevPerTarget = targetIds.map((tid) =>
-    getCategorySpendByDay(workspaceId, tid, prevFrom, prevTo),
+    getCategorySpendByDay(workspaceId, tid, prevFrom, prevTo, accountFilter),
   );
   let prevSpent = 0;
   for (const series of prevPerTarget) {
@@ -140,20 +140,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     sort: "date",
     order: "desc",
     limit: 50,
+    accountKeys: accountFilter.accountKeys,
   });
 
   const needsReviewTransactions = transactions.filter((t) => t.needsReview);
 
-  // Top merchants: for parents, union across children and re-rank.
   const topMerchants = isParent
     ? aggregateTopMerchants(
-        children.map((c) => getTopMerchantsForCategory(workspaceId, c.id, from, to, 12)),
+        children.map((c) =>
+          getTopMerchantsForCategory(workspaceId, c.id, from, to, 12, accountFilter),
+        ),
       )
-    : getTopMerchantsForCategory(workspaceId, categoryId, from, to, 6);
+    : getTopMerchantsForCategory(workspaceId, categoryId, from, to, 6, accountFilter);
 
   const avgPerTransaction = transactionCount > 0 ? spent / transactionCount : 0;
 
-  // For parent: build a children breakdown with each child's spend/budget.
   const childrenBreakdown = isParent
     ? children
         .map((c) => {

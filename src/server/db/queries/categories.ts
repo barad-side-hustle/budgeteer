@@ -53,7 +53,6 @@ export function getCategoryById(workspaceId: number, id: number): Category | nul
 }
 
 export function getCategoryByName(workspaceId: number, name: string): Category | null {
-  // Raw SQL: name comparison relies on COLLATE NOCASE.
   return (
     (getDb()
       .prepare(
@@ -63,12 +62,6 @@ export function getCategoryByName(workspaceId: number, name: string): Category |
   );
 }
 
-/**
- * Returns the set of category ids that are parents (i.e., appear as
- * parent_id on at least one other category). Used to filter out parents
- * from AI categorization (AI must target leaves only) and to detect
- * whether a row is rendered as a rollup card on the dashboard.
- */
 export function getParentIds(workspaceId: number): Set<number> {
   const rows = getOrm()
     .selectDistinct({ id: categories.parentId })
@@ -168,13 +161,6 @@ export type SetParentResult =
         | "self-parent";
     };
 
-/**
- * Moves a category under a new parent (or to top-level when parentId is null).
- * Enforces the 2-level invariant:
- *  - target parent must itself be top-level (parent_id IS NULL)
- *  - the child being reassigned must not itself have any children
- *  - kinds must match (expense vs income trees stay separate)
- */
 export function setCategoryParent(
   workspaceId: number,
   childId: number,
@@ -217,11 +203,6 @@ export function setCategoryParent(
   return { ok: true, category: updated as Category };
 }
 
-/**
- * Creates a new top-level (parent-eligible) category. Color is picked
- * deterministically when not supplied. Throws if a category with the same
- * name already exists in the workspace (UNIQUE constraint).
- */
 export function createParentCategory(
   workspaceId: number,
   input: {
@@ -262,13 +243,6 @@ export function createParentCategory(
   };
 }
 
-/**
- * Hard-coded parent assignments for the seeded expense categories. Mirrors
- * migration 017_seed_category_parents.sql so that AI-proposed categories
- * with names matching a known leaf get auto-grouped at creation time. New
- * names (truly novel proposals) stay as orphan leaves; the user can either
- * leave them ungrouped or reassign in Settings.
- */
 export const SEEDED_CATEGORY_PARENTS: Record<string, string> = {
   Groceries: "Food",
   Restaurants: "Food",
@@ -293,23 +267,19 @@ export const SEEDED_CATEGORY_PARENTS: Record<string, string> = {
   "Fees & Taxes": "Money Movement",
 };
 
-// Palette for AI-proposed new categories. Distinct hues, none colliding
-// with the 16 seeded category colors. Picked deterministically via a hash
-// of the category name so the same proposal always gets the same color.
-// Chroma matched to the L2 buttercream lift.
 const NEW_CATEGORY_PALETTE = [
-  "#A4C386", // light olive
-  "#E7A875", // sandy orange
-  "#65C1D1", // light cyan-blue
-  "#D692BF", // bright pink
-  "#9186D1", // medium violet
-  "#73C4A8", // jade
-  "#7D90CA", // dusty indigo
-  "#A2ABBB", // medium slate
-  "#BF9ED9", // mauve
-  "#92D5B7", // mint
-  "#D6C480", // sand gold
-  "#BFB89B", // sage tan
+  "#A4C386",
+  "#E7A875",
+  "#65C1D1",
+  "#D692BF",
+  "#9186D1",
+  "#73C4A8",
+  "#7D90CA",
+  "#A2ABBB",
+  "#BF9ED9",
+  "#92D5B7",
+  "#D6C480",
+  "#BFB89B",
 ] as const;
 
 function pickColor(seed: string): string {
@@ -321,13 +291,6 @@ function pickColor(seed: string): string {
   return NEW_CATEGORY_PALETTE[idx];
 }
 
-/**
- * Create a category if it doesn't already exist (case-insensitive).
- * Returns the category record (existing or newly created). When the name
- * appears in SEEDED_CATEGORY_PARENTS, the new row is auto-attached to the
- * matching parent in the same workspace. Otherwise the category is a
- * top-level leaf; the user can reassign later via Settings.
- */
 export function ensureCategory(
   workspaceId: number,
   name: string,

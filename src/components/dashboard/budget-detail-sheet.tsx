@@ -3,7 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronDown, HelpCircle, Pencil, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { toast } from "sonner";
 import { getCategoryIcon } from "@/components/category-icon";
@@ -97,7 +97,6 @@ function DetailContent({ data }: { data: CategoryDetail }) {
     queryClient.invalidateQueries({ queryKey: ["category-detail"] });
     queryClient.invalidateQueries({ queryKey: ["summary"] });
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
   };
 
   const handleApprove = async (id: number) => {
@@ -136,7 +135,6 @@ function DetailContent({ data }: { data: CategoryDetail }) {
     }
   };
 
-  const Icon = getCategoryIcon(data.category.icon);
   const iconColor = shade(data.category.color);
   const pct = Math.min(100, Math.round(data.percentSpent));
   const isTracking = data.category.budgetMode === "tracking";
@@ -159,7 +157,10 @@ function DetailContent({ data }: { data: CategoryDetail }) {
       >
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-background/70">
-            <Icon className="h-5 w-5" style={{ color: iconColor }} />
+            {createElement(getCategoryIcon(data.category.icon), {
+              className: "h-5 w-5",
+              style: { color: iconColor },
+            })}
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
@@ -230,7 +231,7 @@ function DetailContent({ data }: { data: CategoryDetail }) {
       <div className="space-y-5 p-6 pt-3">
         {data.category.isParent && data.children && data.children.length > 0 && (
           <ChildrenBreakdownSection
-            children={data.children}
+            items={data.children}
             budgetSource={data.budgetSource}
             color={data.category.color}
           />
@@ -405,11 +406,11 @@ function DetailContent({ data }: { data: CategoryDetail }) {
 }
 
 function ChildrenBreakdownSection({
-  children,
+  items,
   budgetSource,
   color,
 }: {
-  children: CategoryChildBreakdown[];
+  items: CategoryChildBreakdown[];
   budgetSource: "own" | "rollup" | "leaf";
   color: string;
 }) {
@@ -420,7 +421,7 @@ function ChildrenBreakdownSection({
     <div className="space-y-3 rounded-2xl p-4" style={{ background: tint(color, 0.12) }}>
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-medium">
-          {t("subcategoriesHeading", { count: children.length })}
+          {t("subcategoriesHeading", { count: items.length })}
         </h3>
         <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
           {budgetSource === "own" ? t("ownBudget") : t("rolledUp")}
@@ -428,7 +429,7 @@ function ChildrenBreakdownSection({
       </div>
       <p className="text-xs text-muted-foreground">{banner}</p>
       <ul className="space-y-1.5">
-        {children.map((c) => {
+        {items.map((c) => {
           const pct = Math.min(100, Math.round(c.percentSpent));
           return (
             <li
@@ -618,8 +619,6 @@ function BudgetStat({
       await onSave(next);
       setEditing(false);
     } catch {
-      // onSave already surfaced the failure via a toast; keep the editor open
-      // so the user can retry without losing their input.
     } finally {
       setSaving(false);
     }

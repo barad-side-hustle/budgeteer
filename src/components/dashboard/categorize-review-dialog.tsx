@@ -36,7 +36,6 @@ export function CategorizeReviewDialog({
     queryFn: () => getCategories(),
   });
 
-  // Track per-proposal state: approved (default true), or a fallback name.
   const [approvedMap, setApprovedMap] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(preview.proposedCategories.map((p) => [p.name, true])),
   );
@@ -74,8 +73,6 @@ export function CategorizeReviewDialog({
   );
   const totalProposals = preview.proposedCategories.length;
 
-  // How many transactions will land in an existing category, in a new (approved)
-  // category, or stay uncategorized.
   const stats = useMemo(() => {
     let toExisting = 0;
     let toNew = 0;

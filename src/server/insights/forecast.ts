@@ -1,9 +1,3 @@
-// Pure, deterministic cash-flow forecast math. No DB access and no `server-only`
-// import so it can be unit-tested directly. The engine (forecast-engine.ts)
-// gathers data through the query layer and feeds it here. This is the heart of
-// the RiseUp-style "bottom line": will the month finish in the plus or minus,
-// how much is safe to spend, and where the balance is heading.
-
 import type { Forecast, ForecastVerdict, OverdraftRisk } from "@/lib/types";
 
 export interface ForecastInput {
@@ -13,26 +7,16 @@ export interface ForecastInput {
   daysUntilPayday: number;
   incomeMtd: number;
   expensesMtd: number;
-  /** Spend so far this month on recurring (fixed) merchants. */
   fixedMtd: number;
-  /** Typical total monthly recurring commitment (rent, bills, subscriptions...). */
   fixedMonthly: number;
   typicalMonthlyIncome: number | null;
   typicalMonthlyExpenses: number | null;
   monthlyTarget: number | null;
-  /** Known current balance (Tier 2). Null disables the month-end balance line. */
   balanceToday: number | null;
 }
 
-// Below this many elapsed days a straight-line projection is too noisy, so we
-// blend it toward the user's own typical month until enough of the month is in.
 const CONFIDENCE_DAYS = 10;
 
-/**
- * Project the variable (discretionary) spend for the month. A straight-line from
- * a couple of days swings wildly, so blend it toward the typical variable month
- * until enough of the month is in. Never projects below what is already spent.
- */
 function projectVariable(
   variableMtd: number,
   elapsedDays: number,
@@ -78,13 +62,8 @@ export function computeForecast(input: ForecastInput): Forecast {
   const daysLeft = Math.max(0, totalDays - elapsedDays);
   const netMtd = incomeMtd - expensesMtd;
 
-  // Salary is lumpy: if this month's income is still below a typical month, the
-  // rest is treated as upcoming rather than assuming income simply stops.
   const expectedIncome = Math.max(incomeMtd, typicalMonthlyIncome ?? incomeMtd);
 
-  // Fixed commitments (rent, bills, subscriptions) happen once a month, so they
-  // must NOT be extrapolated. Only the variable part is paced by the day. This
-  // is what stops a rent payment early in the month from inflating the forecast.
   const fixedMonthly = Math.max(0, input.fixedMonthly);
   const fixedMtd = Math.max(0, Math.min(input.fixedMtd, expensesMtd));
   const variableMtd = Math.max(0, expensesMtd - fixedMtd);
@@ -102,9 +81,6 @@ export function computeForecast(input: ForecastInput): Forecast {
   const scale = Math.max(expectedIncome, projectedExpenses, 1);
   const verdict = classifyVerdict(projectedNet, scale);
 
-  // Safe-to-spend: what is left of the month's spending headroom. The ceiling is
-  // an explicit target if set, otherwise the month's expected income (so you
-  // finish at or above zero). Spread the remainder over the days left.
   const ceiling = monthlyTarget != null && monthlyTarget > 0 ? monthlyTarget : expectedIncome;
   const safeToSpendRemaining = Math.max(0, ceiling - expensesMtd);
   const safeToSpendPerDay = daysLeft > 0 ? safeToSpendRemaining / daysLeft : safeToSpendRemaining;

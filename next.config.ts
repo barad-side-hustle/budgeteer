@@ -4,21 +4,13 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const SECURITY_HEADERS = [
-  // Block embedding in iframes from other origins.
   { key: "X-Frame-Options", value: "DENY" },
-  // Stop the browser from MIME-sniffing responses.
   { key: "X-Content-Type-Options", value: "nosniff" },
-  // Don't leak the originating URL on outbound links.
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  // Lock down browser capabilities this app never needs.
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
-  // CSP for a local-only app: only same-origin scripts/styles + Google
-  // fonts + bank favicons (s2/favicons redirects to *.gstatic.com). Inline
-  // styles allowed for shadcn/Tailwind.
-  // 'unsafe-inline' on scripts is necessary because Next dev injects them.
   {
     key: "Content-Security-Policy",
     value: [

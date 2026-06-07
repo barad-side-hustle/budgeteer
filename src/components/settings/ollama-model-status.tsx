@@ -28,7 +28,6 @@ export function OllamaModelStatus({ ollamaUrl, model }: OllamaModelStatusProps) 
   const [pullError, setPullError] = useState<string | null>(null);
   const pullCancelRef = useRef<(() => void) | null>(null);
 
-  // Refresh installed-list whenever model or url changes, or a pull finishes.
   useEffect(() => {
     let cancelled = false;
     (async () => {

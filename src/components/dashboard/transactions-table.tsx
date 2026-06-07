@@ -11,12 +11,10 @@ import {
   HelpCircle,
   MoreHorizontal,
   Tags,
-  Wallet,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ProviderBadge } from "@/components/setup/provider-badge";
 import { SortableTableHead } from "@/components/transactions/sortable-table-head";
 import {
   MultiFilterOption,
@@ -25,7 +23,7 @@ import {
 import { TransactionSourceCell } from "@/components/transactions/transaction-source-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,7 +49,7 @@ import {
   updateTransactionCategory,
 } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { translateCategoryName, translateProviderName } from "@/lib/i18n-data";
+import { translateCategoryName } from "@/lib/i18n-data";
 import {
   formatMultiFilterDisplay,
   getCategoryDescendantIds,
@@ -59,8 +57,7 @@ import {
   toggleCategoryFilterSelection,
 } from "@/lib/transaction-filters";
 import type { SortOrder, TransactionSortField } from "@/lib/transaction-sort";
-import type { BankAccount, Category, TransactionWithCategory } from "@/lib/types";
-import { BANK_PROVIDERS } from "@/lib/types";
+import type { Category, TransactionWithCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Kind = "expense" | "income" | "transfer";
@@ -69,14 +66,11 @@ interface TransactionsTableProps {
   transactions: TransactionWithCategory[];
   total: number;
   categories: Category[];
-  accounts: BankAccount[];
   loading: boolean;
   search: string;
   onSearchChange: (search: string) => void;
   categoryFilter: number[];
   onCategoryFilterChange: (categoryIds: number[]) => void;
-  accountFilter: number[];
-  onAccountFilterChange: (accountIds: number[]) => void;
   page: number;
   onPageChange: (page: number) => void;
   sortField: TransactionSortField;
@@ -91,14 +85,11 @@ export function TransactionsTable({
   transactions,
   total,
   categories,
-  accounts,
   loading,
   search,
   onSearchChange,
   categoryFilter,
   onCategoryFilterChange,
-  accountFilter,
-  onAccountFilterChange,
   page,
   onPageChange,
   sortField,
@@ -109,7 +100,6 @@ export function TransactionsTable({
   const t = useTranslations("transactions");
   const tc = useTranslations("common");
   const tCat = useTranslations("categoriesSeeded");
-  const tBanks = useTranslations("banks");
   const locale = useLocale() as Locale;
   const queryClient = useQueryClient();
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -136,7 +126,6 @@ export function TransactionsTable({
       await updateTransactionCategory(txnId, categoryId);
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tc("saveFailed"));
     } finally {
@@ -150,7 +139,6 @@ export function TransactionsTable({
       await setTransactionKind(txnId, next);
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
       queryClient.invalidateQueries({ queryKey: ["categories"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tc("saveFailed"));
@@ -165,7 +153,6 @@ export function TransactionsTable({
       await approveTransactionCategory(txnId);
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tc("saveFailed"));
     } finally {
@@ -176,7 +163,6 @@ export function TransactionsTable({
   const invalidateAfterExclude = () => {
     queryClient.invalidateQueries({ queryKey: ["transactions"] });
     queryClient.invalidateQueries({ queryKey: ["summary"] });
-    queryClient.invalidateQueries({ queryKey: ["transactions-summary"] });
     queryClient.invalidateQueries({ queryKey: ["home"] });
     queryClient.invalidateQueries({ queryKey: ["categories"] });
     queryClient.invalidateQueries({ queryKey: ["excluded-merchants"] });
@@ -219,32 +205,6 @@ export function TransactionsTable({
     return [];
   };
 
-  const accountOptions = accounts
-    .map((account) => {
-      const info = BANK_PROVIDERS.find((b) => b.id === account.provider);
-      const providerName = translateProviderName(
-        account.provider,
-        info?.name ?? account.provider,
-        tBanks,
-      );
-      const label = account.name.trim() || account.accountNumber;
-      return { account, info, providerName, label };
-    })
-    .sort((a, b) => a.providerName.localeCompare(b.providerName) || a.label.localeCompare(b.label));
-
-  const showAccountFilter = accountOptions.length > 1;
-
-  const toggleFilterId = (ids: number[], id: number): number[] =>
-    ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
-
-  const accountLabels = accountFilter
-    .map((id) => accountOptions.find((o) => o.account.id === id)?.label)
-    .filter((name): name is string => name != null);
-
-  const accountDisplayValue = formatMultiFilterDisplay(accountLabels, t("filterAny"), (count) =>
-    t("filterSelectedCount", { count }),
-  );
-
   const categoryLabels = categoryFilter
     .map((id) => categories.find((c) => c.id === id))
     .filter((c): c is Category => c != null)
@@ -254,18 +214,16 @@ export function TransactionsTable({
     t("filterSelectedCount", { count }),
   );
 
-  const hasActiveFilters = categoryFilter.length > 0 || accountFilter.length > 0;
+  const hasActiveFilters = categoryFilter.length > 0;
 
   const handleClearFilters = () => {
     onCategoryFilterChange([]);
-    onAccountFilterChange([]);
     onPageChange(0);
   };
 
   const allCategoryIds = [
     ...new Set(categories.flatMap((c) => getCategoryDescendantIds(c.id, categories))),
   ];
-  const allAccountIds = accountOptions.map((o) => o.account.id);
 
   const renderCategoryFilterOptions = (
     parentId: number | null,
@@ -306,79 +264,38 @@ export function TransactionsTable({
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <CardTitle className="font-semibold text-2xl">{t("pageTitle")}</CardTitle>
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              placeholder={t("search")}
-              value={search}
-              onChange={(e) => {
-                onSearchChange(e.target.value);
-                onPageChange(0);
-              }}
-              className="h-8 w-full sm:w-[200px]"
-            />
-            {showAccountFilter ? (
-              <TransactionMultiFilter
-                label={t("filterAccount")}
-                icon={Wallet}
-                displayValue={accountDisplayValue}
-                triggerClassName="w-[200px]"
-                selectAllLabel={t("filterSelectAll")}
-                clearLabel={t("filterClearSelection")}
-                onSelectAll={() => onAccountFilterChange(allAccountIds)}
-                onClear={() => onAccountFilterChange([])}
-              >
-                {accountOptions.map(({ account, info, label, providerName }) => (
-                  <MultiFilterOption
-                    key={account.id}
-                    selected={accountFilter.includes(account.id)}
-                    onToggle={() =>
-                      onAccountFilterChange(toggleFilterId(accountFilter, account.id))
-                    }
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      {info ? (
-                        <ProviderBadge
-                          color={info.color}
-                          name={providerName}
-                          domain={info.domain}
-                          size={16}
-                          radius={5}
-                        />
-                      ) : null}
-                      <span className="min-w-0 truncate">
-                        <span className="truncate">{label}</span>
-                        <span className="ms-1 text-xs text-muted-foreground">{providerName}</span>
-                      </span>
-                    </div>
-                  </MultiFilterOption>
-                ))}
-              </TransactionMultiFilter>
-            ) : null}
-            <TransactionMultiFilter
-              label={t("filterCategory")}
-              icon={Tags}
-              displayValue={categoryDisplayValue}
-              selectAllLabel={t("filterSelectAll")}
-              clearLabel={t("filterClearSelection")}
-              onSelectAll={() => onCategoryFilterChange(allCategoryIds)}
-              onClear={() => onCategoryFilterChange([])}
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            placeholder={t("search")}
+            value={search}
+            onChange={(e) => {
+              onSearchChange(e.target.value);
+              onPageChange(0);
+            }}
+            className="h-8 w-full sm:w-[240px]"
+          />
+          <TransactionMultiFilter
+            label={t("filterCategory")}
+            icon={Tags}
+            displayValue={categoryDisplayValue}
+            selectAllLabel={t("filterSelectAll")}
+            clearLabel={t("filterClearSelection")}
+            onSelectAll={() => onCategoryFilterChange(allCategoryIds)}
+            onClear={() => onCategoryFilterChange([])}
+          >
+            {renderCategoryFilterOptions(null, 0)}
+          </TransactionMultiFilter>
+          {hasActiveFilters ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 shrink-0 px-2 text-xs text-muted-foreground"
+              onClick={handleClearFilters}
             >
-              {renderCategoryFilterOptions(null, 0)}
-            </TransactionMultiFilter>
-            {hasActiveFilters ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 shrink-0 px-2 text-xs text-muted-foreground"
-                onClick={handleClearFilters}
-              >
-                {t("filterClear")}
-              </Button>
-            ) : null}
-          </div>
+              {t("filterClear")}
+            </Button>
+          ) : null}
         </div>
         {hasActiveFilters || search.trim().length > 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">{t("filterScopedToList")}</p>
@@ -395,9 +312,7 @@ export function TransactionsTable({
           </div>
         ) : transactions.length === 0 ? (
           <div className="py-12 text-center text-sm text-muted-foreground">
-            {search || categoryFilter.length > 0 || accountFilter.length > 0
-              ? t("emptyWithFilters")
-              : t("emptyNoData")}
+            {search || categoryFilter.length > 0 ? t("emptyWithFilters") : t("emptyNoData")}
           </div>
         ) : (
           <>

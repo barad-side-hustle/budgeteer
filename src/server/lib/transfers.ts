@@ -23,7 +23,6 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /ויזה/i,
   /ישראכרט/i,
   /ישרא[\s־-]?כארד/i,
-  // Match כאל / כ.א.ל / כ א ל / כ-א-ל (Israeli abbreviation for Cal credit).
   /כ[\s.\-־]?א[\s.\-־]?ל/i,
   /מקסימום/i,
   /מאסטרקארד/i,
@@ -31,8 +30,6 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /אמקס/i,
   /דיינרס/i,
   /תשלום\s*אשראי/i,
-  // `כרטיסי?` matches both the singular `כרטיס אשראי` and the plural
-  // `כרטיסי אשראי` form bank statements use (e.g. "כרטיסי אשראי ל").
   /כרטיסי?\s*אשראי/i,
   /חיוב\s*כרטיס/i,
   /לאומי\s*קארד/i,
@@ -48,10 +45,6 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
   /\bLEUMI\s+CARD\b/i,
 ];
 
-// Internal transfers between the user's own accounts (Bank A -> Bank B) show up
-// as an expense on one side and income on the other. We only treat a row as an
-// internal transfer when it carries one of these hints AND a matching opposite
-// row exists (see findInternalTransferPairs); the keyword alone is not enough.
 const INTERNAL_TRANSFER_PATTERNS: readonly RegExp[] = [
   /העברה/i,
   /העברת/i,
@@ -59,8 +52,6 @@ const INTERNAL_TRANSFER_PATTERNS: readonly RegExp[] = [
   /\bwire\b/i,
 ];
 
-// ATM cash withdrawals. Used to deterministically file them under "Cash & ATM"
-// (or as transfers when the user tracks cash manually).
 const ATM_WITHDRAWAL_PATTERNS: readonly RegExp[] = [
   /משיכת\s*מזומן/i,
   /משיכה\s*מבנקט/i,
@@ -84,7 +75,6 @@ function matchesTransferPattern(description: string): boolean {
   return matchesAny(description, CREDIT_CARD_PAYMENT_PATTERNS);
 }
 
-/** True when a description looks like a bank-side credit card bill payment. */
 export function matchesCreditCardPayment(description: string): boolean {
   return matchesAny(description, CREDIT_CARD_PAYMENT_PATTERNS);
 }

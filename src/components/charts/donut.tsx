@@ -14,11 +14,6 @@ interface DonutProps {
   children?: ReactNode;
 }
 
-/**
- * A composition donut for the "where it went" breakdown. Capped to a handful of
- * segments by the caller (the rest folded into an "Other" slice) per the
- * research guidance against many-wedge pie charts.
- */
 export function Donut({ slices, size = 132, thickness = 14, className, children }: DonutProps) {
   const radius = (size - thickness) / 2;
   const circumference = 2 * Math.PI * radius;

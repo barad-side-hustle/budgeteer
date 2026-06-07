@@ -23,12 +23,10 @@ export type SetupMode = "first-run" | "new-workspace";
 type Step = "welcome" | "name" | "connect" | "ai" | "target" | "budgets" | "done";
 
 const FLOWS: Record<SetupMode, Step[]> = {
-  // AI is a global (one-time) setting, so the new-workspace flow skips it.
   "first-run": ["welcome", "connect", "ai", "target", "budgets", "done"],
   "new-workspace": ["name", "connect", "target", "budgets", "done"],
 };
 
-// Directional slide: forward enters from the right and exits left, back reverses.
 const variants = {
   enter: (dir: number) => ({ x: dir >= 0 ? 36 : -36, opacity: 0 }),
   center: { x: 0, opacity: 1 },
@@ -88,11 +86,8 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
       </a>
 
       <div className="w-full max-w-[560px]">
-        {/* Brand + progress */}
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            {/* Brand mark; local static SVG, next/image adds no value here. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="Budgeteer" className="h-7 w-7" />
             <div>
               <div className="text-base font-semibold leading-none tracking-tight">Budgeteer</div>
@@ -114,7 +109,6 @@ export function SetupWizard({ mode = "first-run" }: { mode?: SetupMode }) {
           />
         </div>
 
-        {/* Fixed-size card; content swaps with a directional slide */}
         <div className="mt-4 h-[min(72vh,580px)] overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
           <div className="flex h-full flex-col overflow-y-auto px-6 py-8 md:px-10">
             <AnimatePresence mode="wait" custom={dir} initial={false}>

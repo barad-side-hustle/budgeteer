@@ -193,9 +193,11 @@ function CredentialsForm({
     message: string;
   } | null>(null);
 
-  useEffect(() => {
+  const [prevCredentialId, setPrevCredentialId] = useState(credentialId);
+  if (credentialId !== prevCredentialId) {
+    setPrevCredentialId(credentialId);
     setSavedCredentialId(credentialId);
-  }, [credentialId]);
+  }
 
   useEffect(() => {
     if (!isEdit || credentialId == null) return;
@@ -237,9 +239,7 @@ function CredentialsForm({
     try {
       const body = JSON.parse(err.message) as { message?: string };
       if (body.message) return body.message;
-    } catch {
-      /* plain text */
-    }
+    } catch {}
     return err.message || fallback;
   };
 

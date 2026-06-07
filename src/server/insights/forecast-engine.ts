@@ -1,11 +1,20 @@
 import "server-only";
 
-import type { ForecastPayload, InsightSection, InsightSectionError } from "@/lib/types";
+import type {
+  FixedVsVariableCategory,
+  ForecastPayload,
+  InsightSection,
+  InsightSectionError,
+} from "@/lib/types";
 import { getAutoBudgetAverage } from "@/server/db/queries/budgets";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { getCashFlow, getTypicalMonthly } from "@/server/db/queries/home";
 import { getBalanceAnchor, getWorkspaceSetting } from "@/server/db/queries/settings";
-import { getCategorySpendInRange, getMerchantMonthlySpend } from "@/server/db/queries/transactions";
+import {
+  type AccountFilter,
+  getCategorySpendInRange,
+  getMerchantMonthlySpend,
+} from "@/server/db/queries/transactions";
 import { type CategoryMeta, computeMonthRanges, rollUpByParent } from "@/server/insights/compute";
 import { computeForecast } from "@/server/insights/forecast";
 import {
@@ -21,7 +30,7 @@ import {
 import { daysUntil, nextPayday } from "@/server/lib/pace";
 
 const RECURRING_MONTHS = 6;
-const RECURRING_LIMIT = 8;
+const RECURRING_LIMIT = 24;
 const FEES_CATEGORY_NAME = "Fees & Taxes";
 
 function safe<T>(section: InsightSection, errors: InsightSectionError[], fn: () => T): T | null {
@@ -42,7 +51,6 @@ function isoAddDay(dateIso: string): string {
   return `${yy}-${mm}-${dd}`;
 }
 
-/** The trailing month keys (YYYY-MM), oldest first, ending with the current month. */
 function trailingMonthKeys(now: Date, count: number): string[] {
   const keys: string[] = [];
   for (let i = count - 1; i >= 0; i--) {
@@ -52,21 +60,19 @@ function trailingMonthKeys(now: Date, count: number): string[] {
   return keys;
 }
 
-/**
- * Assemble the full forecast payload: the cash-flow forecast, fixed-vs-variable
- * split, recurring charges, savings opportunities and recommendations. Every
- * section is wrapped so one failure never blanks the whole screen.
- */
-export function buildForecastPayload(workspaceId: number, now: Date): ForecastPayload {
+export function buildForecastPayload(
+  workspaceId: number,
+  now: Date,
+  filter: AccountFilter = {},
+): ForecastPayload {
   const errors: InsightSectionError[] = [];
   const ranges = computeMonthRanges(now);
   const today = isoToday(now);
 
-  const typicalExpenses = getTypicalMonthly(workspaceId, "expense", 3);
-  const typicalIncome = getTypicalMonthly(workspaceId, "income", 3);
+  const typicalExpenses = getTypicalMonthly(workspaceId, "expense", 3, filter);
+  const typicalIncome = getTypicalMonthly(workspaceId, "income", 3, filter);
   const anchor = getBalanceAnchor(workspaceId);
 
-  // Category metadata for rollups + fees lookup.
   const metaById = new Map<number, CategoryMeta>();
   let feesCategoryId: number | null = null;
   for (const c of getAllCategories(workspaceId, "expense")) {
@@ -80,11 +86,10 @@ export function buildForecastPayload(workspaceId: number, now: Date): ForecastPa
     if (c.name === FEES_CATEGORY_NAME) feesCategoryId = c.id;
   }
 
-  // Recurring charges first: the forecast needs the fixed split so it can count
-  // committed spend (rent, bills) once instead of extrapolating it.
   let fixedMtd = 0;
+  const fixedByCategory = new Map<number, number>();
   const recurring = safe("movers", errors, () => {
-    const rows = getMerchantMonthlySpend(workspaceId, RECURRING_MONTHS);
+    const rows = getMerchantMonthlySpend(workspaceId, RECURRING_MONTHS, filter);
     const keys = trailingMonthKeys(now, RECURRING_MONTHS);
     const lastIdx = keys.length - 1;
     const monthIndex = new Map(keys.map((k, i) => [k, i] as const));
@@ -106,21 +111,63 @@ export function buildForecastPayload(workspaceId: number, now: Date): ForecastPa
       s.monthly[idx] += r.amount;
     }
     const detected = detectRecurring([...byMerchant.values()]);
-    // Current-month spend already made on recurring merchants.
-    fixedMtd = detected.reduce(
-      (sum, r) => sum + (byMerchant.get(r.merchant)?.monthly[lastIdx] ?? 0),
-      0,
-    );
+    for (const r of detected) {
+      const lastAmount = byMerchant.get(r.merchant)?.monthly[lastIdx] ?? 0;
+      fixedMtd += lastAmount;
+      const meta = r.categoryId != null ? metaById.get(r.categoryId) : null;
+      const key = meta ? (meta.parentId ?? meta.id) : null;
+      if (key != null) {
+        fixedByCategory.set(key, (fixedByCategory.get(key) ?? 0) + lastAmount);
+      }
+    }
     return detected;
   });
 
-  const fixedVsVariable = safe("breakdown", errors, () =>
-    typicalExpenses != null ? computeFixedVsVariable(recurring ?? [], typicalExpenses) : null,
+  const leafCurrent = getCategorySpendInRange(
+    workspaceId,
+    ranges.current.from,
+    ranges.current.to,
+    filter,
   );
+  const currentRolled = rollUpByParent(leafCurrent, metaById);
+  const typicalRolled = rollUpByParent(getAutoBudgetAverage(workspaceId, 3, filter), metaById);
+
+  const fixedVsVariable = safe("breakdown", errors, () => {
+    if (typicalExpenses == null) return null;
+    const totals = computeFixedVsVariable(recurring ?? [], typicalExpenses);
+    const catKeys = new Set<number>([
+      ...currentRolled.keys(),
+      ...typicalRolled.keys(),
+      ...fixedByCategory.keys(),
+    ]);
+    const byCategory: FixedVsVariableCategory[] = [];
+    for (const key of catKeys) {
+      const meta = metaById.get(key);
+      if (!meta) continue;
+      const current = currentRolled.get(key) ?? 0;
+      const typical = typicalRolled.get(key) ?? 0;
+      if (current === 0 && typical === 0) continue;
+      const fixed = Math.min(current, fixedByCategory.get(key) ?? 0);
+      const variable = Math.max(0, current - fixed);
+      byCategory.push({
+        categoryId: key,
+        name: meta.name,
+        color: meta.color,
+        icon: meta.icon,
+        fixed,
+        variable,
+        current,
+        typical,
+        deltaPercent: typical > 0 ? ((current - typical) / typical) * 100 : null,
+      });
+    }
+    byCategory.sort((a, b) => b.current - a.current);
+    return { ...totals, byCategory };
+  });
   const fixedMonthly = fixedVsVariable?.fixedMonthly ?? 0;
 
   const forecast = safe("verdict", errors, () => {
-    const cf = getCashFlow(workspaceId, ranges.current.from, ranges.current.to);
+    const cf = getCashFlow(workspaceId, ranges.current.from, ranges.current.to, filter);
     const paydayDay = Number(getWorkspaceSetting(workspaceId, "payday_day") ?? "1");
     const daysUntilPayday = Math.max(0, daysUntil(nextPayday(now, paydayDay), now));
     const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
@@ -132,7 +179,7 @@ export function buildForecastPayload(workspaceId: number, now: Date): ForecastPa
       if (!anchor.date || anchor.date >= today) {
         balanceToday = anchor.amount;
       } else {
-        const since = getCashFlow(workspaceId, isoAddDay(anchor.date), today);
+        const since = getCashFlow(workspaceId, isoAddDay(anchor.date), today, filter);
         balanceToday = anchor.amount + since.net;
       }
     }
@@ -153,10 +200,6 @@ export function buildForecastPayload(workspaceId: number, now: Date): ForecastPa
     });
   });
 
-  // Rolled-up current vs typical spend per top-level category, for spikes/trims.
-  const leafCurrent = getCategorySpendInRange(workspaceId, ranges.current.from, ranges.current.to);
-  const currentRolled = rollUpByParent(leafCurrent, metaById);
-  const typicalRolled = rollUpByParent(getAutoBudgetAverage(workspaceId, 3), metaById);
   const categorySpend: CategorySpendRow[] = [];
   const keys = new Set<number>([...currentRolled.keys(), ...typicalRolled.keys()]);
   for (const key of keys) {

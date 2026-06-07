@@ -61,9 +61,6 @@ export function countWorkspaces(): number {
   return row.count;
 }
 
-// Cumulative seed list reflecting migrations 001 + 006 (removed "Other")
-// + 008 (added "Salary", kind column) + 010 (brighter colors)
-// + 011 (added 7 more) + 014 (Sports & Hobbies + descriptions). Keep in sync.
 interface SeedCategory {
   name: string;
   color: string;

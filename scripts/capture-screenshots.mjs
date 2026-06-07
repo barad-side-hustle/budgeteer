@@ -1,13 +1,3 @@
-/**
- * Capture fresh screenshots of the Budgeteer app for the landing page.
- *
- * Requires the dev server at http://127.0.0.1:3000 to be running.
- * Writes PNGs to website/src/assets/screenshots/.
- *
- * Usage:
- *   node scripts/capture-screenshots.mjs
- */
-
 import fs from "node:fs/promises";
 import path from "node:path";
 import puppeteer from "puppeteer";
@@ -28,13 +18,11 @@ const SCREENS = [
   },
   {
     name: "dashboard-light.png",
-    // Use /budget as the secondary dashboard view for peek-inside side
     path: "/budget",
     theme: "light",
   },
   {
     name: "dashboard-dark.png",
-    // Home page in dark for the dark mode strip — richer than budget alone
     path: "/",
     theme: "dark",
   },
@@ -45,13 +33,10 @@ const SCREENS = [
   },
   {
     name: "setup-bank-light.png",
-    // Real connected-banks settings view, opening the Add bank picker so the
-    // shot shows BOTH connected banks AND the full list of supported ones.
     path: "/settings/bank",
     theme: "light",
     afterLoad: async (page) => {
       await page.evaluate(() => {
-        // Close any open dropdowns by clicking body
         document.body.click();
       });
       await new Promise((r) => setTimeout(r, 300));
@@ -89,7 +74,6 @@ const setTheme = async (page, theme) => {
     const page = await browser.newPage();
     await page.setViewport(VIEWPORT);
 
-    // Prime localStorage on the right origin
     await page.goto(APP_URL, { waitUntil: "networkidle2", timeout: 15000 });
 
     for (const screen of SCREENS) {
@@ -101,14 +85,12 @@ const setTheme = async (page, theme) => {
         waitUntil: "networkidle2",
         timeout: 20000,
       });
-      // Re-apply theme after navigation (in case it was reset)
       await setTheme(page, screen.theme);
 
       if (screen.injectCss) {
         await page.addStyleTag({ content: screen.injectCss });
       }
 
-      // Give animations a moment to settle
       await new Promise((r) => setTimeout(r, 1200));
 
       if (typeof screen.afterLoad === "function") {

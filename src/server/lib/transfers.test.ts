@@ -17,9 +17,7 @@ describe("detectKind — credit card settlements", () => {
   });
 
   test("a normal credit-card purchase is NOT a settlement (provider gate)", () => {
-    // "Cal - Gett" arriving from a credit-card provider is a real purchase.
     expect(detectKind("Cal - Gett", "isracard", -30)).toBe("expense");
-    // Even a settlement-looking word stays an expense when it is not a bank.
     expect(detectKind("כאל", "isracard", -30)).toBe("expense");
   });
 

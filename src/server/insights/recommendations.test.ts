@@ -17,6 +17,7 @@ function recurring(merchant: string, amount: number, categoryName: string | null
     monthsPresent: 6,
     monthsConsidered: 6,
     lapsed: false,
+    monthly: [amount, amount, amount, amount, amount, amount],
   };
 }
 

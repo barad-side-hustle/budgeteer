@@ -3,7 +3,6 @@ import "server-only";
 import type { AccountOwnershipType, AccountSummary, BankAccount } from "@/lib/types";
 import { getDb } from "@/server/db/index";
 
-/** Mirrors the CHECK(length(name) <= 128) in migration 023. */
 export const BANK_ACCOUNT_NAME_MAX_LENGTH = 128;
 
 const OWNERSHIP_TYPES: readonly AccountOwnershipType[] = ["personal", "joint", "shared"];
@@ -12,11 +11,6 @@ export function isAccountOwnershipType(value: unknown): value is AccountOwnershi
   return typeof value === "string" && OWNERSHIP_TYPES.includes(value as AccountOwnershipType);
 }
 
-/**
- * Unlike the credential label, an account name is auto-created and optional, so
- * this never throws: it trims, clamps to the DDL limit, and falls back to the
- * account number when empty.
- */
 function normalizeAccountName(name: string, fallback: string): string {
   const trimmed = name.trim();
   const value = trimmed || fallback;
@@ -65,11 +59,6 @@ interface UpsertOptions {
   balanceCurrency?: string;
 }
 
-/**
- * Auto-discover/refresh an account during sync. Never overwrites the
- * user-controlled name/ownership_type. Balance and its currency only refresh
- * when a balance is given (the scraper omits a currency, so default to ILS).
- */
 export function upsertBankAccount(
   workspaceId: number,
   credentialId: number,
@@ -138,7 +127,6 @@ interface UpdateBankAccountInput {
   ownershipType?: AccountOwnershipType;
 }
 
-/** Returns the updated account, or null when the id doesn't belong to the workspace. */
 export function updateBankAccount(
   workspaceId: number,
   id: number,
@@ -178,11 +166,6 @@ interface AccountSummaryRow extends BankAccountRow {
   transaction_count: number;
 }
 
-/**
- * Per-account spend aggregates over a date range, joined back to every account
- * (LEFT JOIN, so accounts with no activity still appear with zeroes). Drives the
- * dashboard per-account cards.
- */
 export function getAccountSummaries(
   workspaceId: number,
   from: string,

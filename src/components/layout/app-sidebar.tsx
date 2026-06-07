@@ -102,8 +102,6 @@ export function AppSidebar() {
           href="/"
           className="-mx-1 flex items-center gap-2.5 rounded-lg px-1 py-1 transition-colors duration-200 hover:bg-sidebar-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar"
         >
-          {/* Brand mark; local static SVG, next/image adds no value here. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="Budgeteer" className="h-7 w-7 shrink-0" />
           <div className="min-w-0 group-data-[collapsible=icon]:hidden">
             <div className="text-[17px] font-semibold leading-tight tracking-tight">Budgeteer</div>

@@ -54,8 +54,6 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         }}
         className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/15"
       >
-        {/* Brand mark; local static SVG, next/image adds no value here. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="Budgeteer" className="h-14 w-14" />
       </motion.div>
 

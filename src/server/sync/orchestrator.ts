@@ -246,8 +246,6 @@ async function syncOneCredential(
     syncRunId,
   );
 
-  // Auto-discover/refresh first-class accounts from the scrape. Pure metadata:
-  // never overwrites the user's name/ownership_type (see bank-accounts.ts).
   for (const account of result.accounts) {
     upsertBankAccount(workspaceId, meta.id, account.accountNumber, { balance: account.balance });
   }
@@ -405,20 +403,10 @@ export async function syncWorkspace(
   let categorized = 0;
   let aiWarning: string | null = null;
 
-  // Rule-based reclassification runs after all accounts are inserted (so pairs
-  // across accounts are visible) and before AI categorization (so reclassified
-  // rows are skipped by it). Bounded to the sync window for performance.
   const fromDate = toLocalISODate(startDate);
 
-  // Cross-account deduplication: group internal transfers, bank-side credit card
-  // bill payments, and (when the user tracks cash manually) ATM withdrawals into
-  // auditable financial events, flipping their kind so spend is counted exactly
-  // once. Generalizes the previous ad-hoc kind-flipping; the individual
-  // matchers and confidence scoring live in src/server/lib/matching.ts.
   runMatchingStep(workspaceId, fromDate, settings.treatAtmAsTransfers);
 
-  // ATM cash withdrawals that are NOT treated as transfers are filed under the
-  // "Cash & ATM" category so they stay visible as ordinary spend.
   if (!settings.treatAtmAsTransfers) {
     const atmCategory = getCategoryByName(workspaceId, "Cash & ATM");
     if (atmCategory) {

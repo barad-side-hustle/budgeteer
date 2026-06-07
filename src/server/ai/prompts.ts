@@ -101,8 +101,6 @@ Rules:
 - Apply lessons from "Past corrections" - if a new merchant resembles a past correction, prefer the corrected category.`;
   }
 
-  // Proposal mode: the AI is encouraged to suggest new categories whenever
-  // a transaction doesn't have a clear fit in the existing list.
   return `Categorize these financial transactions. Use an existing category when one clearly fits. When no existing category is a good fit, propose a new one.
 
 Existing categories:

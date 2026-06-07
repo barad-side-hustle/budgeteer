@@ -1,16 +1,6 @@
 import "server-only";
 
-/**
- * In-memory bridge for shuttling OTP codes from the browser back to the
- * scraper. The SSE stream is server->client; this fills in the missing
- * client->server channel by parking a promise on the server keyed by syncRunId
- * and resolving it when the user POSTs the code to /api/sync/otp.
- *
- * Safe for a single-process Next.js server (which Budgeteer is by design - it's a
- * local-only app). Don't lift this to a cluster without an external store.
- */
-
-const OTP_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const OTP_TIMEOUT_MS = 5 * 60 * 1000;
 
 interface PendingOtp {
   resolve: (code: string) => void;
@@ -23,7 +13,6 @@ interface PendingOtp {
 const pending = new Map<number, PendingOtp>();
 
 export interface OtpRequest {
-  /** Awaits the user-supplied code. Rejects on cancel or timeout. */
   wait: () => Promise<string>;
 }
 
@@ -32,7 +21,6 @@ export function registerOtpRequest(
   workspaceId: number,
   provider: string,
 ): OtpRequest {
-  // If there was a stale entry for this id, blow it away.
   const stale = pending.get(syncRunId);
   if (stale) {
     clearTimeout(stale.timeoutHandle);

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { queryTransactions, type TransactionKindFilter } from "@/server/db/queries/transactions";
+import { getAccountFilterFromRequest } from "@/server/lib/account-context";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseKind(raw: string | null): TransactionKindFilter | undefined {
@@ -14,8 +15,6 @@ export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
 
-  // Support multi-id filter ("?categoryIds=1&categoryIds=2") for parent
-  // category drilldowns (parent expands to its children client-side).
   const categoryIds = searchParams.getAll("categoryIds").flatMap((v) => {
     const n = Number(v);
     return Number.isFinite(n) ? [n] : [];
@@ -26,8 +25,6 @@ export async function GET(request: Request) {
     return Number.isFinite(n) && n > 0 ? [n] : [];
   });
 
-  // Resolve selected bank_accounts.id values to their (credentialId,
-  // accountNumber) pairs. Account keys take precedence over credentialIds.
   const accountIds = new Set(
     searchParams.getAll("accountIds").flatMap((v) => {
       const n = Number(v);
@@ -39,7 +36,7 @@ export async function GET(request: Request) {
       ? listBankAccounts(workspaceId)
           .filter((a) => accountIds.has(a.id))
           .map((a) => ({ credentialId: a.credentialId, accountNumber: a.accountNumber }))
-      : undefined;
+      : getAccountFilterFromRequest(request, workspaceId)?.accountKeys;
 
   const result = queryTransactions(workspaceId, {
     from: searchParams.get("from") ?? undefined,

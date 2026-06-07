@@ -8,9 +8,6 @@ export function QueryProvider({ children }: { children: ReactNode }) {
     () =>
       new QueryClient({
         defaultOptions: {
-          // Budgeteer is local-only and same-origin, so react-query's online gating
-          // adds nothing and can wrongly pause queries when a browser misreports
-          // navigator.onLine. "always" keeps fetches running regardless.
           queries: {
             staleTime: 30_000,
             refetchOnWindowFocus: false,

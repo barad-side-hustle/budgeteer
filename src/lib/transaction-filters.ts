@@ -1,6 +1,5 @@
 import type { Category } from "@/lib/types";
 
-/** Leaf ids for a category, or the category itself when it has no children. */
 export function getCategoryDescendantIds(categoryId: number, allCategories: Category[]): number[] {
   const children = allCategories.filter((c) => c.parentId === categoryId);
   if (children.length === 0) return [categoryId];
@@ -16,7 +15,6 @@ export function isCategoryFilterChecked(
   return descendants.every((id) => selectedIds.includes(id));
 }
 
-/** Toggle a category and all descendants together (for parent groups). */
 export function toggleCategoryFilterSelection(
   selectedIds: number[],
   categoryId: number,
@@ -33,7 +31,6 @@ export function toggleCategoryFilterSelection(
   return [...next];
 }
 
-/** Expands each selected id to descendant leaf ids for the transactions query. */
 export function expandCategoryFilterIds(
   selectedIds: number[],
   allCategories: Category[],

@@ -2,9 +2,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
-import { AccountSummaryCards } from "@/components/dashboard/account-summary-cards";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { CategoryGrid } from "@/components/dashboard/category-grid";
 import { HeroCard } from "@/components/dashboard/hero-card";
@@ -13,6 +12,7 @@ import { SyncButton } from "@/components/dashboard/sync-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import type { Locale } from "@/i18n/routing";
 import { getSummary } from "@/lib/api";
 import { addMonths, formatMonthLabel, getMonthRange, isCurrentMonth } from "@/lib/formatters";
@@ -34,40 +34,28 @@ export function Dashboard() {
   const t = useTranslations("dashboard");
   const tc = useTranslations("common");
   const locale = useLocale() as Locale;
+  const hydrated = useIsHydrated();
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<CategoryViewMode>("collapsed");
-  const [accountFilter, setAccountFilter] = useState<number[]>([]);
+  const [viewModeOverride, setViewModeOverride] = useState<CategoryViewMode | null>(null);
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    // Deliberate post-mount read: the server renders the default and the stored
-    // preference is applied on the client to avoid a hydration mismatch.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setViewMode(readViewMode());
-  }, []);
+  const viewMode: CategoryViewMode = viewModeOverride ?? (hydrated ? readViewMode() : "collapsed");
 
   const handleViewModeChange = useCallback((mode: CategoryViewMode) => {
-    setViewMode(mode);
+    setViewModeOverride(mode);
     try {
       window.localStorage.setItem(VIEW_MODE_KEY, mode);
     } catch {
-      // Storage may be unavailable; in-memory state still works.
+      return;
     }
   }, []);
 
   const { from, to } = getMonthRange(selectedDate);
 
   const summaryQuery = useQuery({
-    queryKey: ["summary", from, to, accountFilter],
-    queryFn: () =>
-      getSummary({ from, to, accountIds: accountFilter.length > 0 ? accountFilter : undefined }),
+    queryKey: ["summary", from, to],
+    queryFn: () => getSummary({ from, to }),
   });
-
-  const toggleAccount = useCallback((accountId: number) => {
-    setAccountFilter((prev) =>
-      prev.includes(accountId) ? prev.filter((id) => id !== accountId) : [...prev, accountId],
-    );
-  }, []);
 
   const handleSyncComplete = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["summary"] });
@@ -107,13 +95,6 @@ export function Dashboard() {
         ) : (
           <>
             <HeroCard data={summary} loading={summaryQuery.isLoading} monthLabel={monthLabel} />
-
-            <AccountSummaryCards
-              from={from}
-              to={to}
-              selectedIds={accountFilter}
-              onToggle={toggleAccount}
-            />
 
             <div className="flex items-center justify-end">
               <Tabs

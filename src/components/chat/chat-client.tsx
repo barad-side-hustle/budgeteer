@@ -14,8 +14,8 @@ import {
   Square,
   Trash2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -44,9 +44,15 @@ import type { ChatSession } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useActiveWorkspaceId } from "@/lib/workspace-store";
 
-export function ChatClient() {
+export function ChatClient({ initialSessionId }: { initialSessionId?: string }) {
   const workspaceId = useActiveWorkspaceId();
-  return <ChatWorkspace key={workspaceId ?? "none"} workspaceId={workspaceId} />;
+  return (
+    <ChatWorkspace
+      key={workspaceId ?? "none"}
+      workspaceId={workspaceId}
+      initialSessionId={initialSessionId}
+    />
+  );
 }
 
 function createChatId(): string {
@@ -69,12 +75,30 @@ function extractGeneratedTitle(messages: UIMessage[]): string | null {
   return null;
 }
 
-function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
+function ChatWorkspace({
+  workspaceId,
+  initialSessionId,
+}: {
+  workspaceId: number | null;
+  initialSessionId?: string;
+}) {
   const t = useTranslations("chat");
   const tc = useTranslations("common");
+  const locale = useLocale();
   const queryClient = useQueryClient();
-  const [activeSessionId, setActiveSessionId] = useState(createChatId);
+  const [activeSessionId, setActiveSessionId] = useState(() => initialSessionId ?? createChatId());
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([]);
+
+  const syncUrl = useCallback(
+    (id: string | null) => {
+      if (typeof window === "undefined") return;
+      const path = id ? `/${locale}/chat/${id}` : `/${locale}/chat`;
+      if (window.location.pathname !== path) {
+        window.history.replaceState(null, "", path);
+      }
+    },
+    [locale],
+  );
   const [renameTarget, setRenameTarget] = useState<ChatSession | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<ChatSession | null>(null);
@@ -123,7 +147,37 @@ function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
   const [input, setInput] = useState("");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const renameInputRef = useRef<HTMLInputElement>(null);
   const lastLiveTitleRef = useRef<string | null>(null);
+  const bootstrappedRef = useRef(false);
+
+  useEffect(() => {
+    if (!renameTarget) return;
+    const id = requestAnimationFrame(() => renameInputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [renameTarget]);
+
+  useEffect(() => {
+    if (bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+    if (!initialSessionId || workspaceId == null) return;
+    void (async () => {
+      try {
+        const data = await queryClient.fetchQuery({
+          queryKey: ["chatSession", workspaceId, initialSessionId],
+          queryFn: () => getChatSession(initialSessionId),
+        });
+        setInitialMessages(data.messages);
+        setMessages(data.messages);
+      } catch {
+        syncUrl(null);
+      }
+    })();
+  }, [initialSessionId, workspaceId, queryClient, setMessages, syncUrl]);
+
+  useEffect(() => {
+    if (messages.length > 0) syncUrl(activeSessionId);
+  }, [messages.length, activeSessionId, syncUrl]);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -131,7 +185,6 @@ function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
     el.scrollTop = el.scrollHeight;
   }, [messages, status]);
 
-  // Auto-grow the composer with its content (capped by max-h on the element).
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -196,6 +249,7 @@ function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
     setActiveSessionId(createChatId());
     setMessages([]);
     setInput("");
+    syncUrl(null);
   }
 
   async function selectSession(id: string) {
@@ -208,6 +262,7 @@ function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
       setActiveSessionId(id);
       setMessages(data.messages);
       setInput("");
+      syncUrl(id);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : tc("loadFailed"));
     }
@@ -375,12 +430,11 @@ function ChatWorkspace({ workspaceId }: { workspaceId: number | null }) {
             }}
           >
             <Label htmlFor="chat-rename">{t("renameLabel")}</Label>
-            {/* biome-ignore lint/a11y/noAutofocus: focus the field when the rename dialog opens */}
             <Input
+              ref={renameInputRef}
               id="chat-rename"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
-              autoFocus
             />
           </form>
           <DialogFooter>

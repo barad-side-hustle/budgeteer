@@ -9,8 +9,6 @@ const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 
 function assertKeyFileMode(stat: fs.Stats): void {
-  // POSIX-only. Windows NTFS ACLs don't map to mode bits meaningfully,
-  // so skip there and rely on the default user profile permissions.
   if (process.platform === "win32") return;
 
   const mode = stat.mode & 0o777;

@@ -35,6 +35,7 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   const t = useTranslations("dashboard");
   const tCat = useTranslations("categoriesSeeded");
   const locale = useLocale() as Locale;
+  const todayPhrase = useTodayPhrase(data?.todayLabel ?? "", locale);
 
   if (loading || !data) {
     return (
@@ -50,7 +51,6 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
     totalBudget,
     timeElapsedPercent,
     daysUntilPayday,
-    todayLabel,
     categoriesWithData,
     typicalMonthly,
   } = data;
@@ -91,7 +91,6 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   ];
 
   const verdict = computeVerdict(budgetedSpent, totalBudget, timeElapsedPercent);
-  const todayPhrase = useTodayPhrase(todayLabel, locale);
 
   const ctaLabel = typicalMonthly
     ? t("setMonthlyTargetWithTypical", {
@@ -172,9 +171,6 @@ export function HeroCard({ data, loading, monthLabel }: HeroCardProps) {
   );
 }
 
-// Built once at module scope: rebuilding Intl formatters per render loads
-// locale-data tables and is wasteful. This helper runs after an early return
-// in HeroCard, so useMemo is not an option (it would break the Rules of Hooks).
 const TODAY_FORMAT_HE = new Intl.DateTimeFormat("he-IL", {
   weekday: "long",
   month: "long",
@@ -187,8 +183,6 @@ const TODAY_FORMAT_EN = new Intl.DateTimeFormat("en-IL", {
 });
 
 function useTodayPhrase(serverLabel: string, locale: Locale): string {
-  // Re-format today's date in the current locale so Hebrew users see Hebrew.
-  // The server passed a snapshot, but we re-derive from `new Date()` for the locale.
   try {
     return (locale === "he" ? TODAY_FORMAT_HE : TODAY_FORMAT_EN).format(new Date());
   } catch {

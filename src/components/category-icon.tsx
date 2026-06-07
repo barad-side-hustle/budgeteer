@@ -25,12 +25,8 @@ import {
   TrendingUp,
   UtensilsCrossed,
 } from "lucide-react";
+import { createElement } from "react";
 
-/**
- * The canonical category icon set. Keyed by the icon names seeded in the DB
- * migrations. Single source of truth so a category renders the same glyph on
- * the grid, the budget detail sheet, and the settings sheets. See docs/design-system.md.
- */
 export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "shopping-basket": ShoppingBasket,
   "utensils-crossed": UtensilsCrossed,
@@ -62,7 +58,6 @@ export function getCategoryIcon(name: string | null | undefined): LucideIcon {
   return CATEGORY_ICONS[name ?? "circle-dot"] ?? CircleDot;
 }
 
-/** Renders a category's icon by its stored name, falling back to a neutral dot. */
 export function CategoryIcon({
   name,
   className,
@@ -70,6 +65,5 @@ export function CategoryIcon({
   name: string | null | undefined;
   className?: string;
 }) {
-  const Icon = getCategoryIcon(name);
-  return <Icon className={className} aria-hidden />;
+  return createElement(getCategoryIcon(name), { className, "aria-hidden": true });
 }

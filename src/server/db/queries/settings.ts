@@ -6,9 +6,6 @@ import { getOrm } from "@/server/db/orm";
 import { settings, workspaceSettings } from "@/server/db/schema";
 import { toLocalISODate } from "@/server/lib/date-utils";
 
-// Global settings live in the `settings` table and apply to every workspace.
-// Currently: ai_provider, ai_ollama_url, ai_ollama_model, ai_gemini_model,
-// plus encrypted Claude/Gemini API key triples.
 export function getGlobalSetting(key: string): string | null {
   const row = getOrm()
     .select({ value: settings.value })
@@ -33,8 +30,6 @@ export function deleteGlobalSetting(key: string): void {
   getOrm().delete(settings).where(eq(settings.key, key)).run();
 }
 
-// Per-workspace settings live in `workspace_settings`.
-// Currently: months_to_sync, payday_day, scraper_show_browser.
 export function getWorkspaceSetting(workspaceId: number, key: string): string | null {
   const row = getOrm()
     .select({ value: workspaceSettings.value })
@@ -63,17 +58,10 @@ export function deleteWorkspaceSetting(workspaceId: number, key: string): void {
 }
 
 export interface BalanceAnchor {
-  /** The account balance the user (or a scrape) reported on `date`. */
   amount: number;
-  /** ISO date (YYYY-MM-DD) the balance was accurate as of. */
   date: string;
 }
 
-/**
- * The user's known balance at a point in time, used to project the expected
- * month-end balance and overdraft risk. Optional: the cash-flow forecast still
- * works (as monthly net) without it.
- */
 export function getBalanceAnchor(workspaceId: number): BalanceAnchor | null {
   const amountRaw = getWorkspaceSetting(workspaceId, "current_balance");
   if (amountRaw == null) return null;
@@ -83,8 +71,6 @@ export function getBalanceAnchor(workspaceId: number): BalanceAnchor | null {
   return { amount, date };
 }
 
-// Back-compat aliases so existing call sites that store the Claude API key
-// (settings.ts in src/server/ai/providers/claude.ts) keep working unchanged.
 export const getSetting = getGlobalSetting;
 export const setSetting = setGlobalSetting;
 

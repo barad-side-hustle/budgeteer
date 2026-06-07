@@ -36,7 +36,6 @@ export function nextSortState(
   return { field: clickedField, order: defaultSortOrder(clickedField) };
 }
 
-/** SQL ORDER BY expressions (must stay in sync with transaction list JOIN). */
 export const TRANSACTION_SORT_SQL: Record<TransactionSortField, string> = {
   date: "t.date",
   charged_amount: "t.charged_amount",

@@ -51,7 +51,6 @@ const ITEMS: NavItem[] = [
   },
 ];
 
-/** Full-width horizontal settings nav, replacing the old inner sidebar. */
 export function SettingsNav() {
   const pathname = usePathname();
   const t = useTranslations("settings.sidebar");

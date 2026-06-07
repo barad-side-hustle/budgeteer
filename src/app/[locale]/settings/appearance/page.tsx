@@ -16,8 +16,6 @@ export default function AppearanceSettingsPage() {
 
   const router = useRouter();
   const pathname = usePathname();
-  // The active language lives in the URL (/en, /he); next-intl persists the
-  // choice to the NEXT_LOCALE cookie on navigation. No database involved.
   const locale = useLocale() as Lang;
 
   const themeOptions = [

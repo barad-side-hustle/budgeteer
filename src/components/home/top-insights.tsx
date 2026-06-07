@@ -3,6 +3,7 @@
 import {
   AlertTriangle,
   Gauge,
+  Lightbulb,
   type LucideIcon,
   PiggyBank,
   Sparkles,
@@ -16,23 +17,25 @@ import { translateCategoryName } from "@/lib/i18n-data";
 import type { SpendInsight } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export function ImproveFeed({ insights }: { insights: SpendInsight[] }) {
+const MAX_INSIGHTS = 4;
+
+export function TopInsights({ insights }: { insights: SpendInsight[] }) {
   const t = useTranslations("home");
 
   if (insights.length === 0) {
     return (
-      <CardShell label={t("improveTitle")} icon={<Sparkles />}>
+      <CardShell label={t("topInsightsTitle")} icon={<Lightbulb />}>
         <div className="flex flex-1 items-center justify-center py-8 text-center text-sm text-muted-foreground">
-          {t("improveEmpty")}
+          {t("topInsightsEmpty")}
         </div>
       </CardShell>
     );
   }
 
   return (
-    <CardShell label={t("improveTitle")} icon={<Sparkles />}>
+    <CardShell label={t("topInsightsTitle")} icon={<Lightbulb />}>
       <ul className="flex flex-col gap-3">
-        {insights.map((insight) => (
+        {insights.slice(0, MAX_INSIGHTS).map((insight) => (
           <InsightRow key={insight.id} insight={insight} />
         ))}
       </ul>
@@ -47,8 +50,6 @@ function InsightRow({ insight }: { insight: SpendInsight }) {
   const amount = insight.amount != null ? formatCurrency(insight.amount) : "";
   const percent = insight.percent != null ? Math.abs(Math.round(insight.percent)) : 0;
 
-  // Literal t() calls so the i18n key checker can trace each key to the "home"
-  // namespace (it cannot follow a `t` passed through a helper function).
   let Icon: LucideIcon = Sparkles;
   let title = "";
   let body = "";
