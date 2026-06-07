@@ -28,6 +28,9 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: import.meta.dirname,
+  },
   serverExternalPackages: ["better-sqlite3", "israeli-bank-scrapers"],
   devIndicators: false,
   async headers() {

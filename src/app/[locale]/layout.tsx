@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, getTimeZone, setRequestLocale } from "next-intl/server";
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -64,6 +64,7 @@ export default async function RootLayout({
   }
   setRequestLocale(locale);
   const messages = await getMessages();
+  const timeZone = await getTimeZone();
   const dir = dirFor(locale);
   return (
     <html
@@ -73,7 +74,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <I18nProvider locale={locale} messages={messages as Record<string, unknown>}>
+        <I18nProvider
+          locale={locale}
+          messages={messages as Record<string, unknown>}
+          timeZone={timeZone}
+        >
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <QueryProvider>
               <TooltipProvider>
