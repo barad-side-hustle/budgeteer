@@ -1,5 +1,5 @@
 import type { UIMessage } from "ai";
-import { getActiveAccountIdSync } from "@/lib/account-store";
+import { getAccountSelectionSync } from "@/lib/account-store";
 import type {
   AccountOwnershipType,
   AccountSummary,
@@ -28,9 +28,9 @@ function withScopeHeaders(init?: RequestInit): RequestInit {
   if (wsId != null && !headers.has("x-workspace-id")) {
     headers.set("x-workspace-id", String(wsId));
   }
-  const accountId = getActiveAccountIdSync();
-  if (accountId != null && !headers.has("x-account-id")) {
-    headers.set("x-account-id", String(accountId));
+  const accountSelection = getAccountSelectionSync();
+  if (accountSelection != null && !headers.has("x-account-sel")) {
+    headers.set("x-account-sel", accountSelection);
   }
   return { ...init, headers };
 }

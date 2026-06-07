@@ -18,6 +18,8 @@ export interface ScrapedTransaction {
 export interface ScrapedAccount {
   accountNumber: string;
   balance?: number;
+  groupKey?: string;
+  groupName?: string;
   transactions: ScrapedTransaction[];
 }
 

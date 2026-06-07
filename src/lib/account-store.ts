@@ -2,38 +2,35 @@
 
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "budgeteer.activeAccountId";
+const STORAGE_KEY = "budgeteer.accountSelection";
 
-let memValue: number | null = readFromStorage();
+let memValue: string | null = readFromStorage();
 const listeners = new Set<() => void>();
 
-function readFromStorage(): number | null {
+function readFromStorage(): string | null {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const n = Number(raw);
-    return Number.isInteger(n) && n > 0 ? n : null;
+    return window.localStorage.getItem(STORAGE_KEY);
   } catch {
     return null;
   }
 }
 
-function writeToStorage(value: number | null): void {
+function writeToStorage(value: string | null): void {
   if (typeof window === "undefined") return;
   try {
     if (value == null) window.localStorage.removeItem(STORAGE_KEY);
-    else window.localStorage.setItem(STORAGE_KEY, String(value));
+    else window.localStorage.setItem(STORAGE_KEY, value);
   } catch {
     return;
   }
 }
 
-export function getActiveAccountIdSync(): number | null {
+export function getAccountSelectionSync(): string | null {
   return memValue;
 }
 
-export function setActiveAccountId(value: number | null): void {
+export function setAccountSelection(value: string | null): void {
   if (memValue === value) return;
   memValue = value;
   writeToStorage(value);
@@ -47,7 +44,7 @@ function subscribe(fn: () => void): () => void {
   };
 }
 
-export function useActiveAccountId(): number | null {
+export function useAccountSelection(): string | null {
   return useSyncExternalStore(
     subscribe,
     () => memValue,

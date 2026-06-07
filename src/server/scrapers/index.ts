@@ -1,6 +1,7 @@
 import "server-only";
 
 import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
+import { formatBillingAccountKey, type RawBillingAccount } from "@/lib/account-group";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceSetting } from "@/server/db/queries/settings";
 import type { ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
@@ -155,28 +156,34 @@ async function runScrape(
     `[scraper] success: ${result.accounts?.length ?? 0} account(s), ${txnCount} transaction(s)`,
   );
 
-  const accounts = (result.accounts ?? []).map((account) => ({
-    accountNumber: account.accountNumber,
-    balance: account.balance,
-    transactions: account.txns.map(
-      (txn): ScrapedTransaction => ({
-        type: txn.type === "installments" ? "installments" : "normal",
-        identifier: txn.identifier ?? undefined,
-        date: txn.date,
-        processedDate: txn.processedDate,
-        originalAmount: txn.originalAmount,
-        originalCurrency: txn.originalCurrency,
-        chargedAmount: txn.chargedAmount,
-        chargedCurrency: txn.chargedCurrency ?? undefined,
-        description: txn.description,
-        memo: txn.memo ?? undefined,
-        installments: txn.installments
-          ? { number: txn.installments.number, total: txn.installments.total }
-          : undefined,
-        status: txn.status === "completed" ? "completed" : "pending",
-      }),
-    ),
-  }));
+  const accounts = (result.accounts ?? []).map((account) => {
+    const billing = (account as { billingAccount?: RawBillingAccount }).billingAccount;
+    const groupKey = billing ? formatBillingAccountKey(billing) : undefined;
+    return {
+      accountNumber: account.accountNumber,
+      balance: account.balance,
+      groupKey,
+      groupName: groupKey,
+      transactions: account.txns.map(
+        (txn): ScrapedTransaction => ({
+          type: txn.type === "installments" ? "installments" : "normal",
+          identifier: txn.identifier ?? undefined,
+          date: txn.date,
+          processedDate: txn.processedDate,
+          originalAmount: txn.originalAmount,
+          originalCurrency: txn.originalCurrency,
+          chargedAmount: txn.chargedAmount,
+          chargedCurrency: txn.chargedCurrency ?? undefined,
+          description: txn.description,
+          memo: txn.memo ?? undefined,
+          installments: txn.installments
+            ? { number: txn.installments.number, total: txn.installments.total }
+            : undefined,
+          status: txn.status === "completed" ? "completed" : "pending",
+        }),
+      ),
+    };
+  });
 
   return { success: true, accounts };
 }

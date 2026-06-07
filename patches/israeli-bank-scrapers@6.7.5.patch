@@ -11,3 +11,55 @@ index 630d9309cf10bacc4053fd60ef48a39c070a6776..fee4e64989f7b47f5a9c3500741dd8af
    urls[_baseScraperWithBrowser.LoginResults.InvalidPassword] = [`${BASE_URL}/apollo/core/templates/lobby/masterPage.html#/LOGIN_PAGE`];
    urls[_baseScraperWithBrowser.LoginResults.ChangePassword] = [`${BASE_URL}/apollo/core/templates/lobby/masterPage.html#/PWD_RENEW`];
    return urls;
+diff --git a/lib/scrapers/visa-cal.js b/lib/scrapers/visa-cal.js
+index 6ffc49e3a6130ac6958389adee0d2d106cd2094d..0ec662e13f4496db6f94e7228582f819ee405a55 100644
+--- a/lib/scrapers/visa-cal.js
++++ b/lib/scrapers/visa-cal.js
+@@ -160,6 +160,7 @@ function convertParsedDataToTransactions(data, pendingData, options) {
+ }
+ class VisaCalScraper extends _baseScraperWithBrowser.BaseScraperWithBrowser {
+   authorization = undefined;
++  bankAccountsById = new Map();
+   openLoginPopup = async () => {
+     debug('open login popup, wait until login button available');
+     await (0, _elementsInteractions.waitUntilElementFound)(this.page, '#ccLoginDesktopBtn', true);
+@@ -180,12 +181,18 @@ class VisaCalScraper extends _baseScraperWithBrowser.BaseScraperWithBrowser {
+     if (!initData) {
+       throw new Error('could not find "init" data in session storage');
+     }
++    this.bankAccountsById = new Map();
++    for (const bankAccount of initData?.result?.bankAccounts ?? []) {
++      this.bankAccountsById.set(bankAccount.bankAccountUniqueId, bankAccount);
++    }
+     return initData?.result.cards.map(({
+       cardUniqueId,
+-      last4Digits
++      last4Digits,
++      bankAccountUniqueId
+     }) => ({
+       cardUniqueId,
+-      last4Digits
++      last4Digits,
++      bankAccountUniqueId
+     }));
+   }
+   async getAuthorizationHeader() {
+@@ -308,10 +315,17 @@ class VisaCalScraper extends _baseScraperWithBrowser.BaseScraperWithBrowser {
+       const transactions = convertParsedDataToTransactions(allMonthsData, pendingData, this.options);
+       debug('filter out old transactions');
+       const txns = this.options.outputData?.enableTransactionsFilterByDate ?? true ? (0, _transactions.filterOldTransactions)(transactions, (0, _moment.default)(startDate), this.options.combineInstallments || false) : transactions;
++      const bankAccount = this.bankAccountsById?.get(card.bankAccountUniqueId);
+       return {
+         txns,
+         balance: frame?.nextTotalDebit != null ? -frame.nextTotalDebit : undefined,
+-        accountNumber: card.last4Digits
++        accountNumber: card.last4Digits,
++        billingAccount: bankAccount ? {
++          originalBankCode: bankAccount.originalBankCode,
++          bankBranchNum: bankAccount.bankBranchNum,
++          bankAccountNum: bankAccount.bankAccountNum,
++          bankName: bankAccount.bankName
++        } : undefined
+       };
+     }));
+     debug('return the scraped accounts');
