@@ -6,16 +6,12 @@ import { Bar, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis } from "r
 import { CardShell } from "@/components/home/card-shell";
 import type { Locale } from "@/i18n/routing";
 import { summarizeCashflow } from "@/lib/cashflow";
-import { formatCurrency, formatMonthLabel } from "@/lib/formatters";
+import { bcp47, formatCurrency, formatMonthLabel } from "@/lib/formatters";
 import type { HomeHistoricalTrendPoint } from "@/lib/types";
 
 const INCOME_COLOR = "#34d399";
 const EXPENSE_COLOR = "#fb7185";
 const NET_COLOR = "#818cf8";
-
-function bcp(locale: Locale): string {
-  return locale === "he" ? "he-IL" : "en-US";
-}
 
 function monthDate(month: string): Date {
   const [year, m] = month.split("-").map(Number);
@@ -23,7 +19,7 @@ function monthDate(month: string): Date {
 }
 
 function axisLabel(month: string, locale: Locale): string {
-  return monthDate(month).toLocaleDateString(bcp(locale), { month: "short" });
+  return monthDate(month).toLocaleDateString(bcp47(locale), { month: "short" });
 }
 
 export function TrendsChart({ points }: { points: HomeHistoricalTrendPoint[] }) {

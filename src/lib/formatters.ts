@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 
-function bcp47(locale: Locale | "en-IL" | "he-IL" | undefined): string {
+export function bcp47(locale: Locale | "en-IL" | "he-IL" | undefined): string {
   if (!locale) return "en-IL";
   if (locale === "he") return "he-IL";
   if (locale === "en") return "en-IL";
