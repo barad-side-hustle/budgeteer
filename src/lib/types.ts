@@ -230,6 +230,8 @@ export interface HomeHistoricalTrendPoint {
   month: string;
   label: string;
   total: number;
+  income: number;
+  net: number;
   isCurrent: boolean;
 }
 

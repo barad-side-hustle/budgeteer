@@ -37,7 +37,7 @@ import {
 } from "@/server/insights/compute";
 import { daysUntil, nextPayday } from "@/server/lib/pace";
 
-const HISTORICAL_MONTHS = 8;
+const HISTORICAL_MONTHS = 12;
 const RECENT_TXN_LIMIT = 6;
 const TREND_MONTHS = 6;
 

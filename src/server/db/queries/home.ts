@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, asc, desc, eq } from "drizzle-orm";
+import { trimToSyncedMonths } from "@/lib/cashflow";
 import type {
   HomeBankHealthItem,
   HomeCashFlow,
@@ -108,21 +109,30 @@ export function getHistoricalTrend(
   }
 
   const stmt = db.prepare(
-    `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
+    `SELECT
+       COALESCE(SUM(CASE WHEN kind = 'expense' THEN ABS(charged_amount) ELSE 0 END), 0) as total,
+       COALESCE(SUM(CASE WHEN kind = 'income' THEN charged_amount ELSE 0 END), 0) as income
      FROM transactions
      WHERE workspace_id = ? AND date >= ? AND date <= ?
-       AND status = 'completed' AND kind = 'expense' AND is_excluded = 0${acct.sql}`,
+       AND status = 'completed' AND is_excluded = 0${acct.sql}`,
   );
 
-  return months.map((m) => {
-    const row = stmt.get(workspaceId, m.from, m.to, ...acct.values) as { total: number };
+  const points = months.map((m) => {
+    const row = stmt.get(workspaceId, m.from, m.to, ...acct.values) as {
+      total: number;
+      income: number;
+    };
     return {
       month: m.key,
       label: m.label,
       total: row.total,
+      income: row.income,
+      net: row.income - row.total,
       isCurrent: m.key === currentMonthKey,
     };
   });
+
+  return trimToSyncedMonths(points);
 }
 
 export function getRecentTransactionsForHome(
