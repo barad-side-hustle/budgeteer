@@ -5,11 +5,26 @@ export interface MerchantSeries {
   categoryId: number | null;
   categoryName: string | null;
   monthly: number[];
+  typicalDay?: number | null;
 }
 
 export interface RecurringOptions {
   minMonths?: number;
   recentWindow?: number;
+  referenceDay?: number;
+  lapseGraceDays?: number;
+}
+
+const LAPSE_DAY_CAP = 28;
+
+function isChargeOverdue(
+  typicalDay: number | null | undefined,
+  referenceDay: number | undefined,
+  graceDays: number,
+): boolean {
+  if (referenceDay == null || typicalDay == null) return true;
+  const threshold = Math.min(typicalDay + graceDays, LAPSE_DAY_CAP);
+  return referenceDay >= threshold;
 }
 
 function median(values: number[]): number {
@@ -29,6 +44,7 @@ export function detectRecurring(
     if (monthsConsidered === 0) continue;
     const minMonths = options.minMonths ?? Math.min(3, monthsConsidered);
     const recentWindow = options.recentWindow ?? 2;
+    const graceDays = options.lapseGraceDays ?? 5;
 
     const present = s.monthly.filter((v) => v > 0);
     const monthsPresent = present.length;
@@ -45,7 +61,9 @@ export function detectRecurring(
       amount: median(present),
       monthsPresent,
       monthsConsidered,
-      lapsed: s.monthly[s.monthly.length - 1] === 0,
+      lapsed:
+        s.monthly[s.monthly.length - 1] === 0 &&
+        isChargeOverdue(s.typicalDay, options.referenceDay, graceDays),
       monthly: s.monthly,
     });
   }
