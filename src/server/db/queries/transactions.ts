@@ -561,6 +561,32 @@ export function getMerchantMonthlySpend(
     .all(workspaceId, monthsBack, ...acct.values) as MerchantMonthSpend[];
 }
 
+export interface MerchantChargeDay {
+  merchant: string;
+  day: number;
+}
+
+export function getMerchantChargeDays(
+  workspaceId: number,
+  monthsBack: number,
+  filter: AccountFilter = {},
+): MerchantChargeDay[] {
+  const acct = buildAccountFilterClause(filter);
+  return getDb()
+    .prepare(
+      `SELECT description as merchant,
+              CAST(strftime('%d', date) AS INTEGER) as day
+       FROM transactions
+       WHERE workspace_id = ?
+         AND date >= date('now', 'start of month', '-' || ? || ' months')
+         AND status = 'completed'
+         AND kind = 'expense'
+         AND is_excluded = 0
+         AND description != ''${acct.sql}`,
+    )
+    .all(workspaceId, monthsBack, ...acct.values) as MerchantChargeDay[];
+}
+
 export function getTopMerchants(
   workspaceId: number,
   from: string,

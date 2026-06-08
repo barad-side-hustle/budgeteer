@@ -13,6 +13,7 @@ import { getBalanceAnchor, getWorkspaceSetting } from "@/server/db/queries/setti
 import {
   type AccountFilter,
   getCategorySpendInRange,
+  getMerchantChargeDays,
   getMerchantMonthlySpend,
 } from "@/server/db/queries/transactions";
 import { type CategoryMeta, computeMonthRanges, rollUpByParent } from "@/server/insights/compute";
@@ -49,6 +50,13 @@ function isoAddDay(dateIso: string): string {
   const mm = String(next.getMonth() + 1).padStart(2, "0");
   const dd = String(next.getDate()).padStart(2, "0");
   return `${yy}-${mm}-${dd}`;
+}
+
+function medianDay(days: number[] | undefined): number | null {
+  if (!days || days.length === 0) return null;
+  const sorted = [...days].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid];
 }
 
 function trailingMonthKeys(now: Date, count: number): string[] {
@@ -110,7 +118,16 @@ export function buildForecastPayload(
       }
       s.monthly[idx] += r.amount;
     }
-    const detected = detectRecurring([...byMerchant.values()]);
+    const daysByMerchant = new Map<string, number[]>();
+    for (const d of getMerchantChargeDays(workspaceId, RECURRING_MONTHS, filter)) {
+      const arr = daysByMerchant.get(d.merchant);
+      if (arr) arr.push(d.day);
+      else daysByMerchant.set(d.merchant, [d.day]);
+    }
+    for (const [merchant, s] of byMerchant) {
+      s.typicalDay = medianDay(daysByMerchant.get(merchant));
+    }
+    const detected = detectRecurring([...byMerchant.values()], { referenceDay: now.getDate() });
     for (const r of detected) {
       const lastAmount = byMerchant.get(r.merchant)?.monthly[lastIdx] ?? 0;
       fixedMtd += lastAmount;
