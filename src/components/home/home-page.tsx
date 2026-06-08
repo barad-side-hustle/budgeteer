@@ -16,6 +16,7 @@ import { RecentActivity } from "@/components/home/recent-activity";
 import { SyncFailureBanner } from "@/components/home/sync-failure-banner";
 import { SyncStatusPill } from "@/components/home/sync-status-pill";
 import { TopInsights } from "@/components/home/top-insights";
+import { TrendsChart } from "@/components/home/trends-chart";
 import { PageHeader } from "@/components/layout/app-shell";
 import { getActivity, getForecast, getInsights } from "@/lib/api";
 
@@ -92,6 +93,14 @@ export function HomePage() {
             <CardError label={t("pageTitle")} onRetry={forecast.refetch} />
           ) : (
             <ForecastHero forecast={forecast.data.forecast} />
+          )}
+
+          {insightsLoading ? (
+            <CardSkeleton label={t("trendsTitle")} height={300} />
+          ) : data.trend ? (
+            <TrendsChart points={data.trend} />
+          ) : (
+            <CardError label={t("trendsTitle")} onRetry={insights.refetch} />
           )}
 
           <div className="grid grid-cols-12 gap-4 md:gap-5 lg:gap-6">
