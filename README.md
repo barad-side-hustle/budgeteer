@@ -287,8 +287,23 @@ In the browser:
 |---|---|
 | Just use the app | `bun start` → `http://127.0.0.1:2412` |
 | Code and see changes instantly | `bun dev` → `http://127.0.0.1:3000` |
+| Show a demo without your real data | `bun run seed:demo` then `bun run demo` |
 | Rebuild after editing | `bun run build` then restart `bun start` |
 | Run the full CI gate locally before pushing | `bun run ci` |
+
+## Demo data
+
+Want to show Budgeteer without using your real accounts? Build an isolated demo
+database and launch the app against it:
+
+```bash
+bun run seed:demo   # creates ./demo-data with a "Demo" workspace of synthetic data
+bun run demo        # runs the app on the demo database at http://127.0.0.1:3000
+```
+
+The demo data is entirely fake and lives in a gitignored `demo-data/` folder,
+separate from your real `data/`. Rerun `bun run seed:demo` anytime to rebuild it
+from scratch. To return to your real data, stop the demo and run `bun dev` again.
 
 ## Uninstall
 
