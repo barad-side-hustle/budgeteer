@@ -4,10 +4,9 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { runMigrations } from "@/server/db/migrate";
+import { getDataDir } from "@/server/lib/data-dir";
 
-const DB_DIR = process.env.BUDGETEER_DATA_DIR
-  ? path.resolve(process.env.BUDGETEER_DATA_DIR)
-  : path.join(process.cwd(), "data");
+const DB_DIR = getDataDir();
 const DB_PATH = path.join(DB_DIR, "budgeteer.db");
 
 function migrateLegacyDbFile(): void {

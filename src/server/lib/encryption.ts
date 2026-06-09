@@ -3,8 +3,9 @@ import "server-only";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { getDataDir } from "@/server/lib/data-dir";
 
-const KEY_PATH = path.join(process.cwd(), "data", ".encryption-key");
+const KEY_PATH = path.join(getDataDir(), ".encryption-key");
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 
