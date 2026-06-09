@@ -36,6 +36,7 @@ yarn-error.log*
 
 # local data (sqlite db, encryption key)
 /data/
+/demo-data/
 
 # claude code config + session artifacts (per-developer, not shared)
 /.claude/
