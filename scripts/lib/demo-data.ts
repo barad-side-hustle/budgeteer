@@ -141,10 +141,10 @@ export function generateDemoDataset(now: Date): DemoDataset {
       });
     }
 
+    const span = isCurrent ? cutoff : lastDayOfMonth(year, month);
     const count = 10 + Math.floor(rng() * 9);
     for (let k = 0; k < count; k++) {
-      const day = 1 + Math.floor(rng() * lastDayOfMonth(year, month));
-      if (day > cutoff) continue;
+      const day = 1 + Math.floor(rng() * span);
       const m = MERCHANTS[Math.floor(rng() * MERCHANTS.length)];
       const amount = m.min + rng() * (m.max - m.min);
       transactions.push({

@@ -58,6 +58,23 @@ describe("generateDemoDataset", () => {
     expect(rentMonths.length).toBeGreaterThanOrEqual(11);
   });
 
+  test("spans 12 non-empty months for any reference day, including month start", () => {
+    const refs = [
+      new Date(2026, 5, 1),
+      new Date(2026, 1, 28),
+      new Date(2026, 0, 3),
+      new Date(2025, 11, 31),
+    ];
+    for (const ref of refs) {
+      const ds = generateDemoDataset(ref);
+      const months = monthsOf(ds.transactions.map((t) => t.date));
+      expect(months).toHaveLength(12);
+      const currentMonth = `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}`;
+      const inCurrent = ds.transactions.filter((t) => t.date.startsWith(currentMonth));
+      expect(inCurrent.length).toBeGreaterThan(0);
+    }
+  });
+
   test("produces sensible settings", () => {
     const ds = generateDemoDataset(NOW);
     expect(ds.workspaceName).toBe("Demo");
