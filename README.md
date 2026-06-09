@@ -305,6 +305,11 @@ The demo data is entirely fake and lives in a gitignored `demo-data/` folder,
 separate from your real `data/`. Rerun `bun run seed:demo` anytime to rebuild it
 from scratch. To return to your real data, stop the demo and run `bun dev` again.
 
+> Stop your real `bun dev` server before running `bun run demo`. The Next.js dev
+> server keeps one daemon per project folder, so a second dev process started
+> from the same folder reuses the first one and would show your real data instead
+> of the demo. Run only one at a time.
+
 ## Uninstall
 
 Budgeteer installs nothing outside the project folder. To remove it:
