@@ -112,18 +112,25 @@ function detectDuplicates(current: AnomalyTxn[], usedTxnIds: Set<number>): Anoma
   return out;
 }
 
+const HOME_CURRENCY_ALIASES = new Set(["ILS", "NIS", "₪", "שח", 'ש"ח', "ש''ח", "שקל"]);
+
+function isHomeCurrency(currency: string, homeCurrency: string): boolean {
+  const normalized = currency.trim().toUpperCase();
+  if (normalized === "") return true;
+  return normalized === homeCurrency.trim().toUpperCase() || HOME_CURRENCY_ALIASES.has(normalized);
+}
+
 function detectForeign(
   current: AnomalyTxn[],
   priorMerchants: Set<string>,
   homeCurrency: string,
   usedTxnIds: Set<number>,
 ): Anomaly[] {
-  const home = homeCurrency.toUpperCase();
   const byMerchant = new Map<string, AnomalyTxn>();
   for (const t of current) {
     if (usedTxnIds.has(t.id)) continue;
     if (t.amount < FOREIGN_MIN_AMOUNT) continue;
-    if (t.originalCurrency.toUpperCase() === home) continue;
+    if (isHomeCurrency(t.originalCurrency, homeCurrency)) continue;
     if (priorMerchants.has(t.merchant)) continue;
     const existing = byMerchant.get(t.merchant);
     if (!existing || t.amount > existing.amount) byMerchant.set(t.merchant, t);

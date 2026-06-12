@@ -88,6 +88,17 @@ describe("detectAnomalies - foreign charge", () => {
     ]);
     expect(result.some((a) => a.type === "foreign-charge")).toBe(false);
   });
+
+  test("treats shekel aliases from scrapers as home currency", () => {
+    const result = run([
+      txn({ merchant: "garage", date: "2026-06-05", amount: 1740, originalCurrency: "NIS" }),
+      txn({ merchant: "tavern", date: "2026-06-06", amount: 180, originalCurrency: "₪" }),
+      txn({ merchant: "espresso", date: "2026-06-07", amount: 171, originalCurrency: 'ש"ח' }),
+      txn({ merchant: "no-currency", date: "2026-06-08", amount: 500, originalCurrency: "" }),
+      txn({ merchant: "padded", date: "2026-06-09", amount: 300, originalCurrency: " ils " }),
+    ]);
+    expect(result.some((a) => a.type === "foreign-charge")).toBe(false);
+  });
 });
 
 describe("detectAnomalies - merchant outlier", () => {
