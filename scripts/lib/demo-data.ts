@@ -3,6 +3,8 @@ export interface DemoTransaction {
   description: string;
   chargedAmount: number;
   categoryName: string;
+  originalAmount?: number;
+  originalCurrency?: string;
 }
 
 export interface DemoSettings {
@@ -26,6 +28,7 @@ interface RecurringDef {
   base: number;
   jitter: number;
   day: number;
+  currentBase?: number;
 }
 
 interface MerchantDef {
@@ -51,13 +54,27 @@ const RECURRING: RecurringDef[] = [
   },
   { description: "Clalit Health Plan", categoryName: "Insurance", base: 290, jitter: 0, day: 6 },
   { description: "PowerFit Gym", categoryName: "Sports & Hobbies", base: 179, jitter: 0, day: 8 },
-  { description: "StreamBox Plus", categoryName: "Subscriptions", base: 89, jitter: 0, day: 12 },
+  {
+    description: "StreamBox Plus",
+    categoryName: "Subscriptions",
+    base: 89,
+    jitter: 0,
+    day: 5,
+    currentBase: 109,
+  },
   {
     description: "Cellcom Mobile & Net",
     categoryName: "Bills & Utilities",
     base: 139,
     jitter: 0,
     day: 16,
+  },
+  {
+    description: "Bank Account Fee",
+    categoryName: "Fees & Taxes",
+    base: 22,
+    jitter: 0,
+    day: 3,
   },
 ];
 
@@ -107,6 +124,68 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+function appendAnomalyExemplars(transactions: DemoTransaction[], now: Date): void {
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const clamp = (day: number) => Math.min(day, now.getDate());
+  const prev = new Date(year, month - 1, 1);
+  const prevYear = prev.getFullYear();
+  const prevMonth = prev.getMonth();
+
+  transactions.push(
+    {
+      date: iso(year, month, clamp(9)),
+      description: "Giraffe Noodle Bar",
+      chargedAmount: -248,
+      categoryName: "Restaurants",
+    },
+    {
+      date: iso(year, month, clamp(11)),
+      description: "Giraffe Noodle Bar",
+      chargedAmount: -248,
+      categoryName: "Restaurants",
+    },
+    {
+      date: iso(year, month, clamp(6)),
+      description: "Nimbus Cloud Services",
+      chargedAmount: -329.5,
+      categoryName: "Subscriptions",
+      originalAmount: -89.99,
+      originalCurrency: "USD",
+    },
+    {
+      date: iso(year, month, clamp(7)),
+      description: "PowerFit Gym",
+      chargedAmount: -590,
+      categoryName: "Sports & Hobbies",
+    },
+    {
+      date: iso(prevYear, prevMonth, 20),
+      description: "Lingo Pro Languages",
+      chargedAmount: -49.9,
+      categoryName: "Subscriptions",
+    },
+    {
+      date: iso(year, month, clamp(5)),
+      description: "Lingo Pro Languages",
+      chargedAmount: -49.9,
+      categoryName: "Subscriptions",
+    },
+    {
+      date: iso(year, month, clamp(4)),
+      description: "ריבית חובה",
+      chargedAmount: -92,
+      categoryName: "Fees & Taxes",
+    },
+    {
+      date: iso(year, month, clamp(8)),
+      description: "FX Conversion Fee",
+      chargedAmount: -95,
+      categoryName: "Fees & Taxes",
+    },
+  );
+}
+
 export function generateDemoDataset(now: Date): DemoDataset {
   const rng = mulberry32(0x5eed1234);
   const transactions: DemoTransaction[] = [];
@@ -132,7 +211,8 @@ export function generateDemoDataset(now: Date): DemoDataset {
     for (const r of RECURRING) {
       const day = Math.min(r.day, lastDayOfMonth(year, month));
       if (day > cutoff) continue;
-      const amount = r.base + (rng() - 0.5) * r.jitter;
+      const base = isCurrent && r.currentBase != null ? r.currentBase : r.base;
+      const amount = base + (rng() - 0.5) * r.jitter;
       transactions.push({
         date: iso(year, month, day),
         description: r.description,
@@ -155,6 +235,8 @@ export function generateDemoDataset(now: Date): DemoDataset {
       });
     }
   }
+
+  appendAnomalyExemplars(transactions, now);
 
   transactions.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
