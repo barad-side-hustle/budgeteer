@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getAllCategories } from "@/server/db/queries/categories";
 import { updateChatSessionTitle } from "@/server/db/queries/chat-sessions";
 import {
+  type AccountFilter,
   getCategoryBreakdown,
   getCategorySpendInRange,
   getMonthlySummary,
@@ -14,7 +15,11 @@ import {
 
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use ISO date format YYYY-MM-DD");
 
-export function buildChatTools(workspaceId: number, sessionId?: string) {
+export function buildChatTools(
+  workspaceId: number,
+  sessionId?: string,
+  accountFilter: AccountFilter = {},
+) {
   return {
     setChatTitle: tool({
       description:
@@ -86,6 +91,7 @@ export function buildChatTools(workspaceId: number, sessionId?: string) {
           limit: limit ?? 25,
           sort: "date",
           order: "desc",
+          accountKeys: accountFilter.accountKeys,
         });
         return {
           total,
@@ -111,7 +117,7 @@ export function buildChatTools(workspaceId: number, sessionId?: string) {
         months: z.number().int().min(1).max(36).describe("How many recent months to include."),
       }),
       execute: async ({ months }) => {
-        return { summary: getMonthlySummary(workspaceId, months) };
+        return { summary: getMonthlySummary(workspaceId, months, accountFilter) };
       },
     }),
 
@@ -131,7 +137,7 @@ export function buildChatTools(workspaceId: number, sessionId?: string) {
       }),
       execute: async ({ from, to, limit }) => {
         return {
-          merchants: getTopMerchants(workspaceId, from, to, limit ?? 10),
+          merchants: getTopMerchants(workspaceId, from, to, limit ?? 10, accountFilter),
         };
       },
     }),
@@ -144,7 +150,7 @@ export function buildChatTools(workspaceId: number, sessionId?: string) {
         to: dateString,
       }),
       execute: async ({ from, to }) => {
-        return { breakdown: getCategoryBreakdown(workspaceId, from, to) };
+        return { breakdown: getCategoryBreakdown(workspaceId, from, to, accountFilter) };
       },
     }),
 
@@ -156,7 +162,7 @@ export function buildChatTools(workspaceId: number, sessionId?: string) {
         to: dateString,
       }),
       execute: async ({ from, to }) => {
-        return { spend: getCategorySpendInRange(workspaceId, from, to) };
+        return { spend: getCategorySpendInRange(workspaceId, from, to, accountFilter) };
       },
     }),
   };

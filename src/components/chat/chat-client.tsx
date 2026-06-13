@@ -39,6 +39,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { getAccountSelectionSync } from "@/lib/account-store";
 import { deleteChatSession, getChatSession, listChatSessions, renameChatSession } from "@/lib/api";
 import type { ChatSession } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -133,8 +134,13 @@ function ChatWorkspace({
     messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/chat",
-      headers: (): Record<string, string> =>
-        workspaceId != null ? { "x-workspace-id": String(workspaceId) } : {},
+      headers: (): Record<string, string> => {
+        const headers: Record<string, string> = {};
+        if (workspaceId != null) headers["x-workspace-id"] = String(workspaceId);
+        const accountSelection = getAccountSelectionSync();
+        if (accountSelection != null) headers["x-account-sel"] = accountSelection;
+        return headers;
+      },
     }),
     onFinish: () => {
       queryClient.invalidateQueries({ queryKey: ["chatSessions", workspaceId] });

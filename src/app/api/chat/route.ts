@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { createChatModel } from "@/server/ai/chat-model";
 import { buildChatTools } from "@/server/ai/chat-tools";
 import { ensureChatSession, replaceChatMessages } from "@/server/db/queries/chat-sessions";
+import { getAccountFilterFromRequest } from "@/server/lib/account-context";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 export const maxDuration = 60;
@@ -16,8 +17,12 @@ const TODAY_FORMAT = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(scoped: boolean): string {
   const today = TODAY_FORMAT.format(new Date());
+
+  const scopeNote = scoped
+    ? "\n- The user has filtered the app to a single account or card. Every tool result is scoped to that account only, not their full portfolio. Frame answers around that account and mention the scope when it could be misread as covering everything."
+    : "";
 
   return `You are Budgeteer, a friendly assistant inside a personal finance app for an Israeli user. The user's transactions, categories, and summaries are private and live in a local SQLite database that you can query through the provided tools.
 
@@ -29,7 +34,7 @@ Guidelines:
 - When you need a category id, call listCategories first.
 - If the chat still has a generic title, call setChatTitle once with a concise title based on the first user message.
 - Keep replies short and conversational. Use bullet points or small tables when listing multiple values.
-- If a question is not about the user's finances, politely steer back to the app's purpose.`;
+- If a question is not about the user's finances, politely steer back to the app's purpose.${scopeNote}`;
 }
 
 export async function POST(req: Request) {
@@ -48,11 +53,13 @@ export async function POST(req: Request) {
   }
   ensureChatSession(workspaceId, id);
 
+  const accountFilter = getAccountFilterFromRequest(req, workspaceId);
+
   const result = streamText({
     model,
-    system: buildSystemPrompt(),
+    system: buildSystemPrompt(accountFilter != null),
     messages: await convertToModelMessages(messages),
-    tools: buildChatTools(workspaceId, id),
+    tools: buildChatTools(workspaceId, id, accountFilter ?? {}),
     stopWhen: stepCountIs(8),
   });
 
