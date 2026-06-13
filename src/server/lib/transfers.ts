@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { BankProvider } from "@/lib/types";
+import { BANK_PROVIDERS, type BankProvider } from "@/lib/types";
 
 export type TransactionKind = "expense" | "income" | "transfer";
 
@@ -23,6 +23,10 @@ export type CardIssuer = "isracard" | "cal" | "max" | "amex" | "beyahadBishvilha
 export type CardPaymentMatch = { issuer: CardIssuer } | { issuer: "ambiguous" } | null;
 
 export const CARD_ISSUERS: readonly CardIssuer[] = ["amex", "behatsdaa", "beyahadBishvilha", "cal", "isracard", "max"];
+
+export function cardIssuerLabel(issuer: CardIssuer): string {
+  return BANK_PROVIDERS.find((b) => b.id === issuer)?.name ?? issuer;
+}
 
 const ISSUER_PATTERNS: Record<CardIssuer, readonly RegExp[]> = {
   amex: [/אמריקן\s*אקספרס/i, /אמקס/i, /\bAMEX\b/i, /\bAMERICAN\s+EXPRESS\b/i],
@@ -77,10 +81,6 @@ function matchesAny(description: string, patterns: readonly RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(normalized));
 }
 
-function matchesTransferPattern(description: string): boolean {
-  return matchesAny(description, CREDIT_CARD_PAYMENT_PATTERNS);
-}
-
 export function matchesCreditCardPayment(description: string): boolean {
   return matchesAny(description, CREDIT_CARD_PAYMENT_PATTERNS);
 }
@@ -112,7 +112,7 @@ export function detectKind(
   provider: string,
   chargedAmount: number,
 ): TransactionKind {
-  if (isBankProvider(provider) && matchesTransferPattern(description)) {
+  if (isBankProvider(provider) && matchesCreditCardPayment(description)) {
     return "transfer";
   }
   if (isBankProvider(provider) && chargedAmount > 0) {

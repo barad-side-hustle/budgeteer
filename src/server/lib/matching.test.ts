@@ -112,6 +112,17 @@ describe("proposeEvents", () => {
       { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
     );
     expect(events[0].members[0].flipKindTo).toBe("expense");
+    expect(events[0].needsReview).toBe(false);
+  });
+
+  test("counts an ambiguous bill as spend when no card is connected", () => {
+    const events = proposeEvents(
+      [cand({ id: 6, provider: "leumi", kind: "transfer", description: "חיוב ויזה" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: noCards },
+    );
+    expect(events[0].members[0].flipKindTo).toBe("expense");
+    expect(events[0].needsReview).toBe(false);
   });
 
   test("flags an ambiguous bill payment for review when a card is connected", () => {

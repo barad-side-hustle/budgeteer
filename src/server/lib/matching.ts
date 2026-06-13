@@ -3,6 +3,7 @@ import "server-only";
 import type { EventRole, EventType, MatchSettings } from "@/lib/types";
 import { findInternalTransferPairs } from "@/server/lib/internal-transfers";
 import {
+  cardIssuerLabel,
   isAtmWithdrawal,
   isBankProvider,
   matchCardPaymentIssuer,
@@ -186,7 +187,7 @@ export function proposeEvents(
           "Bank-side credit card bill payment (the individual card purchases are counted instead)";
       } else {
         flipKindTo = "expense";
-        reason = `${match.issuer} not connected; bill counted as spend`;
+        reason = `${cardIssuerLabel(match.issuer)} not connected; bill counted as spend`;
       }
 
       events.push({
