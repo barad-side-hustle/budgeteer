@@ -20,7 +20,7 @@ import {
   batchSetNeedsReview,
   batchUpdateCategories,
   getTransactionsForCategorization,
-  getUncategorizedAtmExpenses,
+  getUncategorizedExpenses,
   getUncategorizedIdsByKind,
   insertTransactions,
 } from "@/server/db/queries/transactions";
@@ -31,7 +31,7 @@ import {
   lookupMerchantCategoriesBulk,
   normalizeMerchant,
 } from "@/server/lib/merchant-memory";
-import { isAtmWithdrawal } from "@/server/lib/transfers";
+import { isAtmWithdrawal, matchCardPaymentIssuer } from "@/server/lib/transfers";
 import { listAllWorkspaceIds } from "@/server/lib/workspace-context";
 import { scrapeBank } from "@/server/scrapers";
 import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
@@ -414,13 +414,24 @@ export async function syncWorkspace(
   if (!settings.treatAtmAsTransfers) {
     const atmCategory = getCategoryByName(workspaceId, "Cash & ATM");
     if (atmCategory) {
-      const atmUpdates = getUncategorizedAtmExpenses(workspaceId).flatMap((r) =>
+      const atmUpdates = getUncategorizedExpenses(workspaceId).flatMap((r) =>
         isAtmWithdrawal(r.description) ? [{ id: r.id, categoryId: atmCategory.id }] : [],
       );
       if (atmUpdates.length > 0) {
         batchUpdateCategories(workspaceId, atmUpdates);
         categorized += atmUpdates.length;
       }
+    }
+  }
+
+  const creditCardCategory = getCategoryByName(workspaceId, "Credit Card");
+  if (creditCardCategory) {
+    const cardUpdates = getUncategorizedExpenses(workspaceId).flatMap((r) =>
+      matchCardPaymentIssuer(r.description) ? [{ id: r.id, categoryId: creditCardCategory.id }] : [],
+    );
+    if (cardUpdates.length > 0) {
+      batchUpdateCategories(workspaceId, cardUpdates);
+      categorized += cardUpdates.length;
     }
   }
 

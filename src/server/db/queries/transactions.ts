@@ -395,7 +395,7 @@ export function getMatchCandidates(workspaceId: number, from: string): MatchCand
     .all() as MatchCandidate[];
 }
 
-export function getUncategorizedAtmExpenses(
+export function getUncategorizedExpenses(
   workspaceId: number,
 ): { id: number; description: string }[] {
   return getOrm()
