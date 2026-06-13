@@ -5,8 +5,8 @@ import {
   detectKind,
   isAtmWithdrawal,
   matchCardPaymentIssuer,
-  matchesInternalTransfer,
   matchesCreditCardPayment,
+  matchesInternalTransfer,
 } from "@/server/lib/transfers";
 
 describe("detectKind — credit card settlements", () => {

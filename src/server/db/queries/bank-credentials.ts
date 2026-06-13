@@ -6,6 +6,7 @@ import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
 import { bankCredentials } from "@/server/db/schema";
 import { decrypt, encrypt } from "@/server/lib/encryption";
+import { CARD_ISSUERS, type CardIssuer } from "@/server/lib/transfers";
 
 export const BANK_CREDENTIAL_LABEL_MAX_LENGTH = 128;
 
@@ -273,4 +274,22 @@ export function listBankCredentials(workspaceId: number): BankCredentialMeta[] {
       hasTwoFactorToken: hasToken,
     };
   });
+}
+
+const CARD_PROVIDER_IDS = new Set<string>(
+  BANK_PROVIDERS.filter((b) => b.kind === "card").map((b) => b.id),
+);
+
+export function cardIssuersFromProviders(providers: readonly string[]): Set<CardIssuer> {
+  const issuers = new Set<CardIssuer>();
+  for (const provider of providers) {
+    if (CARD_PROVIDER_IDS.has(provider) && (CARD_ISSUERS as readonly string[]).includes(provider)) {
+      issuers.add(provider as CardIssuer);
+    }
+  }
+  return issuers;
+}
+
+export function getConnectedCardIssuers(workspaceId: number): Set<CardIssuer> {
+  return cardIssuersFromProviders(listBankCredentials(workspaceId).map((c) => c.provider));
 }
