@@ -5,8 +5,9 @@ import { findInternalTransferPairs } from "@/server/lib/internal-transfers";
 import {
   isAtmWithdrawal,
   isBankProvider,
-  matchesCreditCardPayment,
+  matchCardPaymentIssuer,
   matchesInternalTransfer,
+  type CardIssuer,
   type TransactionKind,
 } from "@/server/lib/transfers";
 
@@ -46,6 +47,7 @@ export type MatchSettingsMap = Partial<Record<EventType, MatchSettings>>;
 
 export interface ProposeOptions {
   treatAtmAsTransfers: boolean;
+  connectedCardIssuers: ReadonlySet<CardIssuer>;
 }
 
 function dayNumber(date: string): number {
@@ -162,29 +164,47 @@ export function proposeEvents(
 
   const cc = settings.credit_card_payment;
   if (cc?.enabled) {
+    const hasAnyCard = opts.connectedCardIssuers.size > 0;
     for (const cand of candidates) {
       if (used.has(cand.id)) continue;
       if (cand.kind !== "transfer") continue;
       if (!isBankProvider(cand.provider)) continue;
-      if (!matchesCreditCardPayment(cand.description)) continue;
+      const match = matchCardPaymentIssuer(cand.description);
+      if (!match) continue;
+
+      let flipKindTo: TransactionKind | null = null;
+      let needsReview = false;
+      let reason: string;
+      if (!hasAnyCard) {
+        flipKindTo = "expense";
+        reason = "No credit card connected; bill counted as spend";
+      } else if (match.issuer === "ambiguous") {
+        reason = "Card issuer undetermined; assumed covered by a connected card - confirm";
+        needsReview = true;
+      } else if (opts.connectedCardIssuers.has(match.issuer)) {
+        reason =
+          "Bank-side credit card bill payment (the individual card purchases are counted instead)";
+      } else {
+        flipKindTo = "expense";
+        reason = `${match.issuer} not connected; bill counted as spend`;
+      }
+
       events.push({
         eventType: "credit_card_payment",
         members: [
           {
             transactionId: cand.id,
             role: "bill_payment",
-            flipKindTo: null,
+            flipKindTo,
             priorKind: cand.kind,
             grouping: true,
           },
         ],
         canonicalTransactionId: null,
         confidence: 0.9,
-        reasons: [
-          "Bank-side credit card bill payment (the individual card purchases are counted instead)",
-        ],
+        reasons: [reason],
         eventKey: eventKeyFor("credit_card_payment", [cand]),
-        needsReview: false,
+        needsReview,
       });
       used.add(cand.id);
     }

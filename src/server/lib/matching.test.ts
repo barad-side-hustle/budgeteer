@@ -2,6 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import type { MatchSettings } from "@/lib/types";
 import { type MatchCandidate, type MatchSettingsMap, proposeEvents } from "@/server/lib/matching";
+import type { CardIssuer } from "@/server/lib/transfers";
+
+const noCards = new Set<CardIssuer>();
+const withCal = new Set<CardIssuer>(["cal"]);
 
 function cand(p: Partial<MatchCandidate> & { id: number }): MatchCandidate {
   return {
@@ -37,8 +41,8 @@ const SETTINGS: MatchSettingsMap = {
   atm_withdrawal: setting("atm_withdrawal"),
 };
 
-const NO_ATM = { treatAtmAsTransfers: false };
-const WITH_ATM = { treatAtmAsTransfers: true };
+const NO_ATM = { treatAtmAsTransfers: false, connectedCardIssuers: noCards };
+const WITH_ATM = { treatAtmAsTransfers: true, connectedCardIssuers: noCards };
 
 describe("proposeEvents", () => {
   test("groups an internal transfer into one event with two grouping legs", () => {
@@ -77,25 +81,54 @@ describe("proposeEvents", () => {
     expect(e1.eventKey.startsWith("internal_transfer:")).toBe(true);
   });
 
-  test("wraps a bank-side credit card bill payment as a single-leg event", () => {
+  test("counts a bank card bill as spend when no card is connected", () => {
     const events = proposeEvents(
       [cand({ id: 5, provider: "hapoalim", kind: "transfer", description: "חיוב ויזה" })],
       SETTINGS,
-      NO_ATM,
+      { treatAtmAsTransfers: false, connectedCardIssuers: noCards },
     );
     expect(events).toHaveLength(1);
     expect(events[0].eventType).toBe("credit_card_payment");
-    expect(events[0].needsReview).toBe(false);
-    expect(events[0].members).toHaveLength(1);
     expect(events[0].members[0].role).toBe("bill_payment");
+    expect(events[0].members[0].flipKindTo).toBe("expense");
+    expect(events[0].needsReview).toBe(false);
+  });
+
+  test("excludes a bill payment when its issuer is connected", () => {
+    const events = proposeEvents(
+      [cand({ id: 5, provider: "leumi", kind: "transfer", description: "תשלום לכ.א.ל" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    expect(events).toHaveLength(1);
     expect(events[0].members[0].flipKindTo).toBeNull();
+    expect(events[0].needsReview).toBe(false);
+  });
+
+  test("counts a bill payment when a different issuer is connected", () => {
+    const events = proposeEvents(
+      [cand({ id: 5, provider: "leumi", kind: "transfer", description: "מקסימום" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    expect(events[0].members[0].flipKindTo).toBe("expense");
+  });
+
+  test("flags an ambiguous bill payment for review when a card is connected", () => {
+    const events = proposeEvents(
+      [cand({ id: 5, provider: "leumi", kind: "transfer", description: "חיוב ויזה" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    expect(events[0].members[0].flipKindTo).toBeNull();
+    expect(events[0].needsReview).toBe(true);
   });
 
   test("does not wrap card payments from a non-bank provider", () => {
     const events = proposeEvents(
       [cand({ id: 5, provider: "isracard", kind: "transfer", description: "ויזה" })],
       SETTINGS,
-      NO_ATM,
+      { treatAtmAsTransfers: false, connectedCardIssuers: noCards },
     );
     expect(events).toHaveLength(0);
   });
