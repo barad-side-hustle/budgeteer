@@ -276,14 +276,12 @@ export function listBankCredentials(workspaceId: number): BankCredentialMeta[] {
   });
 }
 
-const CARD_PROVIDER_IDS = new Set<string>(
-  BANK_PROVIDERS.filter((b) => b.kind === "card").map((b) => b.id),
-);
+const CARD_ISSUER_SET: ReadonlySet<string> = new Set(CARD_ISSUERS);
 
 export function cardIssuersFromProviders(providers: readonly string[]): Set<CardIssuer> {
   const issuers = new Set<CardIssuer>();
   for (const provider of providers) {
-    if (CARD_PROVIDER_IDS.has(provider) && (CARD_ISSUERS as readonly string[]).includes(provider)) {
+    if (CARD_ISSUER_SET.has(provider)) {
       issuers.add(provider as CardIssuer);
     }
   }

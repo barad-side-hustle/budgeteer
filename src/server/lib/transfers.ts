@@ -19,16 +19,18 @@ const BANK_PROVIDERS_SET: ReadonlySet<BankProvider> = new Set<BankProvider>([
   "oneZero",
 ]);
 
-export type CardIssuer = "isracard" | "cal" | "max" | "amex";
+export type CardIssuer = "isracard" | "cal" | "max" | "amex" | "beyahadBishvilha" | "behatsdaa";
 export type CardPaymentMatch = { issuer: CardIssuer } | { issuer: "ambiguous" } | null;
 
-export const CARD_ISSUERS: readonly CardIssuer[] = ["isracard", "cal", "max", "amex"];
+export const CARD_ISSUERS: readonly CardIssuer[] = ["amex", "behatsdaa", "beyahadBishvilha", "cal", "isracard", "max"];
 
 const ISSUER_PATTERNS: Record<CardIssuer, readonly RegExp[]> = {
-  isracard: [/ישראכרט/i, /ישרא[\s\-־]?כארד/i, /\bISRACARD\b/i],
-  cal: [/כ[\s.\-־]?א[\s.\-־]?ל/i, /\bCAL\b/i],
-  max: [/מקסימום/i, /לאומי\s*קארד/i, /\bMAX\b/i, /\bLEUMI\s+CARD\b/i],
   amex: [/אמריקן\s*אקספרס/i, /אמקס/i, /\bAMEX\b/i, /\bAMERICAN\s+EXPRESS\b/i],
+  behatsdaa: [/בהצדעה/i, /\bBEHATSDAA\b/i],
+  beyahadBishvilha: [/ביחד\s*בשבילה/i, /\bBEYAHAD\s+BISHVILHA\b/i],
+  cal: [/כ[\s.\-־]?א[\s.\-־]?ל/i, /\bCAL\b/i],
+  isracard: [/ישראכרט/i, /ישרא[\s\-־]?כארד/i, /\bISRACARD\b/i],
+  max: [/מקסימום/i, /לאומי\s*קארד/i, /\bMAX\b/i, /\bLEUMI\s+CARD\b/i],
 };
 
 const AMBIGUOUS_CARD_PATTERNS: readonly RegExp[] = [
