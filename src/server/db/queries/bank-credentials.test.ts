@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import type { CardIssuer } from "@/server/lib/transfers";
 import { BANK_PROVIDERS } from "@/lib/types";
 import { cardIssuersFromProviders } from "@/server/db/queries/bank-credentials";
+import type { CardIssuer } from "@/server/lib/transfers";
 
 describe("cardIssuersFromProviders", () => {
   test("keeps only providers whose BANK_PROVIDERS kind is card", () => {

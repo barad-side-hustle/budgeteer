@@ -3,12 +3,12 @@ import "server-only";
 import type { EventRole, EventType, MatchSettings } from "@/lib/types";
 import { findInternalTransferPairs } from "@/server/lib/internal-transfers";
 import {
+  type CardIssuer,
   cardIssuerLabel,
   isAtmWithdrawal,
   isBankProvider,
   matchCardPaymentIssuer,
   matchesInternalTransfer,
-  type CardIssuer,
   type TransactionKind,
 } from "@/server/lib/transfers";
 

@@ -427,7 +427,9 @@ export async function syncWorkspace(
   const creditCardCategory = getCategoryByName(workspaceId, "Credit Card");
   if (creditCardCategory) {
     const cardUpdates = getUncategorizedExpenses(workspaceId).flatMap((r) =>
-      matchCardPaymentIssuer(r.description) ? [{ id: r.id, categoryId: creditCardCategory.id }] : [],
+      matchCardPaymentIssuer(r.description)
+        ? [{ id: r.id, categoryId: creditCardCategory.id }]
+        : [],
     );
     if (cardUpdates.length > 0) {
       batchUpdateCategories(workspaceId, cardUpdates);

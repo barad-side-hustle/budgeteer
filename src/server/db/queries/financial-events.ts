@@ -3,6 +3,8 @@ import "server-only";
 import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { EventType, FinancialEventWithMembers, MatchSettings } from "@/lib/types";
 import { getOrm } from "@/server/db/orm";
+import { getCategoryByName } from "@/server/db/queries/categories";
+import { batchUpdateCategories, getMatchCandidates } from "@/server/db/queries/transactions";
 import {
   bankCredentials,
   eventMembers,
@@ -11,10 +13,8 @@ import {
   transactions,
 } from "@/server/db/schema";
 import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
-import { matchCardPaymentIssuer, type CardIssuer } from "@/server/lib/transfers";
 import { proposeEvents } from "@/server/lib/matching";
-import { batchUpdateCategories, getMatchCandidates } from "@/server/db/queries/transactions";
-import { getCategoryByName } from "@/server/db/queries/categories";
+import { type CardIssuer, matchCardPaymentIssuer } from "@/server/lib/transfers";
 
 const EVENT_TYPES: EventType[] = [
   "internal_transfer",

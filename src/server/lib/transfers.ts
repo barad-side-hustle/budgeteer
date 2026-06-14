@@ -22,7 +22,14 @@ const BANK_PROVIDERS_SET: ReadonlySet<BankProvider> = new Set<BankProvider>([
 export type CardIssuer = "isracard" | "cal" | "max" | "amex" | "beyahadBishvilha" | "behatsdaa";
 export type CardPaymentMatch = { issuer: CardIssuer } | { issuer: "ambiguous" } | null;
 
-export const CARD_ISSUERS: readonly CardIssuer[] = ["amex", "behatsdaa", "beyahadBishvilha", "cal", "isracard", "max"];
+export const CARD_ISSUERS: readonly CardIssuer[] = [
+  "amex",
+  "behatsdaa",
+  "beyahadBishvilha",
+  "cal",
+  "isracard",
+  "max",
+];
 
 export function cardIssuerLabel(issuer: CardIssuer): string {
   return BANK_PROVIDERS.find((b) => b.id === issuer)?.name ?? issuer;

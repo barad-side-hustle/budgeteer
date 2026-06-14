@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { BANK_PROVIDERS } from "@/lib/types";
 import {
   deleteBankCredentials,
   getBankCredentialMeta,
@@ -9,7 +10,6 @@ import {
   updateCredentialField,
 } from "@/server/db/queries/bank-credentials";
 import { reclassifyCardPayments } from "@/server/db/queries/financial-events";
-import { BANK_PROVIDERS } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseCredentialId(id: string): number | null {
