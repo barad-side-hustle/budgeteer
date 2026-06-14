@@ -4,8 +4,10 @@ import {
   defaultLabelForProvider,
   getBankCredentialMeta,
   getBankCredentials,
+  getConnectedCardIssuers,
   saveBankCredentials,
 } from "@/server/db/queries/bank-credentials";
+import { reclassifyCardPayments } from "@/server/db/queries/financial-events";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 export async function POST(request: Request) {
@@ -71,6 +73,9 @@ export async function POST(request: Request) {
       label,
       requiresManualTwoFactor: body.requiresManualTwoFactor,
     });
+    if (info?.kind === "card") {
+      reclassifyCardPayments(workspaceId, getConnectedCardIssuers(workspaceId));
+    }
     return NextResponse.json({ success: true, credentialId: id });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to save credentials";

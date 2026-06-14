@@ -3,10 +3,13 @@ import {
   deleteBankCredentials,
   getBankCredentialMeta,
   getBankCredentials,
+  getConnectedCardIssuers,
   getRequiresManualTwoFactor,
   setRequiresManualTwoFactor,
   updateCredentialField,
 } from "@/server/db/queries/bank-credentials";
+import { reclassifyCardPayments } from "@/server/db/queries/financial-events";
+import { BANK_PROVIDERS } from "@/lib/types";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseCredentialId(id: string): number | null {
@@ -96,6 +99,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "invalid id" }, { status: 400 });
   }
 
+  const meta = getBankCredentialMeta(workspaceId, credentialId);
+  const wasCard =
+    meta != null && BANK_PROVIDERS.find((b) => b.id === meta.provider)?.kind === "card";
+
   deleteBankCredentials(workspaceId, credentialId);
+
+  if (wasCard) {
+    reclassifyCardPayments(workspaceId, getConnectedCardIssuers(workspaceId));
+  }
   return NextResponse.json({ success: true });
 }
