@@ -308,6 +308,8 @@ export function reclassifyCardPayments(
             eventRole: null,
             matchConfidence: null,
             needsReview: 0,
+            categoryId: null,
+            categorySource: null,
             updatedAt: sql`datetime('now')`,
             kind: restoreKind,
           })
