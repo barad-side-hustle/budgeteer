@@ -332,4 +332,33 @@ describe("card statement matching", () => {
     expect(ev?.members[0].flipKindTo).toBe("expense");
     expect(ev?.needsReview).toBe(false);
   });
+
+  test("a second bill matching an already-consumed statement is a cost, not an empty statement", () => {
+    const events = proposeEvents(
+      [
+        billCand({
+          id: 10,
+          chargedAmount: -119.9,
+          date: "2026-06-10T00:00:00.000Z",
+          description: "כרטיסי אשראי",
+        }),
+        billCand({
+          id: 11,
+          chargedAmount: -119.9,
+          date: "2026-06-10T00:00:00.000Z",
+          description: "כרטיסי אשראי",
+        }),
+        purchase({ id: 1, chargedAmount: -102, processedDate: "2026-06-09T00:00:00.000Z" }),
+        purchase({ id: 2, chargedAmount: -17.9, processedDate: "2026-06-09T00:00:00.000Z" }),
+      ],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    const statements = events.filter((e) => e.eventType === "credit_card_statement");
+    expect(statements).toHaveLength(1);
+    expect(statements[0].members.filter((m) => m.role === "purchase")).toHaveLength(2);
+    const costs = events.filter((e) => e.eventType === "credit_card_payment");
+    expect(costs).toHaveLength(1);
+    expect(costs[0].members[0].flipKindTo).toBe("expense");
+  });
 });

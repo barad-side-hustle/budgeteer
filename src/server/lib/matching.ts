@@ -235,10 +235,16 @@ export function proposeEvents(
       if (!match) continue;
 
       const covered = matchBillToGroup(cand.chargedAmount, cand.date, groups);
-      if (covered) {
-        const purchases = covered.transactionIds
-          .map((id) => byId.get(id))
-          .filter((p): p is MatchCandidate => p != null && !used.has(p.id));
+      const purchases = covered
+        ? covered.transactionIds
+            .map((id) => byId.get(id))
+            .filter((p): p is MatchCandidate => p != null)
+        : [];
+      const fullyAvailable =
+        covered != null &&
+        purchases.length === covered.transactionIds.length &&
+        purchases.every((p) => !used.has(p.id));
+      if (covered && fullyAvailable) {
         const members: ProposedMember[] = [
           {
             transactionId: cand.id,
