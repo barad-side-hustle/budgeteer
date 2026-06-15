@@ -14,7 +14,13 @@ import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
 import { type AccountFilter, buildAccountFilterClause } from "@/server/db/queries/transactions";
 import { bankCredentials, syncRuns } from "@/server/db/schema";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import {
+  jerusalemToday,
+  monthEnd,
+  monthStart,
+  shiftMonth,
+  toLocalISODate,
+} from "@/server/lib/date-utils";
 
 export function getCashFlow(
   workspaceId: number,
@@ -28,7 +34,7 @@ export function getCashFlow(
     .prepare(
       `SELECT COALESCE(SUM(charged_amount), 0) as total
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ?
+       WHERE workspace_id = ? AND local_date >= ? AND local_date <= ?
          AND status = 'completed' AND kind = 'income' AND is_excluded = 0${acct.sql}`,
     )
     .get(workspaceId, from, to, ...acct.values) as { total: number };
@@ -36,7 +42,7 @@ export function getCashFlow(
     .prepare(
       `SELECT COALESCE(SUM((-charged_amount)), 0) as total
        FROM transactions
-       WHERE workspace_id = ? AND date >= ? AND date <= ?
+       WHERE workspace_id = ? AND local_date >= ? AND local_date <= ?
          AND status = 'completed' AND kind = 'expense' AND is_excluded = 0${acct.sql}`,
     )
     .get(workspaceId, from, to, ...acct.values) as { total: number };
@@ -60,7 +66,7 @@ export function getTypicalMonthly(
   const stmt = db.prepare(
     `SELECT COALESCE(${sumExpr}, 0) as total
      FROM transactions
-     WHERE workspace_id = ? AND date >= ? AND date <= ?
+     WHERE workspace_id = ? AND local_date >= ? AND local_date <= ?
        AND status = 'completed' AND kind = ? AND is_excluded = 0${acct.sql}`,
   );
   let total = 0;
@@ -91,20 +97,21 @@ export function getHistoricalTrend(
   filter: AccountFilter = {},
 ): HomeHistoricalTrendPoint[] {
   const db = getDb();
-  const now = new Date();
   const acct = buildAccountFilterClause(filter);
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const today = jerusalemToday();
+  const currentMonthStart = monthStart(today);
+  const currentMonthKey = currentMonthStart.slice(0, 7);
 
   const months: { key: string; label: string; from: string; to: string }[] = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
-    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
+    const from = shiftMonth(currentMonthStart, -i);
+    const key = from.slice(0, 7);
+    const [y, m] = from.split("-").map(Number);
     months.push({
       key,
-      label: start.toLocaleDateString("en-US", { month: "short" }),
-      from: toLocalISODate(start),
-      to: toLocalISODate(end),
+      label: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "short" }),
+      from,
+      to: monthEnd(from),
     });
   }
 
@@ -113,7 +120,7 @@ export function getHistoricalTrend(
        COALESCE(SUM(CASE WHEN kind = 'expense' THEN (-charged_amount) ELSE 0 END), 0) as total,
        COALESCE(SUM(CASE WHEN kind = 'income' THEN charged_amount ELSE 0 END), 0) as income
      FROM transactions
-     WHERE workspace_id = ? AND date >= ? AND date <= ?
+     WHERE workspace_id = ? AND local_date >= ? AND local_date <= ?
        AND status = 'completed' AND is_excluded = 0${acct.sql}`,
   );
 

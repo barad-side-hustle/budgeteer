@@ -21,7 +21,7 @@ function meta(rows: Array<[number, number | null, string]>): Map<number, Categor
 
 describe("computeMonthRanges", () => {
   test("day-aligns the prior-month window to month-to-date", () => {
-    const r = computeMonthRanges(new Date(2026, 2, 10));
+    const r = computeMonthRanges(new Date("2026-03-10T08:00:00.000Z"));
     expect(r.current).toEqual({ from: "2026-03-01", to: "2026-03-31" });
     expect(r.priorFull).toEqual({ from: "2026-02-01", to: "2026-02-28" });
     expect(r.priorMtd).toEqual({ from: "2026-02-01", to: "2026-02-10" });
@@ -30,7 +30,7 @@ describe("computeMonthRanges", () => {
   });
 
   test("clamps the prior MTD day to the shorter prior month", () => {
-    const r = computeMonthRanges(new Date(2026, 2, 31));
+    const r = computeMonthRanges(new Date("2026-03-31T08:00:00.000Z"));
     expect(r.elapsedDays).toBe(31);
     expect(r.priorMtd.to).toBe("2026-02-28");
   });

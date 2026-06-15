@@ -16,7 +16,7 @@ import {
   getTopMerchants,
 } from "@/server/db/queries/transactions";
 import { getAccountFilterFromRequest } from "@/server/lib/account-context";
-import { toLocalISODate } from "@/server/lib/date-utils";
+import { jerusalemToday, monthEnd, monthStart, toLocalISODate } from "@/server/lib/date-utils";
 import {
   computeStatus,
   daysInMonth,
@@ -34,9 +34,9 @@ function parseISODate(s: string): Date {
 export async function GET(request: Request) {
   const workspaceId = getWorkspaceIdFromRequest(request);
   const { searchParams } = new URL(request.url);
-  const now = new Date();
-  const defaultFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  const defaultTo = toLocalISODate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+  const localToday = jerusalemToday();
+  const defaultFrom = monthStart(localToday);
+  const defaultTo = monthEnd(localToday);
 
   const from = searchParams.get("from") ?? defaultFrom;
   const to = searchParams.get("to") ?? defaultTo;

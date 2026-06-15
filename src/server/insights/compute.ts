@@ -1,4 +1,5 @@
 import type { BreakdownItem, Mover, SpendInsight, Verdict, VerdictStatus } from "@/lib/types";
+import { toJerusalemDate } from "@/server/lib/date-utils";
 
 export interface CategoryMeta {
   id: number;
@@ -30,13 +31,14 @@ export interface MonthRanges {
 }
 
 export function computeMonthRanges(now: Date): MonthRanges {
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const todayLocal = toJerusalemDate(now.toISOString());
+  const [year, monthOneBased, day] = todayLocal.split("-").map(Number);
+  const month = monthOneBased - 1;
 
   const monthStart = new Date(year, month, 1);
   const monthEnd = new Date(year, month + 1, 0);
   const totalDays = monthEnd.getDate();
-  const elapsedDays = Math.min(now.getDate(), totalDays);
+  const elapsedDays = Math.min(day, totalDays);
 
   const prevStart = new Date(year, month - 1, 1);
   const prevEnd = new Date(year, month, 0);

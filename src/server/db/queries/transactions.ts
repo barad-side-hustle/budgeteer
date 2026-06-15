@@ -11,7 +11,7 @@ import type {
 import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
 import { transactions as transactionsTable } from "@/server/db/schema";
-import { toJerusalemDate } from "@/server/lib/date-utils";
+import { jerusalemToday, monthStart, shiftMonth, toJerusalemDate } from "@/server/lib/date-utils";
 import { computeDedupHash } from "@/server/lib/dedup";
 import type { MatchCandidate } from "@/server/lib/matching";
 import { detectKind } from "@/server/lib/transfers";
@@ -525,6 +525,7 @@ export function getCategoryMonthlySpend(
   filter: AccountFilter = {},
 ): CategoryMonthSpend[] {
   const acct = buildAccountFilterClause(filter);
+  const fromMonth = shiftMonth(monthStart(jerusalemToday()), -monthsBack);
   return getDb()
     .prepare(
       `SELECT substr(local_date, 1, 7) as month,
@@ -532,7 +533,7 @@ export function getCategoryMonthlySpend(
               SUM((-charged_amount)) as amount
        FROM transactions
        WHERE workspace_id = ?
-         AND date >= date('now', 'start of month', '-' || ? || ' months')
+         AND local_date >= ?
          AND status = 'completed'
          AND kind = 'expense'
          AND category_id IS NOT NULL
@@ -540,7 +541,7 @@ export function getCategoryMonthlySpend(
        GROUP BY month, category_id
        ORDER BY month ASC`,
     )
-    .all(workspaceId, monthsBack, ...acct.values) as CategoryMonthSpend[];
+    .all(workspaceId, fromMonth, ...acct.values) as CategoryMonthSpend[];
 }
 
 export interface MerchantMonthSpend {
@@ -556,6 +557,7 @@ export function getMerchantMonthlySpend(
   filter: AccountFilter = {},
 ): MerchantMonthSpend[] {
   const acct = buildAccountFilterClause(filter);
+  const fromMonth = shiftMonth(monthStart(jerusalemToday()), -monthsBack);
   return getDb()
     .prepare(
       `SELECT substr(local_date, 1, 7) as month,
@@ -564,7 +566,7 @@ export function getMerchantMonthlySpend(
               SUM((-charged_amount)) as amount
        FROM transactions
        WHERE workspace_id = ?
-         AND date >= date('now', 'start of month', '-' || ? || ' months')
+         AND local_date >= ?
          AND status = 'completed'
          AND kind = 'expense'
          AND is_excluded = 0
@@ -572,7 +574,7 @@ export function getMerchantMonthlySpend(
        GROUP BY month, description
        ORDER BY month ASC`,
     )
-    .all(workspaceId, monthsBack, ...acct.values) as MerchantMonthSpend[];
+    .all(workspaceId, fromMonth, ...acct.values) as MerchantMonthSpend[];
 }
 
 export interface MerchantChargeDay {
@@ -586,19 +588,20 @@ export function getMerchantChargeDays(
   filter: AccountFilter = {},
 ): MerchantChargeDay[] {
   const acct = buildAccountFilterClause(filter);
+  const fromMonth = shiftMonth(monthStart(jerusalemToday()), -monthsBack);
   return getDb()
     .prepare(
       `SELECT description as merchant,
               CAST(substr(local_date, 9, 2) AS INTEGER) as day
        FROM transactions
        WHERE workspace_id = ?
-         AND date >= date('now', 'start of month', '-' || ? || ' months')
+         AND local_date >= ?
          AND status = 'completed'
          AND kind = 'expense'
          AND is_excluded = 0
          AND description != ''${acct.sql}`,
     )
-    .all(workspaceId, monthsBack, ...acct.values) as MerchantChargeDay[];
+    .all(workspaceId, fromMonth, ...acct.values) as MerchantChargeDay[];
 }
 
 export interface AnomalyTransactionRow {

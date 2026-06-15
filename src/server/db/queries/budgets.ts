@@ -111,7 +111,7 @@ export function getAutoBudgetAverage(
       .prepare(
         `SELECT category_id as categoryId, SUM(CASE WHEN kind = 'expense' THEN -charged_amount ELSE ABS(charged_amount) END) as amount
          FROM transactions
-         WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND category_id IS NOT NULL${acct.sql}
+         WHERE workspace_id = ? AND local_date >= ? AND local_date <= ? AND status = 'completed' AND category_id IS NOT NULL${acct.sql}
          GROUP BY category_id`,
       )
       .all(workspaceId, from, to, ...acct.values) as AutoSpend[];
