@@ -39,4 +39,16 @@ describe("computeDedupHash", () => {
     const second = computeDedupHash({ ...baseFields, installmentNumber: 2, installmentTotal: 3 });
     expect(first).not.toBe(second);
   });
+
+  test("is stable across the volatile timestamps a pending transaction carries between syncs", () => {
+    const firstSync = computeDedupHash({ ...baseFields, date: "2026-06-15T18:56:08.000Z" });
+    const secondSync = computeDedupHash({ ...baseFields, date: "2026-06-15T19:04:45.000Z" });
+    expect(firstSync).toBe(secondSync);
+  });
+
+  test("matches a pending transaction to its completed Israel-midnight form", () => {
+    const pending = computeDedupHash({ ...baseFields, date: "2026-06-15T19:04:45.000Z" });
+    const completed = computeDedupHash({ ...baseFields, date: "2026-06-14T21:00:00.000Z" });
+    expect(pending).toBe(completed);
+  });
 });

@@ -2,6 +2,8 @@ import "server-only";
 
 import crypto from "node:crypto";
 
+import { toBankDayStartUtc } from "@/server/lib/dates";
+
 interface DedupFields {
   accountNumber: string;
   date: string;
@@ -16,7 +18,7 @@ interface DedupFields {
 export function computeDedupHash(fields: DedupFields): string {
   const parts = [
     fields.accountNumber,
-    fields.date,
+    toBankDayStartUtc(fields.date),
     String(fields.originalAmount),
     fields.originalCurrency,
     fields.description,

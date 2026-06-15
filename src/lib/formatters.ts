@@ -58,22 +58,15 @@ export function formatDate(isoDate: string): string {
   return `${day}/${month}/${year}`;
 }
 
-function toLocalDateString(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 export function getMonthRange(date: Date = new Date()): {
   from: string;
   to: string;
 } {
   const from = new Date(date.getFullYear(), date.getMonth(), 1);
-  const to = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
   return {
-    from: toLocalDateString(from),
-    to: toLocalDateString(to),
+    from: from.toISOString(),
+    to: new Date(nextMonth.getTime() - 1).toISOString(),
   };
 }
 
