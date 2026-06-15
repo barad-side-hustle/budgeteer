@@ -376,6 +376,7 @@ export function getMatchCandidates(workspaceId: number, from: string): MatchCand
       accountNumber: transactionsTable.accountNumber,
       provider: transactionsTable.provider,
       date: transactionsTable.date,
+      processedDate: transactionsTable.processedDate,
       chargedAmount: transactionsTable.chargedAmount,
       chargedCurrency: transactionsTable.chargedCurrency,
       description: transactionsTable.description,

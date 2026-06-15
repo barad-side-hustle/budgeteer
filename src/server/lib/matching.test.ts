@@ -13,6 +13,7 @@ function cand(p: Partial<MatchCandidate> & { id: number }): MatchCandidate {
     accountNumber: "A",
     provider: "leumi",
     date: "2026-05-01",
+    processedDate: "2026-05-01",
     chargedAmount: -100,
     chargedCurrency: "ILS",
     description: "העברה",

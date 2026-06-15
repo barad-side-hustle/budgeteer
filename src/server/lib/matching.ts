@@ -18,6 +18,7 @@ export interface MatchCandidate {
   accountNumber: string;
   provider: string;
   date: string;
+  processedDate: string;
   chargedAmount: number;
   chargedCurrency: string | null;
   description: string;
