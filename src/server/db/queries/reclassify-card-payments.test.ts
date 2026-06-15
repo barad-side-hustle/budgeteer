@@ -56,6 +56,7 @@ mock.module("@/server/lib/transfers", () => ({
 }));
 
 const capturedCategoryUpdates: Array<{ id: number; categoryId: number }> = [];
+const capturedCandidateIds: number[][] = [];
 
 mock.module("@/server/db/queries/transactions", () => ({
   getMatchCandidates: () => [
@@ -64,6 +65,13 @@ mock.module("@/server/db/queries/transactions", () => ({
       provider: "leumi",
       description: "תשלום לכ.א.ל",
       kind: "transfer",
+    },
+    {
+      id: 77,
+      provider: "cal",
+      description: "רסטורנט",
+      kind: "expense",
+      processedDate: "2024-01-15",
     },
   ],
   batchUpdateCategories: (_workspaceId: number, updates: { id: number; categoryId: number }[]) => {
@@ -80,10 +88,11 @@ const connectedIssuersSeen: ReadonlySet<CardIssuer>[] = [];
 
 mock.module("@/server/lib/matching", () => ({
   proposeEvents: (
-    _candidates: unknown[],
+    candidates: Array<{ id: number }>,
     _settings: unknown,
     options: { connectedCardIssuers: ReadonlySet<CardIssuer> },
   ) => {
+    capturedCandidateIds.push(candidates.map((c) => c.id));
     connectedIssuersSeen.push(options.connectedCardIssuers);
     if (options.connectedCardIssuers.has("cal" as CardIssuer)) return [];
     return [
@@ -100,6 +109,7 @@ describe("reclassifyCardPayments", () => {
   test("files the bill under Credit Card with no card connected, excludes it once the issuer connects", () => {
     capturedCategoryUpdates.length = 0;
     connectedIssuersSeen.length = 0;
+    capturedCandidateIds.length = 0;
 
     reclassifyCardPayments(fakeWorkspaceId, new Set<CardIssuer>());
     expect(capturedCategoryUpdates).toEqual([{ id: 42, categoryId: fakeCreditCardCategoryId }]);
@@ -107,9 +117,19 @@ describe("reclassifyCardPayments", () => {
 
     capturedCategoryUpdates.length = 0;
     connectedIssuersSeen.length = 0;
+    capturedCandidateIds.length = 0;
 
     reclassifyCardPayments(fakeWorkspaceId, new Set<CardIssuer>(["cal"]));
     expect(capturedCategoryUpdates).toHaveLength(0);
     expect(connectedIssuersSeen[0]?.has("cal")).toBe(true);
+  });
+
+  test("passes the full candidate set (including non-transfer purchases) to proposeEvents", () => {
+    capturedCandidateIds.length = 0;
+
+    reclassifyCardPayments(fakeWorkspaceId, new Set<CardIssuer>());
+
+    expect(capturedCandidateIds[0]).toContain(77);
+    expect(capturedCandidateIds[0]).toContain(42);
   });
 });

@@ -14,7 +14,7 @@ import {
 } from "@/server/db/schema";
 import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
 import { proposeEvents } from "@/server/lib/matching";
-import { type CardIssuer, matchCardPaymentIssuer } from "@/server/lib/transfers";
+import type { CardIssuer } from "@/server/lib/transfers";
 
 const EVENT_TYPES: EventType[] = [
   "internal_transfer",
@@ -288,7 +288,7 @@ export function reclassifyCardPayments(
       .where(
         and(
           eq(financialEvents.workspaceId, workspaceId),
-          eq(financialEvents.eventType, "credit_card_payment"),
+          inArray(financialEvents.eventType, ["credit_card_payment", "credit_card_statement"]),
           ne(financialEvents.status, "rejected"),
         ),
       )
@@ -327,9 +327,7 @@ export function reclassifyCardPayments(
     }
   });
 
-  const candidates = getMatchCandidates(workspaceId, ALL_TIME).filter(
-    (c) => c.kind === "transfer" && matchCardPaymentIssuer(c.description) !== null,
-  );
+  const candidates = getMatchCandidates(workspaceId, ALL_TIME);
   const settings = getMatchSettingsMap(workspaceId);
   const proposals = proposeEvents(candidates, settings, {
     treatAtmAsTransfers: false,
