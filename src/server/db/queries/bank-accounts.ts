@@ -193,7 +193,7 @@ export function getAccountSummaries(
               ba.ownership_type, ba.balance, ba.balance_currency, ba.balance_updated_at,
               ba.group_key, ba.group_name, ba.created_at, ba.updated_at,
               COALESCE(SUM(CASE WHEN t.kind = 'income' THEN t.charged_amount ELSE 0 END), 0) AS income,
-              COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN ABS(t.charged_amount) ELSE 0 END), 0) AS expense,
+              COALESCE(SUM(CASE WHEN t.kind = 'expense' THEN -t.charged_amount ELSE 0 END), 0) AS expense,
               COUNT(t.id) AS transaction_count
        FROM bank_accounts ba
        JOIN bank_credentials bc ON ba.credential_id = bc.id

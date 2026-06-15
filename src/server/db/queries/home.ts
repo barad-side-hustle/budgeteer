@@ -34,7 +34,7 @@ export function getCashFlow(
     .get(workspaceId, from, to, ...acct.values) as { total: number };
   const expenses = db
     .prepare(
-      `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
+      `SELECT COALESCE(SUM((-charged_amount)), 0) as total
        FROM transactions
        WHERE workspace_id = ? AND date >= ? AND date <= ?
          AND status = 'completed' AND kind = 'expense' AND is_excluded = 0${acct.sql}`,
@@ -56,7 +56,7 @@ export function getTypicalMonthly(
   const db = getDb();
   const now = new Date();
   const acct = buildAccountFilterClause(filter);
-  const sumExpr = kind === "income" ? "SUM(charged_amount)" : "SUM(ABS(charged_amount))";
+  const sumExpr = kind === "income" ? "SUM(charged_amount)" : "SUM((-charged_amount))";
   const stmt = db.prepare(
     `SELECT COALESCE(${sumExpr}, 0) as total
      FROM transactions
@@ -110,7 +110,7 @@ export function getHistoricalTrend(
 
   const stmt = db.prepare(
     `SELECT
-       COALESCE(SUM(CASE WHEN kind = 'expense' THEN ABS(charged_amount) ELSE 0 END), 0) as total,
+       COALESCE(SUM(CASE WHEN kind = 'expense' THEN (-charged_amount) ELSE 0 END), 0) as total,
        COALESCE(SUM(CASE WHEN kind = 'income' THEN charged_amount ELSE 0 END), 0) as income
      FROM transactions
      WHERE workspace_id = ? AND date >= ? AND date <= ?

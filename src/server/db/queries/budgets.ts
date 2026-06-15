@@ -109,7 +109,7 @@ export function getAutoBudgetAverage(
   for (const { from, to } of periods) {
     const rows = db
       .prepare(
-        `SELECT category_id as categoryId, SUM(ABS(charged_amount)) as amount
+        `SELECT category_id as categoryId, SUM(CASE WHEN kind = 'expense' THEN -charged_amount ELSE ABS(charged_amount) END) as amount
          FROM transactions
          WHERE workspace_id = ? AND date >= ? AND date <= ? AND status = 'completed' AND category_id IS NOT NULL${acct.sql}
          GROUP BY category_id`,

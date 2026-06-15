@@ -501,7 +501,7 @@ export function getMonthlySummary(
   return getDb()
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
-              SUM(ABS(charged_amount)) as amount
+              SUM((-charged_amount)) as amount
        FROM transactions
        WHERE ${conditions.join(" AND ")}
        GROUP BY month
@@ -526,7 +526,7 @@ export function getCategoryMonthlySpend(
     .prepare(
       `SELECT strftime('%Y-%m', date) as month,
               category_id as categoryId,
-              SUM(ABS(charged_amount)) as amount
+              SUM((-charged_amount)) as amount
        FROM transactions
        WHERE workspace_id = ?
          AND date >= date('now', 'start of month', '-' || ? || ' months')
@@ -558,7 +558,7 @@ export function getMerchantMonthlySpend(
       `SELECT strftime('%Y-%m', date) as month,
               description as merchant,
               category_id as categoryId,
-              SUM(ABS(charged_amount)) as amount
+              SUM((-charged_amount)) as amount
        FROM transactions
        WHERE workspace_id = ?
          AND date >= date('now', 'start of month', '-' || ? || ' months')
@@ -619,7 +619,7 @@ export function getTransactionsForAnomalies(
       `SELECT t.id as id,
               t.date as date,
               t.description as description,
-              ABS(t.charged_amount) as amount,
+              (-t.charged_amount) as amount,
               t.original_currency as originalCurrency,
               t.category_id as categoryId,
               c.name as categoryName
@@ -656,7 +656,7 @@ export function getTopMerchants(
   return getDb()
     .prepare(
       `SELECT description as name,
-              SUM(ABS(charged_amount)) as amount,
+              SUM((-charged_amount)) as amount,
               COUNT(*) as count
        FROM transactions
        WHERE ${conditions.join(" AND ")}
@@ -689,7 +689,7 @@ export function getCategoryBreakdown(
          COALESCE(t.category_id, 0) as categoryId,
          COALESCE(c.name, 'Uncategorized') as name,
          COALESCE(c.color, '#B5B3AC') as color,
-         SUM(ABS(t.charged_amount)) as amount,
+         SUM((-t.charged_amount)) as amount,
          COUNT(*) as count
        FROM transactions t
        LEFT JOIN categories c ON t.category_id = c.id
@@ -726,7 +726,7 @@ export function getCategorySpendInRange(
   return getDb()
     .prepare(
       `SELECT category_id as categoryId,
-              SUM(ABS(charged_amount)) as amount,
+              SUM((-charged_amount)) as amount,
               COUNT(*) as count
        FROM transactions
        WHERE ${conditions.join(" AND ")}
@@ -762,8 +762,8 @@ export function getTopMerchantPerCategory(
     .prepare(
       `SELECT category_id as categoryId, description as merchant, amount
        FROM (
-         SELECT category_id, description, SUM(ABS(charged_amount)) as amount,
-                ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM(ABS(charged_amount)) DESC) as rn
+         SELECT category_id, description, SUM((-charged_amount)) as amount,
+                ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY SUM((-charged_amount)) DESC) as rn
          FROM transactions
          WHERE ${conditions.join(" AND ")}
          GROUP BY category_id, description
@@ -794,7 +794,7 @@ export function getCategorySpendByDay(
          SELECT date(d, '+1 day') FROM days WHERE d < date(?)
        )
        SELECT days.d as date,
-              COALESCE(SUM(ABS(t.charged_amount)), 0) as amount
+              COALESCE(SUM((-t.charged_amount)), 0) as amount
        FROM days
        LEFT JOIN transactions t
          ON substr(t.date, 1, 10) = days.d
@@ -824,7 +824,7 @@ export function getDailySpendTotals(
          SELECT date(d, '+1 day') FROM days WHERE d < date(?)
        )
        SELECT days.d as date,
-              COALESCE(SUM(ABS(t.charged_amount)), 0) as amount
+              COALESCE(SUM((-t.charged_amount)), 0) as amount
        FROM days
        LEFT JOIN transactions t
          ON substr(t.date, 1, 10) = days.d
@@ -856,7 +856,7 @@ export function getTopMerchantsForCategory(
   return getDb()
     .prepare(
       `SELECT description as merchant,
-              SUM(ABS(charged_amount)) as amount,
+              SUM((-charged_amount)) as amount,
               COUNT(*) as count
        FROM transactions
        WHERE workspace_id = ? AND category_id = ?
@@ -889,7 +889,7 @@ export function getPeriodTotal(
   appendAccountFilter(conditions, values, filter);
   const row = getDb()
     .prepare(
-      `SELECT COALESCE(SUM(ABS(charged_amount)), 0) as total
+      `SELECT COALESCE(SUM((-charged_amount)), 0) as total
        FROM transactions
        WHERE ${conditions.join(" AND ")}`,
     )
