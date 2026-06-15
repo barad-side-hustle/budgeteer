@@ -180,8 +180,9 @@ export function proposeEvents(
         flipKindTo = "expense";
         reason = "No credit card connected; bill counted as spend";
       } else if (match.issuer === "ambiguous") {
-        reason = "Card issuer undetermined; assumed covered by a connected card - confirm";
+        flipKindTo = "expense";
         needsReview = true;
+        reason = "Card issuer undetermined; counted as spend - confirm";
       } else if (opts.connectedCardIssuers.has(match.issuer)) {
         reason =
           "Bank-side credit card bill payment (the individual card purchases are counted instead)";

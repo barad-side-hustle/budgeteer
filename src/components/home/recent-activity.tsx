@@ -6,6 +6,7 @@ import { CardAction, CardShell } from "@/components/home/card-shell";
 import { ProviderBadge } from "@/components/setup/provider-badge";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { getAccountDisplayLabel } from "@/lib/account-label";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { translateCategoryName, translateProviderName } from "@/lib/i18n-data";
 import { BANK_PROVIDERS, type HomeRecentTransaction } from "@/lib/types";
@@ -40,7 +41,12 @@ export function RecentActivity({ items }: { items: HomeRecentTransaction[] }) {
             info?.name ?? txn.provider,
             tBanks,
           );
-          const sourceLabel = txn.accountName?.trim() || txn.accountLabel?.trim() || providerName;
+          const sourceLabel = getAccountDisplayLabel(
+            txn.provider,
+            providerName,
+            txn.accountName,
+            txn.accountLabel,
+          ).primary;
           return (
             <li key={txn.id}>
               <Link

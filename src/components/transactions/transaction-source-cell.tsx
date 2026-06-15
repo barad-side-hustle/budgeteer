@@ -2,34 +2,31 @@
 
 import { useTranslations } from "next-intl";
 import { ProviderBadge } from "@/components/setup/provider-badge";
+import { getAccountDisplayLabel } from "@/lib/account-label";
 import { translateProviderName } from "@/lib/i18n-data";
 import { BANK_PROVIDERS } from "@/lib/types";
 
 interface TransactionSourceCellProps {
   provider: string;
+  accountName: string | null;
   accountLabel: string | null;
 }
 
-export function getAccountDisplayLabel(
-  providerName: string,
-  accountLabel: string | null,
-): { primary: string; secondary: string | null } {
-  const labelDistinct =
-    accountLabel != null &&
-    accountLabel.trim() !== "" &&
-    accountLabel.trim().toLowerCase() !== providerName.trim().toLowerCase();
-  return {
-    primary: labelDistinct ? accountLabel.trim() : providerName,
-    secondary: labelDistinct ? providerName : null,
-  };
-}
-
-export function TransactionSourceCell({ provider, accountLabel }: TransactionSourceCellProps) {
+export function TransactionSourceCell({
+  provider,
+  accountName,
+  accountLabel,
+}: TransactionSourceCellProps) {
   const tBanks = useTranslations("banks");
   const info = BANK_PROVIDERS.find((b) => b.id === provider);
   const providerName = translateProviderName(provider, info?.name ?? provider, tBanks);
 
-  const { primary, secondary } = getAccountDisplayLabel(providerName, accountLabel);
+  const { primary, secondary } = getAccountDisplayLabel(
+    provider,
+    providerName,
+    accountName,
+    accountLabel,
+  );
   const tooltip = secondary ? `${primary} · ${secondary}` : primary;
 
   return (

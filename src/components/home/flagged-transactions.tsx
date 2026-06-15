@@ -8,6 +8,7 @@ import { ProviderBadge } from "@/components/setup/provider-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { getAccountDisplayLabel } from "@/lib/account-label";
 import { getReviewTransactions } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { translateCategoryName, translateProviderName } from "@/lib/i18n-data";
@@ -73,7 +74,12 @@ function FlaggedRow({ txn }: { txn: TransactionWithCategory }) {
   const locale = useLocale() as Locale;
   const info = BANK_PROVIDERS.find((b) => b.id === txn.provider);
   const providerName = translateProviderName(txn.provider, info?.name ?? txn.provider, tBanks);
-  const sourceLabel = txn.accountName?.trim() || txn.accountLabel?.trim() || providerName;
+  const sourceLabel = getAccountDisplayLabel(
+    txn.provider,
+    providerName,
+    txn.accountName,
+    txn.accountLabel,
+  ).primary;
 
   return (
     <li>

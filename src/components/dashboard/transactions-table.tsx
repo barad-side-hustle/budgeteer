@@ -513,7 +513,8 @@ export function TransactionsTable({
                       <TableCell className="hidden md:table-cell">
                         <TransactionSourceCell
                           provider={txn.provider}
-                          accountLabel={txn.accountName ?? txn.accountLabel}
+                          accountName={txn.accountName}
+                          accountLabel={txn.accountLabel}
                         />
                       </TableCell>
                       <TableCell

@@ -74,6 +74,12 @@ describe("matchCardPaymentIssuer", () => {
     expect(matchCardPaymentIssuer("VISA ישראכרט")).toEqual({ issuer: "isracard" });
   });
 
+  test("recognizes real Leumi bank-statement card labels", () => {
+    expect(matchCardPaymentIssuer("לאומי ויזה(כא)")).toEqual({ issuer: "cal" });
+    expect(matchCardPaymentIssuer("מקס איט פיננ-י")).toEqual({ issuer: "max" });
+    expect(matchCardPaymentIssuer("לאומי מאסטרקרד")).toEqual({ issuer: "ambiguous" });
+  });
+
   test("network-only descriptions are ambiguous", () => {
     expect(matchCardPaymentIssuer("חיוב ויזה")).toEqual({ issuer: "ambiguous" });
     expect(matchCardPaymentIssuer("מאסטרקארד")).toEqual({ issuer: "ambiguous" });
@@ -127,7 +133,7 @@ describe("matchCardPaymentIssuer", () => {
     expect(detectKind("בהצדעה", "leumi", -100)).toBe("expense");
   });
 
-  test("CREDIT_CARD_PAYMENT_PATTERNS holds the original 23 patterns", () => {
-    expect(CREDIT_CARD_PAYMENT_PATTERNS).toHaveLength(23);
+  test("CREDIT_CARD_PAYMENT_PATTERNS holds every issuer and network pattern", () => {
+    expect(CREDIT_CARD_PAYMENT_PATTERNS).toHaveLength(26);
   });
 });

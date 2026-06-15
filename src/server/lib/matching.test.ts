@@ -125,14 +125,24 @@ describe("proposeEvents", () => {
     expect(events[0].needsReview).toBe(false);
   });
 
-  test("flags an ambiguous bill payment for review when a card is connected", () => {
+  test("counts an ambiguous bill as spend and flags it for review when a card is connected", () => {
     const events = proposeEvents(
       [cand({ id: 5, provider: "leumi", kind: "transfer", description: "חיוב ויזה" })],
       SETTINGS,
       { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
     );
-    expect(events[0].members[0].flipKindTo).toBeNull();
+    expect(events[0].members[0].flipKindTo).toBe("expense");
     expect(events[0].needsReview).toBe(true);
+  });
+
+  test("excludes a Leumi (כא) Visa bill when Cal is connected", () => {
+    const events = proposeEvents(
+      [cand({ id: 5, provider: "leumi", kind: "transfer", description: "לאומי ויזה(כא)" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    expect(events[0].members[0].flipKindTo).toBeNull();
+    expect(events[0].needsReview).toBe(false);
   });
 
   test("does not wrap card payments from a non-bank provider", () => {

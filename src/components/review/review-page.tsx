@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Locale } from "@/i18n/routing";
+import { getAccountDisplayLabel } from "@/lib/account-label";
 import {
   approveTransactionCategory,
   getCategories,
@@ -395,7 +396,12 @@ function SourceMeta({ txn }: { txn: TransactionWithCategory }) {
   const tBanks = useTranslations("banks");
   const info = BANK_PROVIDERS.find((b) => b.id === txn.provider);
   const providerName = translateProviderName(txn.provider, info?.name ?? txn.provider, tBanks);
-  const source = txn.accountLabel?.trim() || txn.accountName?.trim() || providerName;
+  const source = getAccountDisplayLabel(
+    txn.provider,
+    providerName,
+    txn.accountName,
+    txn.accountLabel,
+  ).primary;
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       {info ? (
