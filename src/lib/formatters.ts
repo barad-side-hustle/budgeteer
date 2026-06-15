@@ -50,8 +50,10 @@ export function formatCurrency(amount: number, currency = "ILS", locale?: Locale
   }
 }
 
-export function formatDate(localDate: string): string {
+export function formatDate(localDate: string | null | undefined): string {
+  if (!localDate) return "";
   const [year, month, day] = localDate.split("-");
+  if (!day) return localDate;
   return `${day}/${month}/${year}`;
 }
 

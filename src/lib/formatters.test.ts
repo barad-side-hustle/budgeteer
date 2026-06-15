@@ -23,4 +23,9 @@ describe("formatDate", () => {
     expect(formatDate("2026-06-01")).toBe("01/06/2026");
     expect(formatDate("2026-12-31")).toBe("31/12/2026");
   });
+
+  test("returns empty string for null or undefined", () => {
+    expect(formatDate(null)).toBe("");
+    expect(formatDate(undefined)).toBe("");
+  });
 });

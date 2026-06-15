@@ -21,7 +21,7 @@ export interface Transaction {
   accountNumber: string;
   date: string;
   processedDate: string;
-  localDate: string;
+  localDate: string | null;
   originalAmount: number;
   originalCurrency: string;
   chargedAmount: number;
@@ -240,7 +240,7 @@ export interface HomeHistoricalTrendPoint {
 export interface HomeRecentTransaction {
   id: number;
   date: string;
-  localDate: string;
+  localDate: string | null;
   description: string;
   chargedAmount: number;
   chargedCurrency: string | null;

@@ -172,7 +172,7 @@ function FlaggedRow({ txn }: { txn: TransactionWithCategory }) {
   );
 }
 
-function formatDayMonth(iso: string): string {
+function formatDayMonth(iso: string | null): string {
   const parts = formatDate(iso).split("/");
   return `${parts[0]}/${parts[1]}`;
 }
