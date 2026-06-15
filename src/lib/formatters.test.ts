@@ -4,7 +4,7 @@ import { getMonthRange } from "@/lib/formatters";
 
 describe("getMonthRange", () => {
   test("spans the client-local month as UTC instants", () => {
-    const { from, to } = getMonthRange(new Date(2026, 5, 15));
+    const { from } = getMonthRange(new Date(2026, 5, 15));
     expect(from).toBe(new Date(2026, 5, 1).toISOString());
     expect(from).toContain("T");
   });
