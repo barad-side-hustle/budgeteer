@@ -109,6 +109,7 @@ export const transactions = sqliteTable("transactions", {
   accountNumber: text("account_number").notNull(),
   date: text().notNull(),
   processedDate: text("processed_date").notNull(),
+  localDate: text("local_date"),
   originalAmount: real("original_amount").notNull(),
   originalCurrency: text("original_currency").notNull(),
   chargedAmount: real("charged_amount").notNull(),

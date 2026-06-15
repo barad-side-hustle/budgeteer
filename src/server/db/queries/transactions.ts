@@ -11,6 +11,7 @@ import type {
 import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
 import { transactions as transactionsTable } from "@/server/db/schema";
+import { toJerusalemDate } from "@/server/lib/date-utils";
 import { computeDedupHash } from "@/server/lib/dedup";
 import type { MatchCandidate } from "@/server/lib/matching";
 import { detectKind } from "@/server/lib/transfers";
@@ -57,12 +58,12 @@ export function insertTransactions(
 
   const insertStmt = db.prepare(`
     INSERT INTO transactions (
-      workspace_id, account_number, date, processed_date, original_amount, original_currency,
+      workspace_id, account_number, date, processed_date, local_date, original_amount, original_currency,
       charged_amount, charged_currency, description, memo, type, status,
       identifier, installment_number, installment_total, provider, credential_id,
       sync_run_id, dedup_hash, dedup_sequence, kind
     ) VALUES (
-      @workspaceId, @accountNumber, @date, @processedDate, @originalAmount, @originalCurrency,
+      @workspaceId, @accountNumber, @date, @processedDate, @localDate, @originalAmount, @originalCurrency,
       @chargedAmount, @chargedCurrency, @description, @memo, @type, @status,
       @identifier, @installmentNumber, @installmentTotal, @provider, @credentialId,
       @syncRunId, @dedupHash, @dedupSequence, @kind
@@ -71,6 +72,7 @@ export function insertTransactions(
       status = CASE WHEN transactions.status = 'pending' THEN excluded.status ELSE transactions.status END,
       charged_amount = CASE WHEN transactions.status = 'pending' THEN excluded.charged_amount ELSE transactions.charged_amount END,
       processed_date = CASE WHEN transactions.status = 'pending' THEN excluded.processed_date ELSE transactions.processed_date END,
+      local_date = CASE WHEN transactions.status = 'pending' THEN excluded.local_date ELSE transactions.local_date END,
       kind = transactions.kind,
       updated_at = CASE WHEN transactions.status = 'pending' THEN datetime('now') ELSE transactions.updated_at END
   `);
@@ -102,6 +104,7 @@ export function insertTransactions(
         workspaceId,
         accountNumber: txn.accountNumber,
         date: txn.date,
+        localDate: toJerusalemDate(txn.date),
         processedDate: txn.processedDate,
         originalAmount: txn.originalAmount,
         originalCurrency: txn.originalCurrency,
@@ -928,6 +931,7 @@ interface TransactionRow {
   account_number: string;
   date: string;
   processed_date: string;
+  local_date: string;
   original_amount: number;
   original_currency: string;
   charged_amount: number;
@@ -967,6 +971,7 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     accountNumber: r.account_number,
     date: r.date,
     processedDate: r.processed_date,
+    localDate: r.local_date,
     originalAmount: r.original_amount,
     originalCurrency: r.original_currency,
     chargedAmount: r.charged_amount,

@@ -3,6 +3,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
+import { backfillLocalDate } from "@/server/db/backfill-local-date";
 import { runMigrations } from "@/server/db/migrate";
 import { getDataDir } from "@/server/lib/data-dir";
 
@@ -30,6 +31,8 @@ function createDatabase(): Database.Database {
   db.pragma("busy_timeout = 5000");
 
   runMigrations(db);
+
+  backfillLocalDate(db);
 
   return db;
 }

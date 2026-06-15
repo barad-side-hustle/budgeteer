@@ -21,6 +21,7 @@ export interface Transaction {
   accountNumber: string;
   date: string;
   processedDate: string;
+  localDate: string;
   originalAmount: number;
   originalCurrency: string;
   chargedAmount: number;
