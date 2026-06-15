@@ -6,6 +6,7 @@ import {
   type MatchCandidate,
   type MatchSettingsMap,
   buildCardBillingGroups,
+  matchBillToGroup,
   proposeEvents,
 } from "@/server/lib/matching";
 import type { CardIssuer } from "@/server/lib/transfers";
@@ -251,5 +252,37 @@ describe("buildCardBillingGroups", () => {
       new Set<CardIssuer>(["cal"]),
     );
     expect(groups).toHaveLength(2);
+  });
+});
+
+const group = (over: Partial<CardBillingGroup>): CardBillingGroup => ({
+  credentialId: 8,
+  accountNumber: "8682",
+  issuer: "cal",
+  billingDay: Math.floor(Date.parse("2026-06-09") / 86_400_000),
+  amount: 119.9,
+  transactionIds: [1, 2],
+  ...over,
+});
+
+describe("matchBillToGroup", () => {
+  const billDay = "2026-06-10T00:00:00.000Z";
+
+  test("matches on equal amount within the +/-2 day window", () => {
+    expect(matchBillToGroup(119.9, billDay, [group({})])?.accountNumber).toBe("8682");
+  });
+
+  test("no match when amount differs", () => {
+    expect(matchBillToGroup(120.5, billDay, [group({})])).toBeNull();
+  });
+
+  test("no match when the date is too far", () => {
+    expect(matchBillToGroup(119.9, "2026-06-20T00:00:00.000Z", [group({})])).toBeNull();
+  });
+
+  test("ambiguous (two groups, same amount and day) returns null", () => {
+    expect(
+      matchBillToGroup(119.9, billDay, [group({ accountNumber: "8682" }), group({ accountNumber: "2315" })]),
+    ).toBeNull();
   });
 });

@@ -112,6 +112,23 @@ export function buildCardBillingGroups(
   return [...byKey.values()];
 }
 
+const BILL_MATCH_DAY_WINDOW = 2;
+
+export function matchBillToGroup(
+  billAmount: number,
+  billDate: string,
+  groups: readonly CardBillingGroup[],
+): CardBillingGroup | null {
+  const billDay = dayNumber(billDate);
+  const target = Math.abs(billAmount);
+  const hits = groups.filter(
+    (g) =>
+      Math.abs(g.amount - target) < 0.01 &&
+      Math.abs(g.billingDay - billDay) <= BILL_MATCH_DAY_WINDOW,
+  );
+  return hits.length === 1 ? hits[0] : null;
+}
+
 function scoreInternalTransfer(
   debit: MatchCandidate,
   credit: MatchCandidate,
