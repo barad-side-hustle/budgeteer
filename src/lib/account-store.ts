@@ -37,6 +37,26 @@ export function setAccountSelection(value: string | null): void {
   for (const fn of listeners) fn();
 }
 
+export function getAccountTokensSync(): string[] {
+  return memValue == null
+    ? []
+    : memValue
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+}
+
+export function setAccountTokens(tokens: string[]): void {
+  const cleaned = tokens.map((t) => t.trim()).filter((t) => t.length > 0);
+  setAccountSelection(cleaned.length === 0 ? null : cleaned.join(","));
+}
+
+export function toggleAccountToken(token: string): void {
+  const tokens = getAccountTokensSync();
+  const next = tokens.includes(token) ? tokens.filter((t) => t !== token) : [...tokens, token];
+  setAccountTokens(next);
+}
+
 function subscribe(fn: () => void): () => void {
   listeners.add(fn);
   return () => {
