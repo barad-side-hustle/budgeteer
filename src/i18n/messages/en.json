@@ -58,7 +58,8 @@
   },
   "accountFilter": {
     "allAccounts": "All accounts",
-    "ariaLabel": "Filter by account"
+    "ariaLabel": "Filter by account",
+    "accountsCount": "{count} accounts"
   },
   "chat": {
     "title": "AI Chat",
@@ -1110,7 +1111,7 @@
     "recurringColMerchant": "Merchant",
     "recurringColSeen": "Seen",
     "recurringColTrend": "Trend",
-    "recurringColAmount": "Per month",
+    "recurringColAmount": "Median / mo",
     "recurringSeenValue": "{present}/{considered}",
     "recurringLapsed": "Cancelled?",
     "recurringUncategorized": "Uncategorized",

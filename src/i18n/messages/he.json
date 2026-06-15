@@ -58,7 +58,8 @@
   },
   "accountFilter": {
     "allAccounts": "כל החשבונות",
-    "ariaLabel": "סינון לפי חשבון"
+    "ariaLabel": "סינון לפי חשבון",
+    "accountsCount": "{count} חשבונות"
   },
   "chat": {
     "title": "צ'אט AI",
@@ -1110,7 +1111,7 @@
     "recurringColMerchant": "בית עסק",
     "recurringColSeen": "הופיע",
     "recurringColTrend": "מגמה",
-    "recurringColAmount": "לחודש",
+    "recurringColAmount": "חציון לחודש",
     "recurringSeenValue": "{present}/{considered}",
     "recurringLapsed": "בוטל?",
     "recurringUncategorized": "ללא קטגוריה",
