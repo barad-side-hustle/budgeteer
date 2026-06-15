@@ -1,6 +1,6 @@
 import "server-only";
 
-import { selectionToKeys } from "@/lib/account-group";
+import { selectionStringToKeys } from "@/lib/account-group";
 import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import type { AccountFilter } from "@/server/db/queries/transactions";
 
@@ -12,7 +12,7 @@ export function getAccountFilterFromRequest(
 ): AccountFilter | undefined {
   const header = req.headers.get(HEADER);
   if (!header) return undefined;
-  const accountKeys = selectionToKeys(listBankAccounts(workspaceId), header);
+  const accountKeys = selectionStringToKeys(listBankAccounts(workspaceId), header);
   if (accountKeys.length === 0) return undefined;
   return { accountKeys };
 }
