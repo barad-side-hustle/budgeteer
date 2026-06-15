@@ -9,6 +9,7 @@ const dynamicNamespaces = [
   "nav.*",
   "recommendations.*",
   "anomalies.*",
+  "help.*",
 ];
 
 const baseline = [

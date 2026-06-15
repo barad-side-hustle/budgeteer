@@ -1178,5 +1178,126 @@
     "anom_interest-charge_body": "About {amount} this month. Often avoidable.",
     "anom_fee-spike_title": "Fees are up this month",
     "anom_fee-spike_body": "{amount} vs your usual {amount2}."
+  },
+  "help": {
+    "triggerLabel": "Help",
+    "home": {
+      "title": "Home",
+      "intro": "What each card on your home page shows.",
+      "sections": {
+        "cashFlow": {
+          "title": "Cash flow",
+          "body": "Your income minus expenses for the selected period and accounts. Transfers and matched credit-card bills are left out so money is never counted twice."
+        },
+        "trend": {
+          "title": "Trend",
+          "body": "Income versus expenses month by month. Each transaction is counted in its Israel (Asia/Jerusalem) calendar month, so an end-of-month purchase lands in the right month."
+        },
+        "typicalMonth": {
+          "title": "Typical month",
+          "body": "A baseline built from your recent months, to compare the current month against."
+        },
+        "recentActivity": {
+          "title": "Recent activity",
+          "body": "The latest transactions across the accounts you have selected."
+        },
+        "flagged": {
+          "title": "Needs review",
+          "body": "Transactions Budgeteer could not categorize with confidence and is asking you to check."
+        }
+      }
+    },
+    "transactions": {
+      "title": "Transactions",
+      "intro": "How to read and filter your transactions list.",
+      "sections": {
+        "kindFilter": {
+          "title": "Income / expense filter",
+          "body": "Switch between all transactions, income only, or expenses only."
+        },
+        "accountFilter": {
+          "title": "Account filter",
+          "body": "The account selector at the top of the app. Totals and rows reflect only the accounts you pick."
+        },
+        "period": {
+          "title": "Month navigation",
+          "body": "Move between months. Rows are grouped by their Israel calendar date."
+        },
+        "cardMatch": {
+          "title": "Card-bill match",
+          "body": "When a bank charge is a credit-card bill, a badge links it to the individual card purchases that make it up, so the bill is not counted as extra spending."
+        },
+        "rowStates": {
+          "title": "Row states",
+          "body": "'Needs review' marks an uncertain category; 'excluded' rows are kept out of totals."
+        }
+      }
+    },
+    "review": {
+      "title": "Review",
+      "intro": "Clear the queue of transactions that need your attention.",
+      "sections": {
+        "whyFlagged": {
+          "title": "Why it's flagged",
+          "body": "Either the AI was not confident about the category, or it is an expense with no category yet."
+        },
+        "queue": {
+          "title": "The queue",
+          "body": "Items are ordered by what needs review first and leave the list once you categorize them."
+        },
+        "actions": {
+          "title": "Actions",
+          "body": "Assign a category to clear an item, or mark it reviewed as-is."
+        },
+        "cardMatch": {
+          "title": "Card-bill match",
+          "body": "A badge links a credit-card bill to the card purchases behind it, so it is not counted as extra spending."
+        }
+      }
+    },
+    "budget": {
+      "title": "Budget",
+      "intro": "How budgets are set and tracked.",
+      "sections": {
+        "autoVsManual": {
+          "title": "Auto vs manual",
+          "body": "Auto budgets follow a rolling average of your spending; manual budgets are a fixed monthly amount you set yourself."
+        },
+        "average": {
+          "title": "How the average works",
+          "body": "An auto budget is the average expense for that category over the last three completed months."
+        },
+        "spendBars": {
+          "title": "Spend vs budget",
+          "body": "Each bar shows how much you have spent this month against the budgeted amount."
+        },
+        "detail": {
+          "title": "Category detail",
+          "body": "Open a category to see the individual transactions behind its total."
+        }
+      }
+    },
+    "insights": {
+      "title": "Insights",
+      "intro": "Patterns and projections from your spending.",
+      "sections": {
+        "anomalies": {
+          "title": "Anomalies",
+          "body": "Charges that stand out from your normal pattern for that merchant or category."
+        },
+        "recommendations": {
+          "title": "Recommendations",
+          "body": "Suggested actions based on how you spend."
+        },
+        "forecast": {
+          "title": "Forecast",
+          "body": "A projection of your total spending by the end of the month."
+        },
+        "ranges": {
+          "title": "Time ranges",
+          "body": "Monthly and month-to-date windows, anchored to the Israel (Asia/Jerusalem) calendar."
+        }
+      }
+    }
   }
 }
