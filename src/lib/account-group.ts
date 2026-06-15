@@ -115,7 +115,7 @@ export function selectionStringToKeys(accounts: BankAccount[], raw: string): Acc
   const result: AccountKey[] = [];
   for (const token of tokens) {
     for (const key of selectionToKeys(accounts, token)) {
-      const dedupeKey = `${key.credentialId}:${key.accountNumber}`;
+      const dedupeKey = `${key.credentialId}::${key.accountNumber}`;
       if (seen.has(dedupeKey)) continue;
       seen.add(dedupeKey);
       result.push(key);
