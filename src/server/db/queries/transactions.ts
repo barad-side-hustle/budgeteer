@@ -230,11 +230,21 @@ const TRANSACTION_LIST_FROM = `
   LEFT JOIN bank_credentials bc ON t.credential_id = bc.id
   LEFT JOIN bank_accounts ba ON ba.workspace_id = t.workspace_id
     AND ba.credential_id = t.credential_id
-    AND ba.account_number = t.account_number`;
+    AND ba.account_number = t.account_number
+  LEFT JOIN (
+    SELECT em.workspace_id, em.event_id, tp.account_number AS matched_card_number
+    FROM event_members em
+    JOIN transactions tp ON tp.id = em.transaction_id
+    WHERE em.role = 'purchase'
+    GROUP BY em.workspace_id, em.event_id
+  ) mc ON mc.workspace_id = t.workspace_id
+       AND mc.event_id = t.event_id
+       AND t.event_role = 'bill_payment'`;
 
 const TRANSACTION_LIST_SELECT = `
   SELECT t.*, c.name AS category_name, c.color AS category_color,
-         bc.label AS account_label, ba.name AS account_name
+         bc.label AS account_label, ba.name AS account_name,
+         mc.matched_card_number
   ${TRANSACTION_LIST_FROM}`;
 
 export function queryTransactions(
@@ -947,6 +957,7 @@ interface TransactionRow {
   category_color?: string | null;
   account_label?: string | null;
   account_name?: string | null;
+  matched_card_number?: string | null;
 }
 
 function mapTransactionRow(row: unknown): TransactionWithCategory {
@@ -985,6 +996,7 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     updatedAt: r.updated_at,
     categoryName: r.category_name ?? null,
     categoryColor: r.category_color ?? null,
+    matchedCardNumber: r.matched_card_number ?? null,
   };
 }
 

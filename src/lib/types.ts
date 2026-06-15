@@ -53,6 +53,7 @@ export interface TransactionWithCategory extends Transaction {
   categoryName: string | null;
   categoryColor: string | null;
   isExcluded: boolean;
+  matchedCardNumber: string | null;
 }
 
 export type EventType =
