@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { HelpButton } from "@/components/help/help-button";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
 import { AnomaliesCard } from "@/components/insights/anomalies-card";
 import { FixedVsVariableCard } from "@/components/insights/fixed-vs-variable";
@@ -23,7 +24,7 @@ export function InsightsPage() {
 
   return (
     <>
-      <PageHeader title={t("pageTitle")} />
+      <PageHeader title={t("pageTitle")} actions={<HelpButton page="insights" />} />
       <div className="p-4 md:p-6 lg:p-8">
         {loading ? (
           <div className="flex flex-col gap-4 md:gap-6">
