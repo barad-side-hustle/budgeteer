@@ -203,7 +203,7 @@ export function getAccountSummaries(
          AND t.account_number = ba.account_number
          AND t.status = 'completed'
          AND t.is_excluded = 0
-         AND t.date >= ? AND t.date <= ?
+         AND t.local_date >= ? AND t.local_date <= ?
        WHERE ba.workspace_id = ?
        GROUP BY ba.id
        ORDER BY bc.provider, ba.name`,

@@ -492,14 +492,15 @@ export function getMonthlySummary(
   months: number,
   filter: AccountFilter = {},
 ): MonthlySummary[] {
+  const fromMonth = shiftMonth(monthStart(jerusalemToday()), -months);
   const conditions = [
     "workspace_id = ?",
-    "date >= date('now', '-' || ? || ' months')",
+    "local_date >= ?",
     "status = 'completed'",
     "kind = 'expense'",
     "is_excluded = 0",
   ];
-  const values: (string | number)[] = [workspaceId, months];
+  const values: (string | number)[] = [workspaceId, fromMonth];
   appendAccountFilter(conditions, values, filter);
   return getDb()
     .prepare(
