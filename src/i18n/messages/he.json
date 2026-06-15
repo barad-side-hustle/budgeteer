@@ -214,7 +214,6 @@
     "rowActions": "פעולות שורה",
     "rowInstallment": "תשלום {n} מתוך {total}",
     "eventTransfer": "העברה",
-    "eventCardPayment": "תשלום כרטיס",
     "eventBadgeTooltip": "קובץ כתנועת כספים בין חשבונות, ולכן אינו נספר כהוצאה",
     "eventCardMatched": "מותאם · {card}",
     "eventCardMatchedTooltip": "חשבונית זו מכוסה על ידי כרטיס {card} — הרכישות הפרטניות כבר נספרות כהוצאה",

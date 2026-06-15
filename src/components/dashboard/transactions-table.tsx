@@ -48,6 +48,7 @@ import {
   setTransactionKind,
   updateTransactionCategory,
 } from "@/lib/api";
+import { getCardBillBadgeState } from "@/lib/card-bill-badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { translateCategoryName } from "@/lib/i18n-data";
 import {
@@ -404,18 +405,56 @@ export function TransactionsTable({
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="font-medium">{txn.description}</div>
-                          {txn.eventId != null && txn.eventRole != null && (
-                            <span
-                              className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                              style={{ backgroundColor: "var(--muted)" }}
-                              title={t("eventBadgeTooltip")}
-                            >
-                              <ArrowLeftRight className="h-3 w-3" />
-                              {txn.eventRole === "bill_payment"
-                                ? t("eventCardPayment")
-                                : t("eventTransfer")}
-                            </span>
-                          )}
+                          {txn.eventId != null &&
+                            txn.eventRole != null &&
+                            (() => {
+                              const billBadge = getCardBillBadgeState(
+                                txn.eventRole,
+                                txn.kind,
+                                txn.matchedCardNumber,
+                              );
+                              if (billBadge !== null) {
+                                return billBadge.matched ? (
+                                  <span
+                                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                                    style={{
+                                      backgroundColor:
+                                        "color-mix(in oklch, var(--status-on-track) 18%, transparent)",
+                                      color: "var(--status-on-track)",
+                                    }}
+                                    title={t("eventCardMatchedTooltip", {
+                                      card: billBadge.cardNumber,
+                                    })}
+                                  >
+                                    <ArrowLeftRight className="h-3 w-3" />
+                                    {t("eventCardMatched", { card: billBadge.cardNumber })}
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                                    style={{
+                                      backgroundColor:
+                                        "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
+                                      color: "var(--status-heads-up)",
+                                    }}
+                                    title={t("eventCardUnmatchedTooltip")}
+                                  >
+                                    <ArrowLeftRight className="h-3 w-3" />
+                                    {t("eventCardUnmatched")}
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span
+                                  className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                                  style={{ backgroundColor: "var(--muted)" }}
+                                  title={t("eventBadgeTooltip")}
+                                >
+                                  <ArrowLeftRight className="h-3 w-3" />
+                                  {t("eventTransfer")}
+                                </span>
+                              );
+                            })()}
                           {txn.needsReview && (
                             <span
                               className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"

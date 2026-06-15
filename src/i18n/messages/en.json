@@ -214,7 +214,6 @@
     "rowActions": "Row actions",
     "rowInstallment": "Payment {n} of {total}",
     "eventTransfer": "Transfer",
-    "eventCardPayment": "Card payment",
     "eventBadgeTooltip": "Grouped as a money movement between accounts, so it is not counted as spending",
     "eventCardMatched": "Matched · {card}",
     "eventCardMatchedTooltip": "This bill is covered by card {card} — individual purchases are already counted as spending",
