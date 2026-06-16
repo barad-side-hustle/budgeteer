@@ -1036,3 +1036,23 @@ export interface ExcludedMerchant {
   merchantKey: string;
   createdAt: string;
 }
+
+export interface CardBillMatchingRow {
+  billTransactionId: number;
+  date: string;
+  description: string;
+  chargedAmount: number;
+  chargedCurrency: string | null;
+  linkedAccountNumber: string | null;
+}
+
+export interface MatchingCardOption {
+  accountNumber: string;
+  name: string;
+  provider: string;
+}
+
+export interface CardBillMatchingData {
+  bills: CardBillMatchingRow[];
+  cards: MatchingCardOption[];
+}

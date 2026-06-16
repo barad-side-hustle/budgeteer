@@ -9,6 +9,7 @@ import type {
   BankAccount,
   Budget,
   BudgetMode,
+  CardBillMatchingData,
   Category,
   ChatSession,
   DashboardSummary,
@@ -669,4 +670,28 @@ export function pullOllamaModel(
   })();
 
   return { cancel: () => controller.abort() };
+}
+
+export function getCardBillMatching() {
+  return fetchJSON<CardBillMatchingData>("/api/matching");
+}
+
+export function rebuildCardMatching() {
+  return fetchJSON<{ ok: true; warnings: string[] }>("/api/matching/rebuild", { method: "POST" });
+}
+
+export function linkCardBill(billId: number, accountNumber: string) {
+  return fetchJSON<{ ok: true }>("/api/matching/links", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ billId, accountNumber }),
+  });
+}
+
+export function unlinkCardBill(billId: number) {
+  return fetchJSON<{ ok: true }>("/api/matching/links", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ billId }),
+  });
 }
