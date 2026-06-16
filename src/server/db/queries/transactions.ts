@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, desc, eq, gte, inArray, isNull, ne, sql } from "drizzle-orm";
+import { type DateBasis, dateBasisColumn } from "@/lib/date-basis";
 import { isTransactionSortField, TRANSACTION_SORT_SQL } from "@/lib/transaction-sort";
 import type {
   CategoryBreakdown,
@@ -58,12 +59,12 @@ export function insertTransactions(
 
   const insertStmt = db.prepare(`
     INSERT INTO transactions (
-      workspace_id, account_number, date, processed_date, local_date, original_amount, original_currency,
+      workspace_id, account_number, date, processed_date, local_date, billing_local_date, original_amount, original_currency,
       charged_amount, charged_currency, description, memo, type, status,
       identifier, installment_number, installment_total, provider, credential_id,
       sync_run_id, dedup_hash, dedup_sequence, kind
     ) VALUES (
-      @workspaceId, @accountNumber, @date, @processedDate, @localDate, @originalAmount, @originalCurrency,
+      @workspaceId, @accountNumber, @date, @processedDate, @localDate, @billingLocalDate, @originalAmount, @originalCurrency,
       @chargedAmount, @chargedCurrency, @description, @memo, @type, @status,
       @identifier, @installmentNumber, @installmentTotal, @provider, @credentialId,
       @syncRunId, @dedupHash, @dedupSequence, @kind
@@ -73,6 +74,7 @@ export function insertTransactions(
       charged_amount = CASE WHEN transactions.status = 'pending' THEN excluded.charged_amount ELSE transactions.charged_amount END,
       processed_date = CASE WHEN transactions.status = 'pending' THEN excluded.processed_date ELSE transactions.processed_date END,
       local_date = CASE WHEN transactions.status = 'pending' THEN excluded.local_date ELSE transactions.local_date END,
+      billing_local_date = CASE WHEN transactions.status = 'pending' THEN excluded.billing_local_date ELSE transactions.billing_local_date END,
       kind = transactions.kind,
       updated_at = CASE WHEN transactions.status = 'pending' THEN datetime('now') ELSE transactions.updated_at END
   `);
@@ -105,6 +107,7 @@ export function insertTransactions(
         accountNumber: txn.accountNumber,
         date: txn.date,
         localDate: toJerusalemDate(txn.date),
+        billingLocalDate: txn.processedDate ? toJerusalemDate(txn.processedDate) : null,
         processedDate: txn.processedDate,
         originalAmount: txn.originalAmount,
         originalCurrency: txn.originalCurrency,
@@ -156,6 +159,7 @@ interface QueryParams {
   credentialId?: number;
   credentialIds?: number[];
   accountKeys?: AccountKey[];
+  dateBasis?: DateBasis;
 }
 
 export interface AccountKey {
@@ -258,12 +262,15 @@ export function queryTransactions(
   const conditions: string[] = ["t.workspace_id = ?"];
   const values: (string | number)[] = [workspaceId];
 
+  const basis: DateBasis = params.dateBasis ?? "purchase";
+  const dateCol = dateBasisColumn(basis, "t.");
+
   if (params.from) {
-    conditions.push("t.local_date >= ?");
+    conditions.push(`${dateCol} >= ?`);
     values.push(params.from);
   }
   if (params.to) {
-    conditions.push("t.local_date <= ?");
+    conditions.push(`${dateCol} <= ?`);
     values.push(params.to);
   }
   if (params.search) {
@@ -299,7 +306,10 @@ export function queryTransactions(
 
   const where = `WHERE ${conditions.join(" AND ")}`;
 
-  const sortSql = resolveSortSql(params.sort);
+  let sortSql = resolveSortSql(params.sort);
+  if (basis === "billing" && sortSql === "t.date") {
+    sortSql = dateCol;
+  }
   const sortOrder = params.order === "asc" ? "ASC" : "DESC";
   const limit = Math.min(params.limit ?? 50, 200);
   const offset = params.offset ?? 0;
@@ -936,6 +946,7 @@ interface TransactionRow {
   date: string;
   processed_date: string;
   local_date: string;
+  billing_local_date: string | null;
   original_amount: number;
   original_currency: string;
   charged_amount: number;
@@ -976,6 +987,7 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     date: r.date,
     processedDate: r.processed_date,
     localDate: r.local_date,
+    billingLocalDate: r.billing_local_date ?? null,
     originalAmount: r.original_amount,
     originalCurrency: r.original_currency,
     chargedAmount: r.charged_amount,

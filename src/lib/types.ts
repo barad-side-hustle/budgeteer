@@ -22,6 +22,7 @@ export interface Transaction {
   date: string;
   processedDate: string;
   localDate: string | null;
+  billingLocalDate: string | null;
   originalAmount: number;
   originalCurrency: string;
   chargedAmount: number;
