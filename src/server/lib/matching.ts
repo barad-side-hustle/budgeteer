@@ -129,6 +129,24 @@ export function matchBillToGroup(
   return hits.length === 1 ? hits[0] : null;
 }
 
+export function selectNearestCycleGroup(
+  billDate: string,
+  groups: readonly CardBillingGroup[],
+): CardBillingGroup | null {
+  if (groups.length === 0) return null;
+  const billDay = dayNumber(billDate);
+  let best: CardBillingGroup | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const group of groups) {
+    const distance = Math.abs(group.billingDay - billDay);
+    if (distance < bestDistance || (distance === bestDistance && best && group.billingDay < best.billingDay)) {
+      best = group;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 function scoreInternalTransfer(
   debit: MatchCandidate,
   credit: MatchCandidate,

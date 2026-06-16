@@ -8,6 +8,7 @@ import {
   type MatchSettingsMap,
   matchBillToGroup,
   proposeEvents,
+  selectNearestCycleGroup,
 } from "@/server/lib/matching";
 import type { CardIssuer } from "@/server/lib/transfers";
 
@@ -471,5 +472,36 @@ describe("card statement matching", () => {
     const costs = events.filter((e) => e.eventType === "credit_card_payment");
     expect(costs).toHaveLength(1);
     expect(costs[0].members[0].flipKindTo).toBe("expense");
+  });
+});
+
+describe("selectNearestCycleGroup", () => {
+  const g = (billingDay: number, amount: number): CardBillingGroup => ({
+    credentialId: 9,
+    accountNumber: "5052",
+    issuer: "cal",
+    billingDay,
+    amount,
+    transactionIds: [billingDay],
+  });
+
+  test("returns null when there are no groups", () => {
+    expect(selectNearestCycleGroup("2026-05-09", [])).toBeNull();
+  });
+
+  test("picks the group whose billing day is closest to the bill date", () => {
+    const dayJun = Math.floor(Date.parse("2026-06-09") / 86_400_000);
+    const dayMay = Math.floor(Date.parse("2026-05-09") / 86_400_000);
+    const chosen = selectNearestCycleGroup("2026-05-10", [g(dayJun, 1417.69), g(dayMay, 449.79)]);
+    expect(chosen?.billingDay).toBe(dayMay);
+  });
+
+  test("breaks ties by the earlier billing day for determinism", () => {
+    const billDay = Math.floor(Date.parse("2026-05-09") / 86_400_000);
+    const chosen = selectNearestCycleGroup("2026-05-09", [
+      g(billDay + 2, 10),
+      g(billDay - 2, 20),
+    ]);
+    expect(chosen?.billingDay).toBe(billDay - 2);
   });
 });
