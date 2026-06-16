@@ -295,3 +295,15 @@ export const matchRules = sqliteTable("match_rules", {
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
+
+export const manualCardBillLinks = sqliteTable("manual_card_bill_links", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  workspaceId: integer("workspace_id")
+    .notNull()
+    .references(() => workspaces.id, { onDelete: "cascade" }),
+  billTransactionId: integer("bill_transaction_id")
+    .notNull()
+    .references(() => transactions.id, { onDelete: "cascade" }),
+  accountNumber: text("account_number").notNull(),
+  createdAt: createdAt(),
+});
