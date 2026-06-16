@@ -12,7 +12,8 @@ export async function GET(request: Request) {
   const seen = new Set<string>();
   const cards = listBankAccounts(workspaceId)
     .filter(
-      (a) => cardProviderIds.has(a.provider) && !seen.has(a.accountNumber) && seen.add(a.accountNumber),
+      (a) =>
+        cardProviderIds.has(a.provider) && !seen.has(a.accountNumber) && seen.add(a.accountNumber),
     )
     .map((a) => ({
       accountNumber: a.accountNumber,
