@@ -29,15 +29,17 @@ on un-connected cards is never lost).
 
 ## Scope decisions (agreed)
 
-- **Reach:** global-style control, but only the views that compare to the bank
-  re-base: **Home (cash flow + trend)** and **Transactions**. **Budget and
-  Insights stay locked to purchase date**, because their rolling averages and
-  anomaly baselines assume purchase timing and would be confusing on a cash
-  basis.
+- **Reach: the Transactions list only.** This is the exact place a user
+  reconciles against a bank statement, and `queryTransactions` is a cleanly
+  separable seam. **Home, Insights, and Budget all stay locked to purchase
+  date.** (Discovery during planning: Home's trend/forecast are produced by the
+  shared insights/forecast engines, so they cannot diverge from the Insights page
+  without splitting that engine — out of scope. The basis header is therefore
+  read only by the transactions route; all other routes ignore it.)
 - **Default basis:** `purchase` (today's behaviour). Unchanged on first run.
-- **Explanation:** an inline muted caption near the totals/toggle on the two
-  spend pages, **plus** a dedicated "Purchase vs billing date" help-panel section
-  (with the worked credit-card example) on Home and Transactions.
+- **Explanation:** an inline muted caption near the toggle on the Transactions
+  page, **plus** a dedicated "Purchase vs billing date" help-panel section (with
+  the worked credit-card example) on the Transactions help panel.
 
 ## Architecture
 
@@ -96,41 +98,42 @@ function dateColumn(basis: DateBasis, alias = ""):
 ```
 
 Threaded as an optional `dateBasis` parameter (default `"purchase"`, so all
-existing callers and tests are unaffected) into exactly three places:
+existing callers and tests are unaffected) into exactly one place:
 
-- `queryTransactions` — the `from`/`to` range filter and the sort/group date.
-- `getCashFlow` (home.ts) — income/expense range filter.
-- `getHistoricalTrend` (home.ts) — per-month range filter.
+- `queryTransactions` — both the `from`/`to` range filter and the date used for
+  sorting/grouping (the `date` sort field resolves to the basis column).
 
-`getTypicalMonthly`, budgets, insights, forecast, and category detail are **not**
-threaded — they remain purchase-basis.
+Everything else — `getCashFlow`, `getHistoricalTrend`, `getTypicalMonthly`,
+budgets, insights, forecast, category detail — is **not** threaded and remains
+purchase-basis.
 
-The API routes for transactions, summary (cash flow + trend) read the basis via
-`getDateBasisFromRequest` and pass it down. Budget/insights routes ignore it.
+Only the transactions route (`/api/transactions`) reads the basis via
+`getDateBasisFromRequest` and passes it to `queryTransactions`. Every other route
+ignores the header (its presence is harmless to them).
 
 ### 4. UI
 
 - `src/components/layout/date-basis-toggle.tsx`: a small segmented control
-  (Purchase / Billing) styled like the existing top-bar controls. Rendered in the
-  same top-bar slot as `GlobalAccountFilter`, but only on Home and Transactions
-  (`pathname` allow-list, mirroring the account filter's `HIDDEN_PREFIXES`
-  pattern). On change: `setDateBasis(next)` + `invalidateQueries()`.
-- Inline caption: a muted one-liner near the totals on Home and Transactions,
-  reading "Credit-card spending is counted on its purchase date." in purchase
-  mode and the billing-date equivalent in billing mode. New i18n keys.
-- Help panels: a new `dateBasis` section added to the `home` and `transactions`
-  entries in `HELP_SECTIONS`, with `title` / `body` / `example` copy (en + he),
-  reusing the worked credit-card example. Icon `CalendarRange` (already mapped).
+  (Purchase / Billing) styled like the existing top-bar controls. Rendered only
+  on the Transactions page (placed within the Transactions filter/header area,
+  not the global top bar, since it applies to that page alone). On change:
+  `setDateBasis(next)` + `invalidateQueries()`.
+- Inline caption: a muted one-liner next to the toggle on Transactions, reading
+  "Credit-card spending is counted on its purchase date." in purchase mode and
+  the billing-date equivalent in billing mode. New i18n keys.
+- Help panel: a new `dateBasis` section added to the `transactions` entry in
+  `HELP_SECTIONS`, with `title` / `body` / `example` copy (en + he), reusing the
+  worked credit-card example. Icon `CalendarRange` (already mapped).
 
 ## Data flow
 
-1. User toggles Purchase ↔ Billing in the top bar (Home or Transactions).
+1. User toggles Purchase ↔ Billing on the Transactions page.
 2. `setDateBasis` writes localStorage + notifies; `invalidateQueries` refetches.
 3. Client fetchers attach `x-date-basis: billing` (only when billing).
-4. Transactions / summary routes resolve the basis and pass `dateBasis` to the
-   queries, which select `local_date` or `COALESCE(billing_local_date,
-   local_date)` for both filtering and grouping.
-5. Budget and Insights routes ignore the header and stay on purchase date.
+4. The `/api/transactions` route resolves the basis and passes `dateBasis` to
+   `queryTransactions`, which selects `local_date` or
+   `COALESCE(billing_local_date, local_date)` for both filtering and grouping.
+5. Every other route ignores the header and stays on purchase date.
 
 ## Error handling / edge cases
 
@@ -155,9 +158,10 @@ DB-touching pieces via the dev server):
 - Help-content parity test already covers the new `dateBasis` keys via the
   existing en/he loop.
 
-Manual verification via the dev server on demo data: toggle on Home and
-Transactions, confirm May totals shift between the accrual and cash figures, and
-that Budget/Insights are unchanged.
+Manual verification via the dev server on demo data: on the Transactions page,
+toggle Purchase ↔ Billing for a month that has card purchases billed in a later
+month, confirm rows move between months accordingly, and confirm Home / Insights
+/ Budget totals are unchanged by the toggle.
 
 ## Out of scope
 
