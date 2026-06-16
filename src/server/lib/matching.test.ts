@@ -3,6 +3,7 @@ import { describe, expect, test } from "bun:test";
 import type { MatchSettings } from "@/lib/types";
 import {
   buildCardBillingGroups,
+  buildManualStatementProposals,
   type CardBillingGroup,
   type MatchCandidate,
   type MatchSettingsMap,
@@ -179,6 +180,15 @@ describe("proposeEvents", () => {
       ],
       { internal_transfer: setting("internal_transfer", false) },
       NO_ATM,
+    );
+    expect(events).toHaveLength(0);
+  });
+
+  test("skips a bill that is reserved for a manual link", () => {
+    const events = proposeEvents(
+      [cand({ id: 5, provider: "leumi", kind: "transfer", description: "תשלום לכ.א.ל" })],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal, manualBillIds: new Set([5]) },
     );
     expect(events).toHaveLength(0);
   });
@@ -503,5 +513,105 @@ describe("selectNearestCycleGroup", () => {
       g(billDay - 2, 20),
     ]);
     expect(chosen?.billingDay).toBe(billDay - 2);
+  });
+});
+
+describe("buildManualStatementProposals", () => {
+  const billCand = (over: Partial<MatchCandidate>): MatchCandidate => ({
+    id: 100,
+    credentialId: null,
+    accountNumber: "946-354388_73",
+    provider: "leumi",
+    date: "2026-05-09",
+    processedDate: "2026-05-09",
+    chargedAmount: -449.79,
+    chargedCurrency: "ILS",
+    description: "כרטיסי אשראי",
+    kind: "transfer",
+    dedupHash: "hbill",
+    dedupSequence: 0,
+    ...over,
+  });
+  const purchaseCand = (id: number, amount: number): MatchCandidate => ({
+    id,
+    credentialId: 9,
+    accountNumber: "5052",
+    provider: "cal",
+    date: "2026-05-09",
+    processedDate: "2026-05-09T00:00:00.000Z",
+    chargedAmount: amount,
+    chargedCurrency: "ILS",
+    description: "p",
+    kind: "expense",
+    dedupHash: `h${id}`,
+    dedupSequence: 0,
+  });
+
+  test("links the bill to the nearest cycle of the chosen card despite amount mismatch", () => {
+    const candidates = [billCand({}), purchaseCand(1, -347.89), purchaseCand(2, -50)];
+    const { proposals, warnings } = buildManualStatementProposals(candidates, [
+      { billTransactionId: 100, accountNumber: "5052" },
+    ]);
+    expect(warnings).toEqual([]);
+    expect(proposals).toHaveLength(1);
+    expect(proposals[0].eventType).toBe("credit_card_statement");
+    const bill = proposals[0].members.find((m) => m.role === "bill_payment");
+    expect(bill?.transactionId).toBe(100);
+    expect(bill?.flipKindTo).toBe("transfer");
+    const purchaseIds = proposals[0].members
+      .filter((m) => m.role === "purchase")
+      .map((m) => m.transactionId)
+      .sort();
+    expect(purchaseIds).toEqual([1, 2]);
+  });
+
+  test("warns and produces no proposal when the card has no purchases", () => {
+    const { proposals, warnings } = buildManualStatementProposals([billCand({})], [
+      { billTransactionId: 100, accountNumber: "5052" },
+    ]);
+    expect(proposals).toHaveLength(0);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("5052");
+  });
+
+  test("ignores an override whose bill transaction is not in the candidate set", () => {
+    const { proposals, warnings } = buildManualStatementProposals([purchaseCand(1, -10)], [
+      { billTransactionId: 999, accountNumber: "5052" },
+    ]);
+    expect(proposals).toHaveLength(0);
+    expect(warnings).toHaveLength(0);
+  });
+
+  test("links only the billing cycle nearest the bill date", () => {
+    const may = (id: number): MatchCandidate => ({
+      id,
+      credentialId: 9,
+      accountNumber: "5052",
+      provider: "cal",
+      date: "2026-05-09",
+      processedDate: "2026-05-09T00:00:00.000Z",
+      chargedAmount: -100,
+      chargedCurrency: "ILS",
+      description: "p",
+      kind: "expense",
+      dedupHash: `h${id}`,
+      dedupSequence: 0,
+    });
+    const jun = (id: number): MatchCandidate => ({ ...may(id), processedDate: "2026-06-09T00:00:00.000Z" });
+    const candidates = [
+      billCand({ id: 100, date: "2026-05-10" }),
+      may(1),
+      may(2),
+      jun(3),
+    ];
+    const { proposals } = buildManualStatementProposals(candidates, [
+      { billTransactionId: 100, accountNumber: "5052" },
+    ]);
+    expect(proposals).toHaveLength(1);
+    const purchaseIds = proposals[0].members
+      .filter((m) => m.role === "purchase")
+      .map((m) => m.transactionId)
+      .sort();
+    expect(purchaseIds).toEqual([1, 2]);
   });
 });

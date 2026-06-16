@@ -51,6 +51,7 @@ export type MatchSettingsMap = Partial<Record<EventType, MatchSettings>>;
 export interface ProposeOptions {
   treatAtmAsTransfers: boolean;
   connectedCardIssuers: ReadonlySet<CardIssuer>;
+  manualBillIds?: ReadonlySet<number>;
 }
 
 function dayNumber(date: string): number {
@@ -250,6 +251,7 @@ export function proposeEvents(
     const hasAnyCard = opts.connectedCardIssuers.size > 0;
     for (const cand of candidates) {
       if (used.has(cand.id)) continue;
+      if (opts.manualBillIds?.has(cand.id)) continue;
       if (cand.kind !== "transfer") continue;
       if (!isBankProvider(cand.provider)) continue;
       const match = matchCardPaymentIssuer(cand.description);
@@ -360,4 +362,98 @@ export function proposeEvents(
   }
 
   return events;
+}
+
+export interface ManualBillLink {
+  billTransactionId: number;
+  accountNumber: string;
+}
+
+export interface ManualStatementResult {
+  proposals: ProposedEvent[];
+  warnings: string[];
+}
+
+function buildCardBillingGroupsForAccount(
+  candidates: readonly MatchCandidate[],
+  accountNumber: string,
+): CardBillingGroup[] {
+  const byKey = new Map<string, CardBillingGroup>();
+  for (const c of candidates) {
+    if (c.accountNumber !== accountNumber) continue;
+    if (!CARD_ISSUER_SET.has(c.provider)) continue;
+    const billingDay = dayNumber(c.processedDate);
+    if (Number.isNaN(billingDay)) continue;
+    const key = String(billingDay);
+    const existing = byKey.get(key);
+    if (existing) {
+      existing.amount += Math.abs(c.chargedAmount);
+      existing.transactionIds.push(c.id);
+    } else {
+      byKey.set(key, {
+        credentialId: c.credentialId,
+        accountNumber: c.accountNumber,
+        issuer: c.provider as CardIssuer,
+        billingDay,
+        amount: Math.abs(c.chargedAmount),
+        transactionIds: [c.id],
+      });
+    }
+  }
+  return [...byKey.values()];
+}
+
+export function buildManualStatementProposals(
+  candidates: readonly MatchCandidate[],
+  links: readonly ManualBillLink[],
+): ManualStatementResult {
+  const byId = new Map(candidates.map((c) => [c.id, c]));
+  const proposals: ProposedEvent[] = [];
+  const warnings: string[] = [];
+
+  for (const link of links) {
+    const bill = byId.get(link.billTransactionId);
+    if (!bill) continue;
+
+    const cardPurchases = candidates.filter(
+      (c) => c.accountNumber === link.accountNumber && c.id !== bill.id && c.kind !== "transfer",
+    );
+    const groups = buildCardBillingGroupsForAccount(cardPurchases, link.accountNumber);
+    const group = selectNearestCycleGroup(bill.date, groups);
+    if (!group) {
+      warnings.push(`Card ${link.accountNumber} has no purchases to link to bill ${bill.id}`);
+      continue;
+    }
+
+    const purchases = group.transactionIds
+      .map((id) => byId.get(id))
+      .filter((p): p is MatchCandidate => p != null);
+    const members: ProposedMember[] = [
+      {
+        transactionId: bill.id,
+        role: "bill_payment",
+        flipKindTo: "transfer",
+        priorKind: bill.kind,
+        grouping: true,
+      },
+      ...purchases.map((p) => ({
+        transactionId: p.id,
+        role: "purchase" as EventRole,
+        flipKindTo: null,
+        priorKind: p.kind,
+        grouping: false,
+      })),
+    ];
+    proposals.push({
+      eventType: "credit_card_statement",
+      members,
+      canonicalTransactionId: null,
+      confidence: 1,
+      reasons: [`Manually linked to card ${link.accountNumber}`],
+      eventKey: eventKeyFor("credit_card_statement", [bill, ...purchases]),
+      needsReview: false,
+    });
+  }
+
+  return { proposals, warnings };
 }
