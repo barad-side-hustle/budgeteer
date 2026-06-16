@@ -1,5 +1,6 @@
 import type { UIMessage } from "ai";
 import { getAccountSelectionSync } from "@/lib/account-store";
+import { getDateBasisSync } from "@/lib/date-basis-store";
 import type {
   AccountOwnershipType,
   AccountSummary,
@@ -31,6 +32,10 @@ function withScopeHeaders(init?: RequestInit): RequestInit {
   const accountSelection = getAccountSelectionSync();
   if (accountSelection != null && !headers.has("x-account-sel")) {
     headers.set("x-account-sel", accountSelection);
+  }
+  const dateBasis = getDateBasisSync();
+  if (dateBasis === "billing" && !headers.has("x-date-basis")) {
+    headers.set("x-date-basis", dateBasis);
   }
   return { ...init, headers };
 }

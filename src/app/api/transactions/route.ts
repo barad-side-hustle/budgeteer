@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { listBankAccounts } from "@/server/db/queries/bank-accounts";
 import { queryTransactions, type TransactionKindFilter } from "@/server/db/queries/transactions";
 import { getAccountFilterFromRequest } from "@/server/lib/account-context";
+import { getDateBasisFromRequest } from "@/server/lib/date-basis-context";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 function parseKind(raw: string | null): TransactionKindFilter | undefined {
@@ -52,6 +53,7 @@ export async function GET(request: Request) {
     provider: searchParams.get("provider") ?? undefined,
     credentialIds: credentialIds.length > 0 ? credentialIds : undefined,
     accountKeys,
+    dateBasis: getDateBasisFromRequest(request),
   });
 
   return NextResponse.json(result);
