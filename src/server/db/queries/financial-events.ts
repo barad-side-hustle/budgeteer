@@ -296,11 +296,16 @@ export function reclassifyCardPayments(
 
     for (const ev of events) {
       const members = tx
-        .select({ transactionId: eventMembers.transactionId, priorKind: eventMembers.priorKind })
+        .select({
+          transactionId: eventMembers.transactionId,
+          priorKind: eventMembers.priorKind,
+          role: eventMembers.role,
+        })
         .from(eventMembers)
         .where(and(eq(eventMembers.workspaceId, workspaceId), eq(eventMembers.eventId, ev.id)))
         .all();
       for (const m of members) {
+        if (m.role !== "bill_payment") continue;
         const restoreKind: "expense" | "income" | "transfer" = m.priorKind ?? "transfer";
         tx.update(transactions)
           .set({

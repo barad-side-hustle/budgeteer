@@ -7,6 +7,7 @@ import { getCardOwners, upsertBankAccount } from "@/server/db/queries/bank-accou
 import {
   type BankCredentialMeta,
   getBankCredentials,
+  getConnectedCardIssuers,
   getRequiresManualTwoFactor,
   listBankCredentials,
   updateCredentialField,
@@ -14,6 +15,7 @@ import {
 import { getAllCategories, getCategoryByName } from "@/server/db/queries/categories";
 import { getRecentCorrections } from "@/server/db/queries/category-corrections";
 import { applyMerchantRulesToSyncRun } from "@/server/db/queries/excluded-merchants";
+import { reclassifyCardPayments } from "@/server/db/queries/financial-events";
 import { getAppSettings } from "@/server/db/queries/settings";
 import { completeSyncRun, createSyncRun, failSyncRun } from "@/server/db/queries/sync-runs";
 import {
@@ -37,7 +39,7 @@ import { scrapeBank } from "@/server/scrapers";
 import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
 import type { ScrapeResult } from "@/server/scrapers/types";
 import { markSyncEnd, markSyncHeartbeat, markSyncStart } from "@/server/sync/activity";
-import { classifyScrapedCards } from "@/server/sync/card-ownership";
+import { classifyScrapedCards, hasCardDataChange } from "@/server/sync/card-ownership";
 import { runMatchingStep } from "@/server/sync/matching-step";
 import { cancelOtpRequest, registerOtpRequest } from "@/server/sync/otp-bridge";
 
@@ -421,6 +423,10 @@ export async function syncWorkspace(
   const fromDate = toLocalISODate(startDate);
 
   runMatchingStep(workspaceId, fromDate, settings.treatAtmAsTransfers);
+
+  if (hasCardDataChange(results)) {
+    reclassifyCardPayments(workspaceId, getConnectedCardIssuers(workspaceId));
+  }
 
   if (!settings.treatAtmAsTransfers) {
     const atmCategory = getCategoryByName(workspaceId, "Cash & ATM");
