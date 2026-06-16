@@ -46,6 +46,7 @@ export function insertTransactions(
   provider: string,
   credentialId: number,
   syncRunId: number,
+  ownerByAccount?: ReadonlyMap<string, number>,
 ): InsertResult {
   const db = getDb();
   let added = 0;
@@ -101,6 +102,7 @@ export function insertTransactions(
 
       const sequence = batchCount - 1;
       const kind = detectKind(txn.description, provider, txn.chargedAmount);
+      const rowCredentialId = ownerByAccount?.get(txn.accountNumber) ?? credentialId;
 
       const params = {
         workspaceId,
@@ -121,7 +123,7 @@ export function insertTransactions(
         installmentNumber: txn.installmentNumber ?? null,
         installmentTotal: txn.installmentTotal ?? null,
         provider,
-        credentialId,
+        credentialId: rowCredentialId,
         syncRunId: syncRunId,
         dedupHash: hash,
         dedupSequence: sequence,
