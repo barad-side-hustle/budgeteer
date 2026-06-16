@@ -111,10 +111,16 @@ This clears stale `credit_card_payment` / `credit_card_statement` events and
 re-proposes, so a bill previously counted as spend is re-evaluated against
 newly-synced purchases and matches its cycle.
 
-Gating: only run when card data changed this sync, to avoid resetting
-categorization on every sync (`reclassifyCardPayments` nulls `category_id` /
-`category_source` for card-event members and re-derives). `runMatchingStep`
-continues to own `internal_transfer` and `atm_withdrawal` matching.
+Gating: only run when card data changed this sync. `runMatchingStep` continues
+to own `internal_transfer` and `atm_withdrawal` matching.
+
+`reclassifyCardPayments` is also fixed so it resets `category_id` /
+`category_source` / `kind` only for **bill** members (`role = 'bill_payment'`),
+not for **purchase** members. Purchases are non-grouping members whose
+transaction rows the matcher never modified, so nulling their category is wrong:
+it would drop the purchase's category and force the AI step (which runs right
+after matching) to re-categorize it on every sync - an AI-cost regression. This
+fix also benefits the existing add/delete callers.
 
 The orchestrator already aggregates per-credential `added` / `updated`; it gains a
 signal for whether any synced credential's provider was a card issuer with a
