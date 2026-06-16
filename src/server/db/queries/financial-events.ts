@@ -14,7 +14,7 @@ import {
 } from "@/server/db/schema";
 import type { MatchSettingsMap, ProposedEvent } from "@/server/lib/matching";
 import { proposeEvents } from "@/server/lib/matching";
-import { type CardIssuer, detectKind } from "@/server/lib/transfers";
+import { CARD_ISSUERS, type CardIssuer, detectKind } from "@/server/lib/transfers";
 
 const EVENT_TYPES: EventType[] = [
   "internal_transfer",
@@ -315,6 +315,54 @@ export function reclassifyCardPayments(
             needsReview: 0,
             categoryId: null,
             categorySource: null,
+            updatedAt: sql`datetime('now')`,
+            kind: restoreKind,
+          })
+          .where(
+            and(eq(transactions.workspaceId, workspaceId), eq(transactions.id, m.transactionId)),
+          )
+          .run();
+      }
+      tx.delete(eventMembers)
+        .where(and(eq(eventMembers.workspaceId, workspaceId), eq(eventMembers.eventId, ev.id)))
+        .run();
+      tx.delete(financialEvents)
+        .where(and(eq(financialEvents.workspaceId, workspaceId), eq(financialEvents.id, ev.id)))
+        .run();
+    }
+
+    const cardTransferEvents = tx
+      .selectDistinct({ id: eventMembers.eventId })
+      .from(eventMembers)
+      .innerJoin(financialEvents, eq(financialEvents.id, eventMembers.eventId))
+      .innerJoin(transactions, eq(transactions.id, eventMembers.transactionId))
+      .where(
+        and(
+          eq(financialEvents.workspaceId, workspaceId),
+          eq(financialEvents.eventType, "internal_transfer"),
+          ne(financialEvents.status, "rejected"),
+          inArray(transactions.provider, [...CARD_ISSUERS]),
+        ),
+      )
+      .all();
+
+    for (const ev of cardTransferEvents) {
+      const members = tx
+        .select({
+          transactionId: eventMembers.transactionId,
+          priorKind: eventMembers.priorKind,
+        })
+        .from(eventMembers)
+        .where(and(eq(eventMembers.workspaceId, workspaceId), eq(eventMembers.eventId, ev.id)))
+        .all();
+      for (const m of members) {
+        const restoreKind: "expense" | "income" | "transfer" = m.priorKind ?? "expense";
+        tx.update(transactions)
+          .set({
+            eventId: null,
+            eventRole: null,
+            matchConfidence: null,
+            needsReview: 0,
             updatedAt: sql`datetime('now')`,
             kind: restoreKind,
           })

@@ -181,6 +181,81 @@ describe("proposeEvents", () => {
     );
     expect(events).toHaveLength(0);
   });
+
+  test("does not pair two card-issuer rows as an internal transfer", () => {
+    const events = proposeEvents(
+      [
+        cand({
+          id: 1,
+          provider: "cal",
+          accountNumber: "5052",
+          chargedAmount: -101.9,
+          description: "העברת חיובים לכרטיס תחליפי",
+        }),
+        cand({
+          id: 2,
+          provider: "cal",
+          accountNumber: "0905",
+          chargedAmount: 101.9,
+          kind: "income",
+          description: "העברת חיובים לכרטיס תחליפי",
+        }),
+      ],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    expect(events.some((e) => e.eventType === "internal_transfer")).toBe(false);
+  });
+
+  test("a replacement-card charge stays available for its card statement", () => {
+    const events = proposeEvents(
+      [
+        cand({
+          id: 1,
+          provider: "cal",
+          accountNumber: "5052",
+          chargedAmount: -347.89,
+          processedDate: "2026-05-09T00:00:00.000Z",
+          description: "הראל-ביטוח עובד זר",
+        }),
+        cand({
+          id: 2,
+          provider: "cal",
+          accountNumber: "5052",
+          chargedAmount: -101.9,
+          processedDate: "2026-05-09T00:00:00.000Z",
+          description: "העברת חיובים לכרטיס תחליפי",
+        }),
+        cand({
+          id: 3,
+          provider: "cal",
+          accountNumber: "0905",
+          chargedAmount: 101.9,
+          kind: "income",
+          processedDate: "2026-05-09T00:00:00.000Z",
+          description: "העברת חיובים לכרטיס תחליפי",
+        }),
+        cand({
+          id: 4,
+          provider: "leumi",
+          accountNumber: "946-354388_73",
+          chargedAmount: -449.79,
+          date: "2026-05-09",
+          kind: "transfer",
+          description: "כרטיסי אשראי-ישראכרט",
+        }),
+      ],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    const statement = events.find((e) => e.eventType === "credit_card_statement");
+    expect(statement).toBeDefined();
+    const purchaseIds = statement?.members
+      .filter((m) => m.role === "purchase")
+      .map((m) => m.transactionId)
+      .sort();
+    expect(purchaseIds).toEqual([1, 2]);
+  });
 });
 
 const purchase = (over: Partial<MatchCandidate>): MatchCandidate => ({

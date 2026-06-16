@@ -185,10 +185,13 @@ export function proposeEvents(
 
   const it = settings.internal_transfer;
   if (it?.enabled) {
-    const pairs = findInternalTransferPairs(candidates, {
-      epsilon: it.epsilon,
-      dayWindow: it.dayWindow,
-    });
+    const pairs = findInternalTransferPairs(
+      candidates.filter((c) => isBankProvider(c.provider)),
+      {
+        epsilon: it.epsilon,
+        dayWindow: it.dayWindow,
+      },
+    );
     for (const { debitId, creditId } of pairs) {
       const debit = byId.get(debitId);
       const credit = byId.get(creditId);

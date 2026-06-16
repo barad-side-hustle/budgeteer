@@ -7,7 +7,9 @@ const fakeCreditCardCategoryId = 99;
 function noopChain() {
   const chain = {
     select: () => chain,
+    selectDistinct: () => chain,
     from: () => chain,
+    innerJoin: () => chain,
     where: () => chain,
     all: () => [] as unknown[],
     get: () => null,
@@ -51,6 +53,7 @@ mock.module("drizzle-orm", () => ({
 }));
 
 mock.module("@/server/lib/transfers", () => ({
+  CARD_ISSUERS: ["amex", "behatsdaa", "beyahadBishvilha", "cal", "isracard", "max"],
   matchCardPaymentIssuer: (description: string) =>
     description.includes("כ.א.ל") ? { issuer: "cal" } : null,
   detectKind: (description: string, provider: string) =>
