@@ -112,6 +112,13 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
             closeButton: true,
           });
         }
+        const sharedCards = (event.data.sharedCards as string[]) ?? [];
+        if (ok && sharedCards.length > 0) {
+          toast.info(t("sharedCardsSkipped", { count: sharedCards.length }), {
+            duration: 8000,
+            closeButton: true,
+          });
+        }
       } else if (event.type === "stage") {
         setStage((event.data.stage as string) ?? null);
       } else if (event.type === "complete") {

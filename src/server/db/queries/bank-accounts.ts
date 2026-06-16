@@ -218,3 +218,30 @@ export function getAccountSummaries(
     transactionCount: row.transaction_count,
   }));
 }
+
+export function getCardOwners(
+  workspaceId: number,
+  provider: string,
+  accountNumbers: readonly string[],
+): Map<string, number> {
+  const owners = new Map<string, number>();
+  if (accountNumbers.length === 0) return owners;
+  const placeholders = accountNumbers.map(() => "?").join(",");
+  const rows = getDb()
+    .prepare(
+      `SELECT ba.account_number AS account_number, ba.credential_id AS credential_id
+       FROM bank_accounts ba
+       JOIN bank_credentials bc ON ba.credential_id = bc.id
+       WHERE ba.workspace_id = ? AND bc.provider = ?
+         AND ba.account_number IN (${placeholders})
+       ORDER BY ba.created_at ASC, ba.id ASC`,
+    )
+    .all(workspaceId, provider, ...accountNumbers) as {
+    account_number: string;
+    credential_id: number;
+  }[];
+  for (const r of rows) {
+    if (!owners.has(r.account_number)) owners.set(r.account_number, r.credential_id);
+  }
+  return owners;
+}

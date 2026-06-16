@@ -248,6 +248,7 @@
     "categorizationFailed": "Categorization failed",
     "aiCategorizationIssue": "AI categorization issue",
     "checkDevTerminal": "Check the dev server terminal for full details.",
+    "sharedCardsSkipped": "{count, plural, one {# shared card was already connected and skipped} other {# shared cards were already connected and skipped}}",
     "pageTitle": "Budgets",
     "youHavePaydayPrefix": "You have",
     "daysOne": "day",

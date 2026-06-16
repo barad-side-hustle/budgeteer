@@ -248,6 +248,7 @@
     "categorizationFailed": "הסיווג נכשל",
     "aiCategorizationIssue": "תקלה בסיווג AI",
     "checkDevTerminal": "בדקו בטרמינל שרת הפיתוח את הפרטים המלאים.",
+    "sharedCardsSkipped": "{count, plural, one {# כרטיס משותף כבר מחובר ולכן דולג} other {# כרטיסים משותפים כבר מחוברים ולכן דולגו}}",
     "pageTitle": "תקציבים",
     "youHavePaydayPrefix": "נשארו",
     "daysOne": "יום",
