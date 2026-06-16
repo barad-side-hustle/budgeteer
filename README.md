@@ -135,6 +135,14 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 
 </td>
 </tr>
+<tr>
+<td colspan="3" valign="top">
+
+### ❓ Per-page help panels
+Every data page (Home, Transactions, Review, Budget, Insights) has a help button in the header that opens a side panel explaining each pane in plain English and Hebrew: cash flow, trends, card-bill matching, budgets, anomalies, and more.
+
+</td>
+</tr>
 </table>
 
 ## Screenshots

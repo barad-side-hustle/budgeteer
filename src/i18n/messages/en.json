@@ -1178,5 +1178,136 @@
     "anom_interest-charge_body": "About {amount} this month. Often avoidable.",
     "anom_fee-spike_title": "Fees are up this month",
     "anom_fee-spike_body": "{amount} vs your usual {amount2}."
+  },
+  "help": {
+    "triggerLabel": "Help",
+    "exampleLabel": "Example",
+    "home": {
+      "title": "Home",
+      "intro": "What each card on your home page shows, and how the numbers are worked out.",
+      "sections": {
+        "cashFlow": {
+          "title": "Cash flow",
+          "body": "Your income minus expenses for the selected period and accounts. Internal transfers between your own accounts, and credit-card bills that were matched to their individual purchases, are left out so the same money is never counted twice.",
+          "example": "If ₪8,000 of salary arrives and ₪5,000 goes out, cash flow is +₪3,000. A ₪2,000 move from checking to savings does not change it, because the money never left you."
+        },
+        "trend": {
+          "title": "Trend",
+          "body": "Income versus expenses month by month. Each transaction is counted in its Israel (Asia/Jerusalem) calendar month, based on the date it happened, so a late end-of-month purchase lands in the correct month.",
+          "example": "A purchase at 23:30 on May 31 (Israel time) counts in May, even if the bank's server stamped it just after midnight in another time zone."
+        },
+        "typicalMonth": {
+          "title": "Typical month",
+          "body": "A baseline built from your recent completed months, used to tell whether the current month is running high or low.",
+          "example": "If the last three months were ₪9,000, ₪11,000 and ₪10,000, your typical month is ₪10,000, and spending ₪11,500 so far would read as above typical."
+        },
+        "recentActivity": {
+          "title": "Recent activity",
+          "body": "The latest transactions across the accounts you have selected, newest first. Internal transfers are hidden so the list reflects real activity."
+        },
+        "flagged": {
+          "title": "Needs review",
+          "body": "A count of transactions Budgeteer could not categorize with confidence. Clearing them keeps your totals and insights accurate."
+        }
+      }
+    },
+    "transactions": {
+      "title": "Transactions",
+      "intro": "How to read, filter, and interpret your transactions list.",
+      "sections": {
+        "kindFilter": {
+          "title": "Income / expense filter",
+          "body": "Switch between all transactions, income only, or expenses only. Internal transfers are never shown as income or expense, so they stay out of both views."
+        },
+        "accountFilter": {
+          "title": "Account filter",
+          "body": "The account selector at the top of the app. Totals, rows, and every summary reflect only the accounts you pick, so you can isolate a single card or bank."
+        },
+        "period": {
+          "title": "Month navigation",
+          "body": "Move between months. Rows are grouped by their Israel (Asia/Jerusalem) calendar date, which is the date the transaction happened.",
+          "example": "A credit-card purchase made on May 3 appears under May here, even though the card company will bill it to your bank in June."
+        },
+        "cardMatch": {
+          "title": "Card-bill match",
+          "body": "When a bank charge is a credit-card bill, a badge links it to the individual card purchases that make it up. The bill is treated as a transfer and kept out of expense totals, so you are not counted twice: once for the purchases and again for the bill that pays them. A bill we could not match (for example a card you have not connected) is still counted as a single expense, so that spending is never lost.",
+          "example": "A ₪1,896 Visa bill is paid from checking. If those purchases were already pulled from the card, the bill is hidden and the purchases are counted instead. If the card is not connected, the ₪1,896 bill is counted on its own."
+        },
+        "rowStates": {
+          "title": "Row states",
+          "body": "'Needs review' marks an uncertain category waiting for you; 'excluded' rows are deliberately kept out of every total; a card-match badge marks a bill linked to its purchases."
+        }
+      }
+    },
+    "review": {
+      "title": "Review",
+      "intro": "Clear the queue of transactions that need your attention.",
+      "sections": {
+        "whyFlagged": {
+          "title": "Why it's flagged",
+          "body": "Either the AI was not confident about the category it chose, or it is an expense with no category yet. Both keep an item in the queue until you confirm it."
+        },
+        "queue": {
+          "title": "The queue",
+          "body": "Items are ordered so the ones most needing review come first, and they leave the list the moment you categorize or confirm them."
+        },
+        "actions": {
+          "title": "Actions",
+          "body": "Assign a category to clear an item, or mark it reviewed as-is when the existing guess is correct."
+        },
+        "cardMatch": {
+          "title": "Card-bill match",
+          "body": "A badge links a credit-card bill to the card purchases behind it, so the bill is treated as a transfer and not counted as extra spending.",
+          "example": "A ₪1,896 card bill matched to its purchases is excluded from expenses; the underlying purchases are what count toward your spending."
+        }
+      }
+    },
+    "budget": {
+      "title": "Budget",
+      "intro": "How budgets are set and tracked.",
+      "sections": {
+        "autoVsManual": {
+          "title": "Auto vs manual",
+          "body": "Auto budgets follow a rolling average of your own spending and adjust over time; manual budgets are a fixed monthly amount you set yourself."
+        },
+        "average": {
+          "title": "How the average works",
+          "body": "An auto budget is the average expense for that category over the last three completed months. The current, in-progress month is not used, so a partial month does not drag the number down.",
+          "example": "If groceries were ₪1,800, ₪2,100 and ₪2,100 over the last three full months, the auto budget is ₪2,000."
+        },
+        "spendBars": {
+          "title": "Spend vs budget",
+          "body": "Each bar shows how much you have spent this month against the budgeted amount, so you can see at a glance where you are over or under."
+        },
+        "detail": {
+          "title": "Category detail",
+          "body": "Open a category to see the individual transactions behind its total and understand what is driving the spend."
+        }
+      }
+    },
+    "insights": {
+      "title": "Insights",
+      "intro": "Patterns and projections drawn from your spending.",
+      "sections": {
+        "anomalies": {
+          "title": "Anomalies",
+          "body": "Charges that stand out from your normal pattern for a category, flagged when they are clearly larger than usual rather than for small fluctuations.",
+          "example": "If pharmacies are usually about ₪300 a month and this month they reach ₪900, that threefold jump is flagged as an anomaly."
+        },
+        "recommendations": {
+          "title": "Recommendations",
+          "body": "Suggested actions based on how you actually spend, such as a category that has been creeping up over several months."
+        },
+        "forecast": {
+          "title": "Forecast",
+          "body": "A projection of your total spending by the end of the month. It takes what you have spent so far and scales it across the whole month at your current daily pace.",
+          "example": "By the 10th of a 30-day month you have spent ₪4,000. At that pace the forecast is ₪4,000 ÷ 10 × 30 = ₪12,000."
+        },
+        "ranges": {
+          "title": "Time ranges",
+          "body": "Monthly and month-to-date windows, anchored to the Israel (Asia/Jerusalem) calendar so comparisons line up day for day."
+        }
+      }
+    }
   }
 }

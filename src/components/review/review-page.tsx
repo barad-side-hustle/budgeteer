@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
+import { HelpButton } from "@/components/help/help-button";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
 import { PageHeader } from "@/components/layout/app-shell";
 import { ProviderBadge } from "@/components/setup/provider-badge";
@@ -97,12 +98,15 @@ export function ReviewPage() {
         title={t("pageTitle")}
         meta={!loading && txns.length > 0 ? t("countMeta", { count: txns.length }) : undefined}
         actions={
-          !loading && txns.length > 0 ? (
-            <Button variant="outline" size="sm" onClick={() => setFocus(true)}>
-              <ScanEye className="size-3.5" />
-              {t("focusMode")}
-            </Button>
-          ) : undefined
+          <>
+            {!loading && txns.length > 0 ? (
+              <Button variant="outline" size="sm" onClick={() => setFocus(true)}>
+                <ScanEye className="size-3.5" />
+                {t("focusMode")}
+              </Button>
+            ) : null}
+            <HelpButton page="review" />
+          </>
         }
       />
 

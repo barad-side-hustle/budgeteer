@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
+import { HelpButton } from "@/components/help/help-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import type { Locale } from "@/i18n/routing";
@@ -77,14 +78,17 @@ export function TransactionsPage() {
         title={t("pageTitle")}
         meta={monthLabel}
         actions={
-          <PeriodSelector
-            label={monthLabel}
-            onPrev={() => setSelectedDate((d) => addMonths(d, -1))}
-            onNext={() => setSelectedDate((d) => addMonths(d, 1))}
-            prevLabel={tc("previousMonth")}
-            nextLabel={tc("nextMonth")}
-            nextDisabled={isCurrentMonth(selectedDate)}
-          />
+          <>
+            <PeriodSelector
+              label={monthLabel}
+              onPrev={() => setSelectedDate((d) => addMonths(d, -1))}
+              onNext={() => setSelectedDate((d) => addMonths(d, 1))}
+              prevLabel={tc("previousMonth")}
+              nextLabel={tc("nextMonth")}
+              nextDisabled={isCurrentMonth(selectedDate)}
+            />
+            <HelpButton page="transactions" />
+          </>
         }
       />
 

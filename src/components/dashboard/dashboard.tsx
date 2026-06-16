@@ -9,6 +9,7 @@ import { CategoryGrid } from "@/components/dashboard/category-grid";
 import { HeroCard } from "@/components/dashboard/hero-card";
 import { PeriodSelector } from "@/components/dashboard/period-selector";
 import { SyncButton } from "@/components/dashboard/sync-button";
+import { HelpButton } from "@/components/help/help-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -84,6 +85,7 @@ export function Dashboard() {
             />
             <CategorizeButton onApplied={handleSyncComplete} />
             <SyncButton onComplete={handleSyncComplete} />
+            <HelpButton page="budget" />
           </>
         }
       />

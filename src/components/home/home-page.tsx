@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import { AINotConnectedBanner } from "@/components/ai-not-connected-banner";
 import { CategorizeButton } from "@/components/dashboard/categorize-button";
 import { SyncButton } from "@/components/dashboard/sync-button";
+import { HelpButton } from "@/components/help/help-button";
 import { BreakdownSection } from "@/components/home/breakdown-section";
 import { CardError, CardSkeleton } from "@/components/home/card-shell";
 import { ConnectedAccounts } from "@/components/home/connected-accounts";
@@ -78,6 +79,7 @@ export function HomePage() {
             />
             <CategorizeButton onApplied={handleComplete} />
             <SyncButton onComplete={handleComplete} autoStart={autoStartSync} />
+            <HelpButton page="home" />
           </>
         }
       />
