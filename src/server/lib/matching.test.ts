@@ -333,6 +333,42 @@ describe("card statement matching", () => {
     expect(ev?.needsReview).toBe(false);
   });
 
+  test("a released per-card bill matches its cycle once purchases are present", () => {
+    const events = proposeEvents(
+      [
+        billCand({
+          id: 20,
+          chargedAmount: -8411.42,
+          date: "2026-06-02T00:00:00.000Z",
+          description: "כרטיסי אשראי",
+        }),
+        purchase({
+          id: 21,
+          accountNumber: "4384",
+          chargedAmount: -8000,
+          processedDate: "2026-06-02T00:00:00.000Z",
+        }),
+        purchase({
+          id: 22,
+          accountNumber: "4384",
+          chargedAmount: -411.42,
+          processedDate: "2026-06-02T00:00:00.000Z",
+        }),
+      ],
+      SETTINGS,
+      { treatAtmAsTransfers: false, connectedCardIssuers: withCal },
+    );
+    const ev = events.find((e) => e.eventType === "credit_card_statement");
+    expect(ev).toBeTruthy();
+    expect(ev?.members.find((m) => m.role === "bill_payment")?.transactionId).toBe(20);
+    expect(
+      ev?.members
+        .filter((m) => m.role === "purchase")
+        .map((m) => m.transactionId)
+        .sort(),
+    ).toEqual([21, 22]);
+  });
+
   test("a second bill matching an already-consumed statement is a cost, not an empty statement", () => {
     const events = proposeEvents(
       [
