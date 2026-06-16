@@ -4,6 +4,7 @@ import {
   classifyScrapedCards,
   hasCardDataChange,
   isCardIssuerProvider,
+  ownedAccounts,
 } from "@/server/sync/card-ownership";
 
 describe("isCardIssuerProvider", () => {
@@ -52,6 +53,30 @@ describe("classifyScrapedCards", () => {
     expect(c.newlyAdded).toEqual(["4384"]);
     expect(c.existingOwn).toEqual(["8682"]);
     expect(c.ownerByAccount.get("4384")).toBe(7);
+  });
+});
+
+describe("ownedAccounts", () => {
+  test("returns the accounts owned by the syncing credential (new + existing own)", () => {
+    const c = classifyScrapedCards(
+      7,
+      ["3307", "4384", "8682"],
+      new Map([
+        ["3307", 3],
+        ["8682", 7],
+      ]),
+    );
+    expect(ownedAccounts(c).sort()).toEqual(["4384", "8682"]);
+  });
+
+  test("excludes shared accounts owned by another credential", () => {
+    const c = classifyScrapedCards(7, ["3307"], new Map([["3307", 3]]));
+    expect(ownedAccounts(c)).toEqual([]);
+  });
+
+  test("adopts a previously-orphaned card as owned when no prior owner exists", () => {
+    const c = classifyScrapedCards(7, ["4384"], new Map());
+    expect(ownedAccounts(c)).toEqual(["4384"]);
   });
 });
 

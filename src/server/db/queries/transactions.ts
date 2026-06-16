@@ -146,6 +146,25 @@ export function insertTransactions(
   return { added, updated };
 }
 
+export function rehomeOrphanTransactions(
+  workspaceId: number,
+  provider: string,
+  accountNumbers: readonly string[],
+  ownerCredentialId: number,
+): number {
+  if (accountNumbers.length === 0) return 0;
+  const placeholders = accountNumbers.map(() => "?").join(",");
+  const result = getDb()
+    .prepare(
+      `UPDATE transactions
+       SET credential_id = ?, updated_at = datetime('now')
+       WHERE workspace_id = ? AND provider = ? AND credential_id IS NULL
+         AND account_number IN (${placeholders})`,
+    )
+    .run(ownerCredentialId, workspaceId, provider, ...accountNumbers);
+  return result.changes;
+}
+
 interface QueryParams {
   from?: string;
   to?: string;

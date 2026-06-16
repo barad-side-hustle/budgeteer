@@ -25,6 +25,7 @@ import {
   getUncategorizedExpenses,
   getUncategorizedIdsByKind,
   insertTransactions,
+  rehomeOrphanTransactions,
 } from "@/server/db/queries/transactions";
 import { getWorkspace } from "@/server/db/queries/workspaces";
 import { toLocalISODate } from "@/server/lib/date-utils";
@@ -39,7 +40,11 @@ import { scrapeBank } from "@/server/scrapers";
 import { scrapeOneZeroFirstTime, scrapeOneZeroWithToken } from "@/server/scrapers/one-zero";
 import type { ScrapeResult } from "@/server/scrapers/types";
 import { markSyncEnd, markSyncHeartbeat, markSyncStart } from "@/server/sync/activity";
-import { classifyScrapedCards, hasCardDataChange } from "@/server/sync/card-ownership";
+import {
+  classifyScrapedCards,
+  hasCardDataChange,
+  ownedAccounts,
+} from "@/server/sync/card-ownership";
 import { runMatchingStep } from "@/server/sync/matching-step";
 import { cancelOtpRequest, registerOtpRequest } from "@/server/sync/otp-bridge";
 
@@ -246,6 +251,8 @@ async function syncOneCredential(
   const scrapedAccountNumbers = result.accounts.map((a) => a.accountNumber);
   const priorOwners = getCardOwners(workspaceId, provider, scrapedAccountNumbers);
   const classification = classifyScrapedCards(meta.id, scrapedAccountNumbers, priorOwners);
+
+  rehomeOrphanTransactions(workspaceId, provider, ownedAccounts(classification), meta.id);
 
   const { added, updated } = insertTransactions(
     workspaceId,
