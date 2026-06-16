@@ -342,8 +342,6 @@
       "listTitle": "Workspaces",
       "listDescription": "Each workspace keeps its own transactions, categories, budgets, and bank connections. Deleting one permanently removes everything inside it. Your other workspaces are untouched.",
       "currentBadge": "Current",
-      "dangerTitle": "Delete this workspace",
-      "dangerDescription": "Permanently removes this workspace and every bank connection, transaction, category, and budget inside it. The other workspaces are untouched.",
       "deleteButton": "Delete workspace",
       "lastOneHint": "You can't delete your only workspace. Create another one first.",
       "confirmTitle": "Delete \"{name}\"?",

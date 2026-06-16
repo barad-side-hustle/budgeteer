@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SettingCard } from "@/components/settings/section-shell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -88,30 +89,45 @@ function WorkspaceNameCardInner({ workspace }: { workspace: Workspace }) {
 }
 
 export function WorkspaceDangerCard() {
-  const queryClient = useQueryClient();
-  const { workspaces, active } = useActiveWorkspace();
-  if (!active) return null;
+  const t = useTranslations("settings.workspace");
+  const tCommon = useTranslations("common");
+  const activeId = useActiveWorkspaceId();
+  const { data: workspaces = [], isLoading } = useQuery<Workspace[]>({
+    queryKey: ["workspaces"],
+    queryFn: listWorkspaces,
+  });
+
   const onlyOne = workspaces.length <= 1;
+
   return (
-    <DangerCard
-      workspace={active}
-      disabled={onlyOne}
-      onDeleted={(remainingId) => {
-        setActiveWorkspaceId(remainingId);
-        queryClient.invalidateQueries();
-      }}
-    />
+    <SettingCard title={t("listTitle")} description={t("listDescription")}>
+      {isLoading ? (
+        <div className="text-sm text-muted-foreground">{tCommon("loading")}</div>
+      ) : (
+        <ul className="divide-y rounded-lg border">
+          {workspaces.map((w) => (
+            <WorkspaceDeleteRow
+              key={w.id}
+              workspace={w}
+              isActive={w.id === activeId}
+              disabled={onlyOne}
+            />
+          ))}
+        </ul>
+      )}
+      {onlyOne ? <p className="mt-2 text-xs text-muted-foreground">{t("lastOneHint")}</p> : null}
+    </SettingCard>
   );
 }
 
-function DangerCard({
+function WorkspaceDeleteRow({
   workspace,
+  isActive,
   disabled,
-  onDeleted,
 }: {
   workspace: Workspace;
+  isActive: boolean;
   disabled: boolean;
-  onDeleted: (remainingId: number) => void;
 }) {
   const t = useTranslations("settings.workspace");
   const tCommon = useTranslations("common");
@@ -125,8 +141,11 @@ function DangerCard({
         queryKey: ["workspaces"],
         queryFn: listWorkspaces,
       });
-      const next = list.find((w) => w.id !== workspace.id);
-      if (next) onDeleted(next.id);
+      if (isActive) {
+        const next = list.find((w) => w.id !== workspace.id);
+        if (next) setActiveWorkspaceId(next.id);
+      }
+      queryClient.invalidateQueries();
       setOpen(false);
       toast.success(t("deletedToast", { name: workspace.name }));
     },
@@ -136,14 +155,19 @@ function DangerCard({
   });
 
   return (
-    <>
-      <SettingCard title={t("dangerTitle")} description={t("dangerDescription")}>
-        <Button variant="destructive" onClick={() => setOpen(true)} disabled={disabled}>
-          <Trash2 className="me-2 size-4" />
-          {t("deleteButton")}
-        </Button>
-        {disabled ? <p className="mt-2 text-xs text-muted-foreground">{t("lastOneHint")}</p> : null}
-      </SettingCard>
+    <li className="flex items-center gap-3 px-3 py-2.5">
+      <span className="flex-1 truncate text-sm font-medium">{workspace.name}</span>
+      {isActive ? <Badge variant="secondary">{t("currentBadge")}</Badge> : null}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-destructive hover:text-destructive"
+        onClick={() => setOpen(true)}
+        disabled={disabled}
+        aria-label={t("deleteButton")}
+      >
+        <Trash2 className="size-4" />
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -161,6 +185,6 @@ function DangerCard({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </li>
   );
 }
