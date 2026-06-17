@@ -138,6 +138,14 @@ Toggle between English (default) and עברית from **Settings → Appearance**
 <tr>
 <td colspan="3" valign="top">
 
+### 📤 Export to CSV
+On the Transactions page, **Export CSV** downloads every transaction matching the current month and active filters (search, category, income/expense, sort) — not just the visible page. Dates follow your chosen purchase/billing basis, amounts stay raw and numeric for spreadsheets, and headers are localized.
+
+</td>
+</tr>
+<tr>
+<td colspan="3" valign="top">
+
 ### ❓ Per-page help panels
 Every data page (Home, Transactions, Review, Budget, Insights) has a help button in the header that opens a side panel explaining each pane in plain English and Hebrew: cash flow, trends, card-bill matching, budgets, anomalies, and more.
 
@@ -387,7 +395,8 @@ spent/
 - [x] Gemini as a third AI provider
 - [x] AI chat agent for asking questions about your spending
 - [x] Multiple workspaces
-- [ ] CSV / OFX export
+- [x] CSV export of transactions
+- [ ] OFX export
 - [ ] Custom user-defined categories
 - [ ] Mobile companion (Phase 2)
 
