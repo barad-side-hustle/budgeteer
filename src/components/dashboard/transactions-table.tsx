@@ -6,6 +6,7 @@ import {
   ArrowLeftRight,
   ArrowUpRight,
   Check,
+  ChevronRight,
   Eye,
   EyeOff,
   HelpCircle,
@@ -13,7 +14,7 @@ import {
   Tags,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { SortableTableHead } from "@/components/transactions/sortable-table-head";
 import {
@@ -55,6 +56,7 @@ import {
   unlinkCardBill,
   updateTransactionCategory,
 } from "@/lib/api";
+import { groupBillChildren } from "@/lib/bill-grouping";
 import { getCardBillBadgeState } from "@/lib/card-bill-badge";
 import { useDateBasis } from "@/lib/date-basis-store";
 import { formatCurrency, formatDate } from "@/lib/formatters";
@@ -113,7 +115,17 @@ export function TransactionsTable({
   const queryClient = useQueryClient();
   const dateBasis = useDateBasis();
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [expandedEvents, setExpandedEvents] = useState<Set<number>>(new Set());
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  const toggleEvent = (eventId: number) => {
+    setExpandedEvents((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
+  };
 
   const otherKinds: Record<Kind, Array<{ value: Kind; label: string }>> = {
     expense: [
@@ -293,6 +305,277 @@ export function TransactionsTable({
     return nodes;
   };
 
+  const renderRow = (
+    txn: TransactionWithCategory,
+    options: { isChild?: boolean; childCount?: number; expanded?: boolean } = {},
+  ) => {
+    const { isChild = false, childCount = 0, expanded = false } = options;
+    const isIncome = txn.chargedAmount > 0;
+    const directionColor = isIncome ? "var(--status-on-track)" : "var(--status-over)";
+    const categoryKind: Kind = isIncome ? "income" : "expense";
+    const matchedCardBill = getCardBillBadgeState(
+      txn.eventRole,
+      txn.kind,
+      txn.matchedCardNumber,
+    )?.matched;
+    const categoryName = txn.categoryName
+      ? translateCategoryName(txn.categoryName, tCat)
+      : matchedCardBill
+        ? t("categoryCardTransfer")
+        : t("rowUncategorized");
+    const expandable = childCount > 0;
+    return (
+      <TableRow
+        key={txn.id}
+        className={cn(
+          "transition-colors duration-200 hover:bg-muted/50",
+          txn.isExcluded && "opacity-50",
+          isChild && "bg-muted/30",
+        )}
+      >
+        <TableCell>
+          {expandable ? (
+            <button
+              type="button"
+              onClick={() => txn.eventId != null && toggleEvent(txn.eventId)}
+              aria-label={expanded ? t("collapsePurchases") : t("expandPurchases")}
+              className="inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <ChevronRight
+                className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")}
+              />
+            </button>
+          ) : (
+            <div style={{ color: directionColor }} className={cn(isChild && "ps-4")}>
+              {isIncome ? (
+                <ArrowUpRight className="h-4 w-4" />
+              ) : (
+                <ArrowDownRight className="h-4 w-4" />
+              )}
+            </div>
+          )}
+        </TableCell>
+        <TableCell className="text-sm tabular-nums text-muted-foreground">
+          {formatDate(
+            dateBasis === "billing" ? (txn.billingLocalDate ?? txn.localDate) : txn.localDate,
+          )}
+        </TableCell>
+        <TableCell>
+          <div className={cn("flex items-center gap-2", isChild && "ps-4")}>
+            <div className="font-medium">{txn.description}</div>
+            {txn.eventId != null &&
+              txn.eventRole != null &&
+              (() => {
+                const billBadge = getCardBillBadgeState(
+                  txn.eventRole,
+                  txn.kind,
+                  txn.matchedCardNumber,
+                );
+                if (billBadge !== null) {
+                  return billBadge.matched ? (
+                    <span
+                      className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in oklch, var(--status-on-track) 18%, transparent)",
+                        color: "var(--status-on-track)",
+                      }}
+                      title={t("eventCardMatchedTooltip", {
+                        card: billBadge.cardNumber,
+                      })}
+                    >
+                      <ArrowLeftRight className="h-3 w-3" />
+                      {t("eventCardMatched", { card: billBadge.cardNumber })}
+                    </span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
+                        color: "var(--status-heads-up)",
+                      }}
+                      title={t("eventCardUnmatchedTooltip")}
+                    >
+                      <ArrowLeftRight className="h-3 w-3" />
+                      {t("eventCardUnmatched")}
+                    </span>
+                  );
+                }
+                return (
+                  <span
+                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                    style={{ backgroundColor: "var(--muted)" }}
+                    title={t("eventBadgeTooltip")}
+                  >
+                    <ArrowLeftRight className="h-3 w-3" />
+                    {t("eventTransfer")}
+                  </span>
+                );
+              })()}
+            {childCount > 0 && (
+              <span
+                className="inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums"
+                title={t("cardItemsCount", { count: childCount })}
+              >
+                {t("cardItemsCount", { count: childCount })}
+              </span>
+            )}
+            {txn.needsReview && (
+              <span
+                className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                style={{
+                  backgroundColor: "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
+                  color: "var(--status-heads-up)",
+                }}
+                title={
+                  txn.aiConfidence != null
+                    ? t("rowReviewTooltipConfidence", { score: txn.aiConfidence })
+                    : t("rowReviewTooltipUnsure")
+                }
+              >
+                <HelpCircle className="h-3 w-3" />
+                {t("rowReview")}
+                {txn.aiConfidence != null && (
+                  <span className="ms-0.5 tabular-nums">{txn.aiConfidence}/7</span>
+                )}
+              </span>
+            )}
+          </div>
+          {txn.memo && <div className="text-xs text-muted-foreground">{txn.memo}</div>}
+          {txn.type === "installments" && txn.installmentNumber && txn.installmentTotal && (
+            <div className="text-xs text-muted-foreground">
+              {t("rowInstallment", {
+                n: txn.installmentNumber,
+                total: txn.installmentTotal,
+              })}
+            </div>
+          )}
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-1.5">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex" disabled={updatingId === txn.id}>
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer transition-colors hover:bg-accent"
+                  style={
+                    txn.categoryColor
+                      ? {
+                          borderColor: `${txn.categoryColor}40`,
+                          backgroundColor: `${txn.categoryColor}15`,
+                          color: txn.categoryColor,
+                        }
+                      : undefined
+                  }
+                >
+                  {categoryName}
+                </Badge>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {categoriesForKind(categoryKind).map((cat) => (
+                  <DropdownMenuItem
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(txn.id, cat.id)}
+                  >
+                    <div
+                      className="me-2 h-2 w-2 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    {translateCategoryName(cat.name, tCat)}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {txn.needsReview && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleApprove(txn.id)}
+                disabled={updatingId === txn.id}
+                className="h-6 gap-1 px-2 text-[11px] font-medium"
+                style={{
+                  borderColor: "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
+                  color: "var(--status-on-track)",
+                }}
+                title={t("rowApproveTooltip")}
+              >
+                <Check className="h-3 w-3" />
+                {t("rowApprove")}
+              </Button>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="hidden md:table-cell">
+          <TransactionSourceCell
+            provider={txn.provider}
+            accountName={txn.accountName}
+            accountLabel={txn.accountLabel}
+          />
+        </TableCell>
+        <TableCell className="text-end font-medium tabular-nums" style={{ color: directionColor }}>
+          {formatCurrency(txn.chargedAmount, txn.chargedCurrency ?? "ILS", locale)}
+        </TableCell>
+        <TableCell className="text-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+              disabled={updatingId === txn.id}
+              aria-label={t("rowActions")}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {otherKinds[txn.kind].map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() => handleKindChange(txn.id, opt.value)}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+              {txn.isExcluded ? (
+                <DropdownMenuItem onClick={() => handleExcludeToggle(txn, false)}>
+                  <Eye className="me-2 h-3.5 w-3.5" />
+                  {t("includeAction")}
+                </DropdownMenuItem>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={() => handleExcludeToggle(txn, false)}>
+                    <EyeOff className="me-2 h-3.5 w-3.5" />
+                    {t("excludeAction")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExcludeToggle(txn, true)}>
+                    <EyeOff className="me-2 h-3.5 w-3.5" />
+                    {t("excludeMerchantAction")}
+                  </DropdownMenuItem>
+                </>
+              )}
+              {txn.eventRole === "bill_payment" && cards.length > 0 && (
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>{t("linkToCard")}</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => handleLinkCard(txn.id, null)}>
+                      {t("unlinkCard")}
+                    </DropdownMenuItem>
+                    {cards.map((c) => (
+                      <DropdownMenuItem
+                        key={c.accountNumber}
+                        onClick={() => handleLinkCard(txn.id, c.accountNumber)}
+                      >
+                        {c.name ? `${c.name} (${c.accountNumber})` : c.accountNumber}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -406,261 +689,18 @@ export function TransactionsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((txn) => {
-                  const isIncome = txn.chargedAmount > 0;
-                  const directionColor = isIncome ? "var(--status-on-track)" : "var(--status-over)";
-                  const categoryKind: Kind = isIncome ? "income" : "expense";
-                  const matchedCardBill = getCardBillBadgeState(
-                    txn.eventRole,
-                    txn.kind,
-                    txn.matchedCardNumber,
-                  )?.matched;
-                  const categoryName = txn.categoryName
-                    ? translateCategoryName(txn.categoryName, tCat)
-                    : matchedCardBill
-                      ? t("categoryCardTransfer")
-                      : t("rowUncategorized");
+                {groupBillChildren(transactions).map((group) => {
+                  const expanded =
+                    group.txn.eventId != null && expandedEvents.has(group.txn.eventId);
                   return (
-                    <TableRow
-                      key={txn.id}
-                      className={cn(
-                        "transition-colors duration-200 hover:bg-muted/50",
-                        txn.isExcluded && "opacity-50",
-                      )}
-                    >
-                      <TableCell>
-                        <div style={{ color: directionColor }}>
-                          {isIncome ? (
-                            <ArrowUpRight className="h-4 w-4" />
-                          ) : (
-                            <ArrowDownRight className="h-4 w-4" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm tabular-nums text-muted-foreground">
-                        {formatDate(
-                          dateBasis === "billing"
-                            ? (txn.billingLocalDate ?? txn.localDate)
-                            : txn.localDate,
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{txn.description}</div>
-                          {txn.eventId != null &&
-                            txn.eventRole != null &&
-                            (() => {
-                              const billBadge = getCardBillBadgeState(
-                                txn.eventRole,
-                                txn.kind,
-                                txn.matchedCardNumber,
-                              );
-                              if (billBadge !== null) {
-                                return billBadge.matched ? (
-                                  <span
-                                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                                    style={{
-                                      backgroundColor:
-                                        "color-mix(in oklch, var(--status-on-track) 18%, transparent)",
-                                      color: "var(--status-on-track)",
-                                    }}
-                                    title={t("eventCardMatchedTooltip", {
-                                      card: billBadge.cardNumber,
-                                    })}
-                                  >
-                                    <ArrowLeftRight className="h-3 w-3" />
-                                    {t("eventCardMatched", { card: billBadge.cardNumber })}
-                                  </span>
-                                ) : (
-                                  <span
-                                    className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                                    style={{
-                                      backgroundColor:
-                                        "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
-                                      color: "var(--status-heads-up)",
-                                    }}
-                                    title={t("eventCardUnmatchedTooltip")}
-                                  >
-                                    <ArrowLeftRight className="h-3 w-3" />
-                                    {t("eventCardUnmatched")}
-                                  </span>
-                                );
-                              }
-                              return (
-                                <span
-                                  className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
-                                  style={{ backgroundColor: "var(--muted)" }}
-                                  title={t("eventBadgeTooltip")}
-                                >
-                                  <ArrowLeftRight className="h-3 w-3" />
-                                  {t("eventTransfer")}
-                                </span>
-                              );
-                            })()}
-                          {txn.needsReview && (
-                            <span
-                              className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                              style={{
-                                backgroundColor:
-                                  "color-mix(in oklch, var(--status-heads-up) 18%, transparent)",
-                                color: "var(--status-heads-up)",
-                              }}
-                              title={
-                                txn.aiConfidence != null
-                                  ? t("rowReviewTooltipConfidence", { score: txn.aiConfidence })
-                                  : t("rowReviewTooltipUnsure")
-                              }
-                            >
-                              <HelpCircle className="h-3 w-3" />
-                              {t("rowReview")}
-                              {txn.aiConfidence != null && (
-                                <span className="ms-0.5 tabular-nums">{txn.aiConfidence}/7</span>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                        {txn.memo && (
-                          <div className="text-xs text-muted-foreground">{txn.memo}</div>
-                        )}
-                        {txn.type === "installments" &&
-                          txn.installmentNumber &&
-                          txn.installmentTotal && (
-                            <div className="text-xs text-muted-foreground">
-                              {t("rowInstallment", {
-                                n: txn.installmentNumber,
-                                total: txn.installmentTotal,
-                              })}
-                            </div>
-                          )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger
-                              className="inline-flex"
-                              disabled={updatingId === txn.id}
-                            >
-                              <Badge
-                                variant="outline"
-                                className="cursor-pointer transition-colors hover:bg-accent"
-                                style={
-                                  txn.categoryColor
-                                    ? {
-                                        borderColor: `${txn.categoryColor}40`,
-                                        backgroundColor: `${txn.categoryColor}15`,
-                                        color: txn.categoryColor,
-                                      }
-                                    : undefined
-                                }
-                              >
-                                {categoryName}
-                              </Badge>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                              {categoriesForKind(categoryKind).map((cat) => (
-                                <DropdownMenuItem
-                                  key={cat.id}
-                                  onClick={() => handleCategoryChange(txn.id, cat.id)}
-                                >
-                                  <div
-                                    className="me-2 h-2 w-2 rounded-full"
-                                    style={{ backgroundColor: cat.color }}
-                                  />
-                                  {translateCategoryName(cat.name, tCat)}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          {txn.needsReview && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleApprove(txn.id)}
-                              disabled={updatingId === txn.id}
-                              className="h-6 gap-1 px-2 text-[11px] font-medium"
-                              style={{
-                                borderColor:
-                                  "color-mix(in oklch, var(--status-on-track) 35%, transparent)",
-                                color: "var(--status-on-track)",
-                              }}
-                              title={t("rowApproveTooltip")}
-                            >
-                              <Check className="h-3 w-3" />
-                              {t("rowApprove")}
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <TransactionSourceCell
-                          provider={txn.provider}
-                          accountName={txn.accountName}
-                          accountLabel={txn.accountLabel}
-                        />
-                      </TableCell>
-                      <TableCell
-                        className="text-end font-medium tabular-nums"
-                        style={{ color: directionColor }}
-                      >
-                        {formatCurrency(txn.chargedAmount, txn.chargedCurrency ?? "ILS", locale)}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
-                            disabled={updatingId === txn.id}
-                            aria-label={t("rowActions")}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {otherKinds[txn.kind].map((opt) => (
-                              <DropdownMenuItem
-                                key={opt.value}
-                                onClick={() => handleKindChange(txn.id, opt.value)}
-                              >
-                                {opt.label}
-                              </DropdownMenuItem>
-                            ))}
-                            {txn.isExcluded ? (
-                              <DropdownMenuItem onClick={() => handleExcludeToggle(txn, false)}>
-                                <Eye className="me-2 h-3.5 w-3.5" />
-                                {t("includeAction")}
-                              </DropdownMenuItem>
-                            ) : (
-                              <>
-                                <DropdownMenuItem onClick={() => handleExcludeToggle(txn, false)}>
-                                  <EyeOff className="me-2 h-3.5 w-3.5" />
-                                  {t("excludeAction")}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleExcludeToggle(txn, true)}>
-                                  <EyeOff className="me-2 h-3.5 w-3.5" />
-                                  {t("excludeMerchantAction")}
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {txn.eventRole === "bill_payment" && cards.length > 0 && (
-                              <DropdownMenuSub>
-                                <DropdownMenuSubTrigger>{t("linkToCard")}</DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent>
-                                  <DropdownMenuItem onClick={() => handleLinkCard(txn.id, null)}>
-                                    {t("unlinkCard")}
-                                  </DropdownMenuItem>
-                                  {cards.map((c) => (
-                                    <DropdownMenuItem
-                                      key={c.accountNumber}
-                                      onClick={() => handleLinkCard(txn.id, c.accountNumber)}
-                                    >
-                                      {c.name ? `${c.name} (${c.accountNumber})` : c.accountNumber}
-                                    </DropdownMenuItem>
-                                  ))}
-                                </DropdownMenuSubContent>
-                              </DropdownMenuSub>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
+                    <Fragment key={group.txn.id}>
+                      {renderRow(group.txn, {
+                        childCount: group.children.length,
+                        expanded,
+                      })}
+                      {expanded &&
+                        group.children.map((child) => renderRow(child, { isChild: true }))}
+                    </Fragment>
                   );
                 })}
               </TableBody>
