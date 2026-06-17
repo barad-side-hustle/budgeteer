@@ -4,6 +4,7 @@ export type HelpIconName =
   | "AlertTriangle"
   | "ArrowLeftRight"
   | "CalendarRange"
+  | "ChevronsUpDown"
   | "CreditCard"
   | "Filter"
   | "Gauge"
@@ -32,6 +33,7 @@ export const HELP_SECTIONS: Record<HelpPageKey, HelpSection[]> = {
     { id: "accountFilter", icon: "Filter" },
     { id: "period", icon: "CalendarRange" },
     { id: "cardMatch", icon: "CreditCard" },
+    { id: "cardExpand", icon: "ChevronsUpDown" },
     { id: "rowStates", icon: "Tags" },
     { id: "dateBasis", icon: "CalendarRange" },
   ],

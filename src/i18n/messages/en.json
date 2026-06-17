@@ -1264,6 +1264,11 @@
           "body": "When a bank charge is a credit-card bill, a badge links it to the individual card purchases that make it up. The bill is treated as a transfer and kept out of expense totals, so you are not counted twice: once for the purchases and again for the bill that pays them. A bill we could not match (for example a card you have not connected) is still counted as a single expense, so that spending is never lost.",
           "example": "A ₪1,896 Visa bill is paid from checking. If those purchases were already pulled from the card, the bill is hidden and the purchases are counted instead. If the card is not connected, the ₪1,896 bill is counted on its own."
         },
+        "cardExpand": {
+          "title": "Expand a bill into its purchases",
+          "body": "A matched card-bill row can be opened to reveal the individual purchases that make it up. Click the arrow at the start of the row to expand or collapse it; the row shows how many purchases are grouped underneath. This works on the Billing-date view, where a bill and its purchases fall in the same month. On the Purchase-date view a bill's purchases sit in the month they were bought, so there is nothing to expand and no arrow appears.",
+          "example": "A ₪7,949 card bill on May 3 shows a '24 items' badge. Switch to Billing date and click the arrow to list all 24 purchases beneath the bill, then collapse them again when you are done."
+        },
         "rowStates": {
           "title": "Row states",
           "body": "'Needs review' marks an uncertain category waiting for you; 'excluded' rows are deliberately kept out of every total; a card-match badge marks a bill linked to its purchases."
