@@ -259,6 +259,7 @@ const TRANSACTION_LIST_FROM = `
   LEFT JOIN bank_accounts ba ON ba.workspace_id = t.workspace_id
     AND ba.credential_id = t.credential_id
     AND ba.account_number = t.account_number
+  LEFT JOIN event_members em_txn ON em_txn.transaction_id = t.id
   LEFT JOIN (
     SELECT em.workspace_id, em.event_id, MIN(tp.account_number) AS matched_card_number
     FROM event_members em
@@ -266,13 +267,15 @@ const TRANSACTION_LIST_FROM = `
     WHERE em.role = 'purchase'
     GROUP BY em.workspace_id, em.event_id
   ) mc ON mc.workspace_id = t.workspace_id
-       AND mc.event_id = t.event_id
-       AND t.event_role = 'bill_payment'`;
+       AND mc.event_id = COALESCE(t.event_id, em_txn.event_id)
+       AND COALESCE(t.event_role, em_txn.role) = 'bill_payment'`;
 
 const TRANSACTION_LIST_SELECT = `
   SELECT t.*, c.name AS category_name, c.color AS category_color,
          bc.label AS account_label, ba.name AS account_name,
-         mc.matched_card_number
+         mc.matched_card_number,
+         COALESCE(t.event_id, em_txn.event_id) AS _event_id,
+         COALESCE(t.event_role, em_txn.role) AS _event_role
   ${TRANSACTION_LIST_FROM}`;
 
 export function queryTransactions(
@@ -998,6 +1001,8 @@ interface TransactionRow {
   account_label?: string | null;
   account_name?: string | null;
   matched_card_number?: string | null;
+  _event_id?: number | null;
+  _event_role?: string | null;
 }
 
 function mapTransactionRow(row: unknown): TransactionWithCategory {
@@ -1031,8 +1036,8 @@ function mapTransactionRow(row: unknown): TransactionWithCategory {
     kind: r.kind as "expense" | "income" | "transfer",
     needsReview: r.needs_review === 1,
     isExcluded: r.is_excluded === 1,
-    eventId: r.event_id ?? null,
-    eventRole: (r.event_role as TransactionWithCategory["eventRole"]) ?? null,
+    eventId: r._event_id ?? r.event_id ?? null,
+    eventRole: ((r._event_role ?? r.event_role) as TransactionWithCategory["eventRole"]) ?? null,
     matchConfidence: r.match_confidence ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
