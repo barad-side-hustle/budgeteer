@@ -85,7 +85,10 @@
     "unrs-resolver"
   ],
   "overrides": {
-    "postcss": "8.5.15"
+    "postcss": "8.5.15",
+    "protobufjs": "^7.6.4",
+    "hono": "^4.12.25",
+    "js-yaml": "^4.2.0"
   },
   "patchedDependencies": {
     "israeli-bank-scrapers@6.7.5": "patches/israeli-bank-scrapers@6.7.5.patch"
