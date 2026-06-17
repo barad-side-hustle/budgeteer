@@ -24,7 +24,8 @@ Key priorities (in order):
 
 ## Branching
 
-- Every new feature must be developed on a dedicated feature branch: `git checkout -b feat/<short-name>` before writing any code. Merge to `main` only when the feature is complete and CI passes.
+- Every new feature must be developed on a dedicated feature branch: `git checkout -b feat/<short-name>` before writing any code.
+- Never merge a feature branch into `main` yourself. Leave all work on the feature branch; the user decides when and how to merge.
 
 ## Conventions
 
