@@ -847,7 +847,13 @@ export function getCategorySpendByDay(
        GROUP BY days.d
        ORDER BY days.d ASC`,
     )
-    .all(from, to, workspaceId, categoryId, ...acct.values) as DailySpendPoint[];
+    .all(
+      toJerusalemDate(from),
+      toJerusalemDate(to),
+      workspaceId,
+      categoryId,
+      ...acct.values,
+    ) as DailySpendPoint[];
 }
 
 export function getDailySpendTotals(
@@ -876,7 +882,12 @@ export function getDailySpendTotals(
        GROUP BY days.d
        ORDER BY days.d ASC`,
     )
-    .all(from, to, workspaceId, ...acct.values) as DailySpendPoint[];
+    .all(
+      toJerusalemDate(from),
+      toJerusalemDate(to),
+      workspaceId,
+      ...acct.values,
+    ) as DailySpendPoint[];
 }
 
 export interface TopMerchantForCategory {
