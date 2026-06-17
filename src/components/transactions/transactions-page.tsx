@@ -9,6 +9,7 @@ import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { HelpButton } from "@/components/help/help-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { DateBasisToggle } from "@/components/transactions/date-basis-toggle";
+import { ExportCsvButton } from "@/components/transactions/export-csv-button";
 import { QueryError } from "@/components/ui/query-error";
 import type { Locale } from "@/i18n/routing";
 import type { TransactionKindFilter } from "@/lib/api";
@@ -87,6 +88,16 @@ export function TransactionsPage() {
               prevLabel={tc("previousMonth")}
               nextLabel={tc("nextMonth")}
               nextDisabled={isCurrentMonth(selectedDate)}
+            />
+            <ExportCsvButton
+              from={from}
+              to={to}
+              search={search}
+              categoryIds={expandedCategoryIds}
+              kind={kind}
+              sort={sortField}
+              order={sortOrder}
+              disabled={(transactionsQuery.data?.total ?? 0) === 0}
             />
             <HelpButton page="transactions" />
           </>
