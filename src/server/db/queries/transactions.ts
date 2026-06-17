@@ -435,7 +435,7 @@ export function getMatchCandidates(workspaceId: number, from: string): MatchCand
     .where(
       and(
         eq(transactionsTable.workspaceId, workspaceId),
-        gte(transactionsTable.date, from),
+        gte(transactionsTable.processedDate, from),
         isNull(transactionsTable.eventId),
       ),
     )

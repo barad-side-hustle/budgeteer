@@ -4,7 +4,10 @@ import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
 import { formatBillingAccountKey, type RawBillingAccount } from "@/lib/account-group";
 import type { BankProvider } from "@/lib/types";
 import { getWorkspaceSetting } from "@/server/db/queries/settings";
+import { CARD_ISSUERS } from "@/server/lib/transfers";
 import type { ScrapedTransaction, ScrapeResult } from "@/server/scrapers/types";
+
+const CARD_ISSUER_SET: ReadonlySet<string> = new Set(CARD_ISSUERS);
 
 export const PROVIDER_MAP: Record<string, CompanyTypes> = {
   isracard: CompanyTypes.isracard,
@@ -135,6 +138,9 @@ async function runScrape(
     verbose: showBrowser,
     timeout: 60000,
     args: chromiumArgs,
+    outputData: CARD_ISSUER_SET.has(provider)
+      ? { enableTransactionsFilterByDate: false }
+      : undefined,
   });
 
   const result = await scraper.scrape(credentials as Parameters<typeof scraper.scrape>[0]);
