@@ -22,6 +22,10 @@ Key priorities (in order):
 - **better-sqlite3** + **israeli-bank-scrapers** must be in `serverExternalPackages` in `next.config.ts` (native bindings can't be bundled).
 - **Tailwind CSS v4** - uses the new `@theme` directive in `globals.css`, not `tailwind.config.js`.
 
+## Branching
+
+- Every new feature must be developed on a dedicated feature branch: `git checkout -b feat/<short-name>` before writing any code. Merge to `main` only when the feature is complete and CI passes.
+
 ## Conventions
 
 - No em dashes anywhere in code, comments, docs, or commit messages.
