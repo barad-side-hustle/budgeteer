@@ -111,7 +111,7 @@ A built-in AI chat agent at `/chat` answers questions about your transactions, b
 <td valign="top">
 
 ### 🎯 Auto-detected transfers
-Credit card payments and inter-account moves are recognized and excluded from spending totals. When a card bill cannot be matched automatically, link it to the right card from **Settings → Card matching** (or the transaction row menu) and rebuild, so the bill is never double-counted.
+Credit card payments and inter-account moves are recognized and excluded from spending totals. When a card bill cannot be matched automatically, link it to the right card from **Settings → Card matching** (or the transaction row menu) and rebuild, so the bill is never double-counted. On the Transactions page, a matched bill collapses its card purchases beneath it: each bill row shows an item count and a toggle to expand or collapse the purchases that make it up (most useful on the billing-date basis, where a bill and its purchases share the same month).
 
 </td>
 <td valign="top">
