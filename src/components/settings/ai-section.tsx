@@ -262,7 +262,11 @@ function AIForm({ settings }: { settings: AppSettings }) {
                 <SelectContent align="start">
                   {RECOMMENDED_OPENROUTER_MODELS.map((m) => (
                     <SelectItem key={m.name} value={m.name}>
-                      {m.recommended ? `${m.name} (${t("recommendedTag")})` : m.name}
+                      {m.free
+                        ? `${m.name} (${t("freeTag")})`
+                        : m.recommended
+                          ? `${m.name} (${t("recommendedTag")})`
+                          : m.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

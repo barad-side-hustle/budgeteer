@@ -501,10 +501,22 @@ function OpenRouterModelPicker({
             >
               <div className="flex items-baseline justify-between gap-1">
                 <span className="truncate text-[11px] font-bold tracking-tight">{m.name}</span>
-                {m.recommended && (
-                  <span className="rounded-full bg-primary/10 px-1 py-0 text-[8px] font-bold uppercase tracking-wider text-primary">
-                    {t("aiModelRecommendedBadge")}
+                {m.free ? (
+                  <span
+                    className="rounded-full px-1 py-0 text-[8px] font-bold uppercase tracking-wider"
+                    style={{
+                      background: "color-mix(in oklch, var(--status-on-track) 16%, transparent)",
+                      color: "var(--status-on-track)",
+                    }}
+                  >
+                    {t("aiModelFreeBadge")}
                   </span>
+                ) : (
+                  m.recommended && (
+                    <span className="rounded-full bg-primary/10 px-1 py-0 text-[8px] font-bold uppercase tracking-wider text-primary">
+                      {t("aiModelRecommendedBadge")}
+                    </span>
+                  )
                 )}
               </div>
               <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{m.description}</p>

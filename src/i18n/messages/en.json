@@ -531,6 +531,7 @@
       "modelLabel": "Model",
       "geminiModelDescription": "Choose a stable Gemini text model for categorization.",
       "recommendedTag": "recommended",
+      "freeTag": "free",
       "saveAiSettings": "Save AI settings",
       "aiSettingsSaved": "AI settings saved"
     },
@@ -782,6 +783,7 @@
     "aiProviderOpenRouterTagline": "One key, hundreds of models (Claude, GPT, more)",
     "aiOpenRouterCustomModelLabel": "Or paste a model id",
     "aiModelRecommendedBadge": "rec",
+    "aiModelFreeBadge": "free",
     "aiModelSizeGb": "{size} GB",
     "aiManualNoteAfterWithGemini": "; you can assign categories from the transactions table any time. Switch to Claude, Gemini, OpenRouter, or Ollama later in",
     "aiOllamaInstalledReadyRich": "✓ <b>{model}</b> is installed and ready.",

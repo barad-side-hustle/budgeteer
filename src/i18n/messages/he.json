@@ -531,6 +531,7 @@
       "modelLabel": "מודל",
       "geminiModelDescription": "בחרו מודל טקסט יציב של Gemini לסיווג.",
       "recommendedTag": "מומלץ",
+      "freeTag": "חינם",
       "saveAiSettings": "שמירת הגדרות AI",
       "aiSettingsSaved": "הגדרות AI נשמרו"
     },
@@ -782,6 +783,7 @@
     "aiProviderOpenRouterTagline": "מפתח אחד, מאות מודלים (Claude, GPT ועוד)",
     "aiOpenRouterCustomModelLabel": "או הדביקו מזהה מודל",
     "aiModelRecommendedBadge": "מומלץ",
+    "aiModelFreeBadge": "חינם",
     "aiModelSizeGb": "{size} GB",
     "aiManualNoteAfterWithGemini": "; תוכלו לשייך קטגוריות מטבלת התנועות בכל עת. תוכלו להחליף ל־Claude, Gemini, OpenRouter או Ollama מאוחר יותר ב־",
     "aiOllamaInstalledReadyRich": "✓ <b>{model}</b> מותקן ומוכן.",

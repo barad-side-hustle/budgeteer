@@ -691,6 +691,7 @@ export interface OpenRouterModelInfo {
   name: string;
   description: string;
   recommended?: boolean;
+  free?: boolean;
 }
 
 export const RECOMMENDED_OPENROUTER_MODELS: OpenRouterModelInfo[] = [
@@ -710,6 +711,20 @@ export const RECOMMENDED_OPENROUTER_MODELS: OpenRouterModelInfo[] = [
   {
     name: "google/gemini-3.5-flash",
     description: "Fast, budget-friendly Google option.",
+  },
+  {
+    name: "z-ai/glm-5.2",
+    description: "Capable, low-cost model from Z.ai with tool support.",
+  },
+  {
+    name: "meta-llama/llama-3.3-70b-instruct:free",
+    description: "Free Llama 3.3 70B. Heavier rate limits than paid models.",
+    free: true,
+  },
+  {
+    name: "qwen/qwen3-next-80b-a3b-instruct:free",
+    description: "Free Qwen3 model. Heavier rate limits than paid models.",
+    free: true,
   },
 ];
 
