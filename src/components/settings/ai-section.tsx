@@ -85,8 +85,15 @@ function AIForm({ settings }: { settings: AppSettings }) {
   const [geminiKey, setGeminiKey] = useState("");
   const [geminiModel, setGeminiModel] = useState(settings.geminiModel);
   const [openRouterKey, setOpenRouterKey] = useState("");
-  const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel);
-  const [openRouterCustomModel, setOpenRouterCustomModel] = useState("");
+  const isKnownOpenRouterModel = RECOMMENDED_OPENROUTER_MODELS.some(
+    (m) => m.name === settings.openRouterModel,
+  );
+  const [openRouterModel, setOpenRouterModel] = useState(
+    isKnownOpenRouterModel ? settings.openRouterModel : RECOMMENDED_OPENROUTER_MODELS[0].name,
+  );
+  const [openRouterCustomModel, setOpenRouterCustomModel] = useState(
+    isKnownOpenRouterModel ? "" : settings.openRouterModel,
+  );
   const [ollamaUrl, setOllamaUrl] = useState(settings.ollamaUrl);
   const [ollamaModel, setOllamaModel] = useState(settings.ollamaModel);
   const missingKey =
@@ -262,7 +269,7 @@ function AIForm({ settings }: { settings: AppSettings }) {
               </Select>
               <p className="text-xs text-muted-foreground">
                 {RECOMMENDED_OPENROUTER_MODELS.find((m) => m.name === openRouterModel)
-                  ?.description ?? ""}
+                  ?.description ?? t("openRouterModelDescription")}
               </p>
             </div>
             <div className="space-y-2">
