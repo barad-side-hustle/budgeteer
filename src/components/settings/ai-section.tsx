@@ -17,10 +17,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getSettings, saveAIConfig } from "@/lib/api";
+import { resolveOpenRouterModel } from "@/lib/openrouter";
 import {
   type AppSettings,
   RECOMMENDED_GEMINI_MODELS,
   RECOMMENDED_OLLAMA_MODELS,
+  RECOMMENDED_OPENROUTER_MODELS,
 } from "@/lib/types";
 
 function ollamaModelKey(name: string): string {
@@ -82,9 +84,15 @@ function AIForm({ settings }: { settings: AppSettings }) {
   const [apiKey, setApiKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [geminiModel, setGeminiModel] = useState(settings.geminiModel);
+  const [openRouterKey, setOpenRouterKey] = useState("");
+  const [openRouterModel, setOpenRouterModel] = useState(settings.openRouterModel);
+  const [openRouterCustomModel, setOpenRouterCustomModel] = useState("");
   const [ollamaUrl, setOllamaUrl] = useState(settings.ollamaUrl);
   const [ollamaModel, setOllamaModel] = useState(settings.ollamaModel);
-  const missingKey = (provider === "claude" && !apiKey) || (provider === "gemini" && !geminiKey);
+  const missingKey =
+    (provider === "claude" && !apiKey) ||
+    (provider === "gemini" && !geminiKey) ||
+    (provider === "openrouter" && !openRouterKey);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -93,6 +101,11 @@ function AIForm({ settings }: { settings: AppSettings }) {
         claudeApiKey: provider === "claude" && apiKey ? apiKey : undefined,
         geminiApiKey: provider === "gemini" && geminiKey ? geminiKey : undefined,
         geminiModel: provider === "gemini" ? geminiModel : undefined,
+        openRouterApiKey: provider === "openrouter" && openRouterKey ? openRouterKey : undefined,
+        openRouterModel:
+          provider === "openrouter"
+            ? resolveOpenRouterModel(openRouterCustomModel, openRouterModel)
+            : undefined,
         ollamaUrl: provider === "ollama" ? ollamaUrl : undefined,
         ollamaModel: provider === "ollama" ? ollamaModel : undefined,
       }),
@@ -101,6 +114,7 @@ function AIForm({ settings }: { settings: AppSettings }) {
       toast.success(t("aiSettingsSaved"));
       setApiKey("");
       setGeminiKey("");
+      setOpenRouterKey("");
     },
     onError: (err) => {
       toast.error(errorMessage(err));
@@ -110,7 +124,7 @@ function AIForm({ settings }: { settings: AppSettings }) {
   return (
     <>
       <SettingCard title={t("providerCardTitle")} description={t("providerCardDescription")}>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
               id: "claude" as const,
@@ -121,6 +135,11 @@ function AIForm({ settings }: { settings: AppSettings }) {
               id: "gemini" as const,
               title: t("providerGeminiTitle"),
               desc: t("providerGeminiDesc"),
+            },
+            {
+              id: "openrouter" as const,
+              title: t("providerOpenRouterTitle"),
+              desc: t("providerOpenRouterDesc"),
             },
             {
               id: "ollama" as const,
@@ -197,6 +216,64 @@ function AIForm({ settings }: { settings: AppSettings }) {
                 {RECOMMENDED_GEMINI_MODELS.find((m) => m.name === geminiModel)?.description ??
                   t("geminiModelDescription")}
               </p>
+            </div>
+          </div>
+        </SettingCard>
+      )}
+
+      {provider === "openrouter" && (
+        <SettingCard
+          title={t("openRouterKeyCardTitle")}
+          description={t("openRouterKeyCardDescription")}
+        >
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="openrouter-key">{t("apiKeyLabel")}</Label>
+              <Input
+                id="openrouter-key"
+                type="password"
+                value={openRouterKey}
+                onChange={(e) => setOpenRouterKey(e.target.value)}
+                placeholder="sk-or-v1-..."
+              />
+              <p className="text-xs text-muted-foreground">{t("apiKeyRequiredHint")}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("modelLabel")}</Label>
+              <Select
+                value={openRouterModel}
+                onValueChange={(v) => {
+                  if (v) {
+                    setOpenRouterModel(v);
+                    setOpenRouterCustomModel("");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="start">
+                  {RECOMMENDED_OPENROUTER_MODELS.map((m) => (
+                    <SelectItem key={m.name} value={m.name}>
+                      {m.recommended ? `${m.name} (${t("recommendedTag")})` : m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {RECOMMENDED_OPENROUTER_MODELS.find((m) => m.name === openRouterModel)
+                  ?.description ?? ""}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="openrouter-custom-model">{t("openRouterCustomModelLabel")}</Label>
+              <Input
+                id="openrouter-custom-model"
+                value={openRouterCustomModel}
+                onChange={(e) => setOpenRouterCustomModel(e.target.value)}
+                placeholder="anthropic/claude-3.5-haiku"
+              />
+              <p className="text-xs text-muted-foreground">{t("openRouterCustomModelHint")}</p>
             </div>
           </div>
         </SettingCard>
