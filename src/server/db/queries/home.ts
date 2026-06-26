@@ -207,7 +207,7 @@ export function getNeedsAttentionCounts(
 export function getBankHealth(workspaceId: number): HomeBankHealthItem[] {
   const orm = getOrm();
   const creds = orm
-    .select({ provider: bankCredentials.provider })
+    .selectDistinct({ provider: bankCredentials.provider })
     .from(bankCredentials)
     .where(eq(bankCredentials.workspaceId, workspaceId))
     .orderBy(asc(bankCredentials.provider))
