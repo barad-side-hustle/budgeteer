@@ -143,10 +143,12 @@ export function testBankConnection(
 }
 
 export function saveAIConfig(config: {
-  provider: "claude" | "gemini" | "ollama" | "none";
+  provider: "claude" | "gemini" | "ollama" | "openrouter" | "none";
   claudeApiKey?: string;
   geminiApiKey?: string;
   geminiModel?: string;
+  openRouterApiKey?: string;
+  openRouterModel?: string;
   ollamaUrl?: string;
   ollamaModel?: string;
 }) {

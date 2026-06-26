@@ -2,9 +2,10 @@ import "server-only";
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { LanguageModel } from "ai";
 import { createOllama } from "ai-sdk-ollama";
-import { RECOMMENDED_GEMINI_MODELS } from "@/lib/types";
+import { RECOMMENDED_GEMINI_MODELS, RECOMMENDED_OPENROUTER_MODELS } from "@/lib/types";
 import { getSetting } from "@/server/db/queries/settings";
 import { decrypt } from "@/server/lib/encryption";
 
@@ -44,6 +45,23 @@ export function createChatModel(): LanguageModel | null {
 
     const model = getSetting("ai_gemini_model") ?? RECOMMENDED_GEMINI_MODELS[0].name;
     return createGoogleGenerativeAI({ apiKey })(model);
+  }
+
+  if (provider === "openrouter") {
+    const encryptedKey = getSetting("ai_openrouter_key_encrypted");
+    const iv = getSetting("ai_openrouter_key_iv");
+    const authTag = getSetting("ai_openrouter_key_auth_tag");
+
+    if (!encryptedKey || !iv || !authTag) return null;
+
+    const apiKey = decrypt({
+      encrypted: Buffer.from(encryptedKey, "hex"),
+      iv: Buffer.from(iv, "hex"),
+      authTag: Buffer.from(authTag, "hex"),
+    });
+
+    const model = getSetting("ai_openrouter_model") ?? RECOMMENDED_OPENROUTER_MODELS[0].name;
+    return createOpenRouter({ apiKey }).chat(model);
   }
 
   if (provider === "ollama") {

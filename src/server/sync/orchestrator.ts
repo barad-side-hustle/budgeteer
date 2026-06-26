@@ -92,6 +92,9 @@ export function friendlyAIError(err: unknown, modelName: string, provider?: stri
   if (provider === "gemini" && (isNetwork || isAuth)) {
     return "Gemini API request failed. Check your API key and connection in settings.";
   }
+  if (provider === "openrouter" && (isNetwork || isAuth)) {
+    return "OpenRouter API request failed. Check your API key and connection in settings.";
+  }
   return `AI categorization failed: ${msg}`;
 }
 

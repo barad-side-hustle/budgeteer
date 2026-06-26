@@ -1,7 +1,11 @@
 import "server-only";
 
 import { and, eq, sql } from "drizzle-orm";
-import { type AppSettings, RECOMMENDED_GEMINI_MODELS } from "@/lib/types";
+import {
+  type AppSettings,
+  RECOMMENDED_GEMINI_MODELS,
+  RECOMMENDED_OPENROUTER_MODELS,
+} from "@/lib/types";
 import { getOrm } from "@/server/db/orm";
 import { settings, workspaceSettings } from "@/server/db/schema";
 import { toLocalISODate } from "@/server/lib/date-utils";
@@ -76,6 +80,7 @@ export const setSetting = setGlobalSetting;
 
 const AUTO_SYNC_TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DEFAULT_GEMINI_MODEL = RECOMMENDED_GEMINI_MODELS[0].name;
+const DEFAULT_OPENROUTER_MODEL = RECOMMENDED_OPENROUTER_MODELS[0].name;
 
 export function getAppSettings(workspaceId: number): AppSettings {
   const targetRaw = getWorkspaceSetting(workspaceId, "monthly_target");
@@ -89,6 +94,7 @@ export function getAppSettings(workspaceId: number): AppSettings {
     monthsToSync: Number(getWorkspaceSetting(workspaceId, "months_to_sync") ?? "3"),
     aiProvider: (getGlobalSetting("ai_provider") ?? "none") as AppSettings["aiProvider"],
     geminiModel: getGlobalSetting("ai_gemini_model") ?? DEFAULT_GEMINI_MODEL,
+    openRouterModel: getGlobalSetting("ai_openrouter_model") ?? DEFAULT_OPENROUTER_MODEL,
     ollamaUrl: getGlobalSetting("ai_ollama_url") ?? "http://localhost:11434",
     ollamaModel: getGlobalSetting("ai_ollama_model") ?? "llama3.2:3b",
     showBrowser: getWorkspaceSetting(workspaceId, "scraper_show_browser") === "true",

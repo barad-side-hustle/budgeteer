@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, asc, desc, eq } from "drizzle-orm";
 import { trimToSyncedMonths } from "@/lib/cashflow";
+import { dateBasisColumn } from "@/lib/date-basis";
 import type {
   HomeBankHealthItem,
   HomeCashFlow,
@@ -115,12 +116,13 @@ export function getHistoricalTrend(
     });
   }
 
+  const billingDate = dateBasisColumn("billing");
   const stmt = db.prepare(
     `SELECT
        COALESCE(SUM(CASE WHEN kind = 'expense' THEN (-charged_amount) ELSE 0 END), 0) as total,
        COALESCE(SUM(CASE WHEN kind = 'income' THEN charged_amount ELSE 0 END), 0) as income
      FROM transactions
-     WHERE workspace_id = ? AND local_date >= ? AND local_date <= ?
+     WHERE workspace_id = ? AND ${billingDate} >= ? AND ${billingDate} <= ?
        AND status = 'completed' AND is_excluded = 0${acct.sql}`,
   );
 
@@ -205,7 +207,7 @@ export function getNeedsAttentionCounts(
 export function getBankHealth(workspaceId: number): HomeBankHealthItem[] {
   const orm = getOrm();
   const creds = orm
-    .select({ provider: bankCredentials.provider })
+    .selectDistinct({ provider: bankCredentials.provider })
     .from(bankCredentials)
     .where(eq(bankCredentials.workspaceId, workspaceId))
     .orderBy(asc(bankCredentials.provider))
