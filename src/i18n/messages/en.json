@@ -331,7 +331,9 @@
     "vsLastMonthDown": "↓ {pct}% vs last month",
     "vsLastMonthFlat": "flat vs last month",
     "vsTypical": "vs {amount} typical",
-    "ofBudget": "of {amount}"
+    "ofBudget": "of {amount}",
+    "missingCards": "Card {cards} was not returned by the provider this sync. It may have been removed from your login, or the provider is not exposing it.",
+    "collidingCards": "Two cards share the last 4 digits {cards}. Their transactions are being merged and totals will be wrong."
   },
   "settings": {
     "pageTitle": "Settings",
@@ -1359,5 +1361,10 @@
         }
       }
     }
+  },
+  "uncoveredBills": {
+    "title": "{count, plural, one {# card bill totalling {total}} other {# card bills totalling {total}}} not covered by a connected card",
+    "description": "These bills were charged to {accounts}, but no connected card explains them. A card is probably missing from your credit card login.",
+    "connectCard": "Add a card"
   }
 }

@@ -1056,3 +1056,11 @@ export interface CardBillMatchingData {
   bills: CardBillMatchingRow[];
   cards: MatchingCardOption[];
 }
+
+export interface UncoveredCardBill {
+  id: number;
+  accountNumber: string;
+  localDate: string;
+  chargedAmount: number;
+  description: string;
+}

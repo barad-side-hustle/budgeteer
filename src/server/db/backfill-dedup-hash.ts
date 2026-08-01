@@ -1,0 +1,135 @@
+import "server-only";
+
+import type Database from "better-sqlite3";
+import { computeDedupHash, DEDUP_HASH_VERSION } from "@/server/lib/dedup";
+
+export interface RepairRow {
+  id: number;
+  workspaceId: number;
+  hash: string;
+  syncRunId: number;
+  referenced: boolean;
+}
+
+export interface RepairPlan {
+  keep: { id: number; hash: string; sequence: number }[];
+  remove: number[];
+}
+
+export function planDedupRepair(rows: readonly RepairRow[]): RepairPlan {
+  const groups = new Map<string, RepairRow[]>();
+  for (const row of rows) {
+    const key = `${row.workspaceId}:${row.hash}`;
+    const bucket = groups.get(key);
+    if (bucket) {
+      bucket.push(row);
+    } else {
+      groups.set(key, [row]);
+    }
+  }
+
+  const keep: RepairPlan["keep"] = [];
+  const remove: number[] = [];
+
+  for (const bucket of groups.values()) {
+    const perRun = new Map<number, number>();
+    for (const row of bucket) {
+      perRun.set(row.syncRunId, (perRun.get(row.syncRunId) ?? 0) + 1);
+    }
+    const keepCount = Math.max(...perRun.values());
+
+    const ordered = [...bucket].sort(
+      (a, b) => Number(b.referenced) - Number(a.referenced) || a.id - b.id,
+    );
+
+    ordered.forEach((row, index) => {
+      if (index < keepCount) {
+        keep.push({ id: row.id, hash: row.hash, sequence: index });
+      } else {
+        remove.push(row.id);
+      }
+    });
+  }
+
+  return { keep, remove };
+}
+
+interface StoredRow {
+  id: number;
+  workspaceId: number;
+  accountNumber: string;
+  date: string;
+  originalAmount: number;
+  originalCurrency: string;
+  description: string;
+  identifier: string | null;
+  installmentNumber: number | null;
+  installmentTotal: number | null;
+  syncRunId: number;
+  referenced: number;
+}
+
+export function backfillDedupHash(db: Database.Database): void {
+  const { stale } = db
+    .prepare("SELECT COUNT(*) AS stale FROM transactions WHERE dedup_hash_version < ?")
+    .get(DEDUP_HASH_VERSION) as { stale: number };
+  if (stale === 0) return;
+
+  const stored = db
+    .prepare(
+      `SELECT t.id,
+              t.workspace_id AS workspaceId,
+              t.account_number AS accountNumber,
+              t.date,
+              t.original_amount AS originalAmount,
+              t.original_currency AS originalCurrency,
+              t.description,
+              t.identifier,
+              t.installment_number AS installmentNumber,
+              t.installment_total AS installmentTotal,
+              t.sync_run_id AS syncRunId,
+              EXISTS(SELECT 1 FROM event_members em WHERE em.transaction_id = t.id) AS referenced
+         FROM transactions t
+        ORDER BY t.id`,
+    )
+    .all() as StoredRow[];
+
+  const plan = planDedupRepair(
+    stored.map((row) => ({
+      id: row.id,
+      workspaceId: row.workspaceId,
+      syncRunId: row.syncRunId,
+      referenced: row.referenced === 1,
+      hash: computeDedupHash({
+        accountNumber: row.accountNumber,
+        date: row.date,
+        originalAmount: row.originalAmount,
+        originalCurrency: row.originalCurrency,
+        description: row.description,
+        identifier: row.identifier,
+        installmentNumber: row.installmentNumber,
+        installmentTotal: row.installmentTotal,
+      }),
+    })),
+  );
+
+  const removeStmt = db.prepare("DELETE FROM transactions WHERE id = ?");
+  const parkStmt = db.prepare("UPDATE transactions SET dedup_sequence = -id WHERE id = ?");
+  const applyStmt = db.prepare(
+    `UPDATE transactions
+        SET dedup_hash = ?, dedup_sequence = ?, dedup_hash_version = ?
+      WHERE id = ?`,
+  );
+
+  db.transaction(() => {
+    for (const id of plan.remove) {
+      removeStmt.run(id);
+    }
+    for (const row of plan.keep) {
+      parkStmt.run(row.id);
+    }
+    for (const row of plan.keep) {
+      applyStmt.run(row.hash, row.sequence, DEDUP_HASH_VERSION, row.id);
+    }
+  })();
+}

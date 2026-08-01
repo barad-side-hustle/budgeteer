@@ -134,6 +134,7 @@ export const transactions = sqliteTable("transactions", {
     .references(() => syncRuns.id),
   dedupHash: text("dedup_hash").notNull(),
   dedupSequence: integer("dedup_sequence").notNull().default(0),
+  dedupHashVersion: integer("dedup_hash_version").notNull().default(0),
   kind: text().$type<"expense" | "income" | "transfer">().notNull().default("expense"),
   needsReview: integer("needs_review").notNull().default(0),
   isExcluded: integer("is_excluded").notNull().default(0),

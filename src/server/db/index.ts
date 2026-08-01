@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { backfillBillingLocalDate } from "@/server/db/backfill-billing-local-date";
+import { backfillDedupHash } from "@/server/db/backfill-dedup-hash";
 import { backfillLocalDate } from "@/server/db/backfill-local-date";
 import { runMigrations } from "@/server/db/migrate";
 import { getDataDir } from "@/server/lib/data-dir";
@@ -35,6 +36,7 @@ function createDatabase(): Database.Database {
 
   backfillLocalDate(db);
   backfillBillingLocalDate(db);
+  backfillDedupHash(db);
 
   return db;
 }

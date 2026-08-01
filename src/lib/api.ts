@@ -18,6 +18,7 @@ import type {
   Integration,
   SetupStatus,
   TransactionWithCategory,
+  UncoveredCardBill,
   Workspace,
 } from "@/lib/types";
 import { getActiveWorkspaceIdSync } from "@/lib/workspace-store";
@@ -159,6 +160,10 @@ export function saveAIConfig(config: {
 
 export function getSettings() {
   return fetchJSON<AppSettings>("/api/settings");
+}
+
+export function getUncoveredCardBills() {
+  return fetchJSON<UncoveredCardBill[]>("/api/card-coverage");
 }
 
 export function listChatSessions() {

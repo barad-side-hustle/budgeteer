@@ -119,6 +119,20 @@ export function SyncButton({ onComplete, autoStart = false }: SyncButtonProps) {
             closeButton: true,
           });
         }
+        const missingCards = (event.data.missingCards as string[]) ?? [];
+        if (ok && missingCards.length > 0) {
+          toast.warning(t("missingCards", { cards: missingCards.join(", ") }), {
+            duration: 12000,
+            closeButton: true,
+          });
+        }
+        const collidingCards = (event.data.collidingCards as string[]) ?? [];
+        if (ok && collidingCards.length > 0) {
+          toast.warning(t("collidingCards", { cards: collidingCards.join(", ") }), {
+            duration: 12000,
+            closeButton: true,
+          });
+        }
       } else if (event.type === "stage") {
         setStage((event.data.stage as string) ?? null);
       } else if (event.type === "complete") {

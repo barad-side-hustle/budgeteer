@@ -66,8 +66,10 @@ export const CREDIT_CARD_PAYMENT_PATTERNS: readonly RegExp[] = [
 const INTERNAL_TRANSFER_PATTERNS: readonly RegExp[] = [
   /העברה/i,
   /העברת/i,
+  /הוראת[\s\-־]*קבע/i,
   /\btransfer\b/i,
   /\bwire\b/i,
+  /\bstanding\s*order\b/i,
 ];
 
 const ATM_WITHDRAWAL_PATTERNS: readonly RegExp[] = [
