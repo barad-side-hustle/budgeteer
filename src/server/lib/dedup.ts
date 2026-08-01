@@ -4,6 +4,8 @@ import crypto from "node:crypto";
 
 import { toBankDayStartUtc } from "@/server/lib/dates";
 
+export const DEDUP_HASH_VERSION = 1;
+
 interface DedupFields {
   accountNumber: string;
   date: string;

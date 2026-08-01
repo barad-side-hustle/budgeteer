@@ -13,7 +13,7 @@ import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
 import { transactions as transactionsTable } from "@/server/db/schema";
 import { jerusalemToday, monthStart, shiftMonth, toJerusalemDate } from "@/server/lib/date-utils";
-import { computeDedupHash } from "@/server/lib/dedup";
+import { computeDedupHash, DEDUP_HASH_VERSION } from "@/server/lib/dedup";
 import type { MatchCandidate } from "@/server/lib/matching";
 import { detectKind } from "@/server/lib/transfers";
 export type TransactionKindFilter = "expense" | "income" | "all";
@@ -63,12 +63,12 @@ export function insertTransactions(
       workspace_id, account_number, date, processed_date, local_date, billing_local_date, original_amount, original_currency,
       charged_amount, charged_currency, description, memo, type, status,
       identifier, installment_number, installment_total, provider, credential_id,
-      sync_run_id, dedup_hash, dedup_sequence, kind
+      sync_run_id, dedup_hash, dedup_sequence, dedup_hash_version, kind
     ) VALUES (
       @workspaceId, @accountNumber, @date, @processedDate, @localDate, @billingLocalDate, @originalAmount, @originalCurrency,
       @chargedAmount, @chargedCurrency, @description, @memo, @type, @status,
       @identifier, @installmentNumber, @installmentTotal, @provider, @credentialId,
-      @syncRunId, @dedupHash, @dedupSequence, @kind
+      @syncRunId, @dedupHash, @dedupSequence, @dedupHashVersion, @kind
     )
     ON CONFLICT(workspace_id, dedup_hash, dedup_sequence) DO UPDATE SET
       status = CASE WHEN transactions.status = 'pending' THEN excluded.status ELSE transactions.status END,
@@ -127,6 +127,7 @@ export function insertTransactions(
         syncRunId: syncRunId,
         dedupHash: hash,
         dedupSequence: sequence,
+        dedupHashVersion: DEDUP_HASH_VERSION,
         kind,
       };
 
