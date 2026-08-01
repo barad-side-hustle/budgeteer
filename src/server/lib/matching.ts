@@ -213,6 +213,7 @@ export function proposeEvents(
       {
         epsilon: it.epsilon,
         dayWindow: it.dayWindow,
+        requireKeyword: it.requireKeyword,
       },
     );
     for (const { debitId, creditId } of pairs) {

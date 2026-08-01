@@ -21,6 +21,7 @@ export interface TransferPair {
 interface PairOptions {
   epsilon?: number;
   dayWindow?: number;
+  requireKeyword?: boolean;
 }
 
 const DEFAULT_EPSILON = 0.01;
@@ -56,6 +57,7 @@ export function findInternalTransferPairs(
 ): TransferPair[] {
   const epsilon = opts.epsilon ?? DEFAULT_EPSILON;
   const dayWindow = opts.dayWindow ?? DEFAULT_DAY_WINDOW;
+  const requireKeyword = opts.requireKeyword ?? true;
 
   const eligible = rows.filter((r) => r.kind !== "transfer" && r.chargedAmount !== 0);
   const debits = eligible.filter((r) => r.chargedAmount < 0).sort(sortKey);
@@ -78,6 +80,7 @@ export function findInternalTransferPairs(
       const gap = Math.abs(dayNumber(debit.date) - dayNumber(credit.date));
       if (Number.isNaN(gap) || gap > dayWindow) continue;
       if (
+        requireKeyword &&
         !matchesInternalTransfer(debit.description) &&
         !matchesInternalTransfer(credit.description)
       ) {
