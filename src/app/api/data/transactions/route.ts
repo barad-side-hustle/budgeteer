@@ -2,7 +2,13 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getDb } from "@/server/db/index";
 import { getOrm } from "@/server/db/orm";
-import { merchantCategories, syncRuns, transactions } from "@/server/db/schema";
+import {
+  financialEvents,
+  manualCardBillLinks,
+  merchantCategories,
+  syncRuns,
+  transactions,
+} from "@/server/db/schema";
 import { getWorkspaceIdFromRequest } from "@/server/lib/workspace-context";
 
 export async function DELETE(request: Request) {
@@ -29,7 +35,9 @@ export async function DELETE(request: Request) {
         .get(workspaceId) as { c: number }
     ).c;
 
+    orm.delete(manualCardBillLinks).where(eq(manualCardBillLinks.workspaceId, workspaceId)).run();
     orm.delete(transactions).where(eq(transactions.workspaceId, workspaceId)).run();
+    orm.delete(financialEvents).where(eq(financialEvents.workspaceId, workspaceId)).run();
     orm.delete(syncRuns).where(eq(syncRuns.workspaceId, workspaceId)).run();
     orm.delete(merchantCategories).where(eq(merchantCategories.workspaceId, workspaceId)).run();
 
