@@ -19,6 +19,7 @@ import { SyncStatusPill } from "@/components/home/sync-status-pill";
 import { TopInsights } from "@/components/home/top-insights";
 import { TrendsChart } from "@/components/home/trends-chart";
 import { PageHeader } from "@/components/layout/app-shell";
+import { UncoveredBillsBanner } from "@/components/uncovered-bills-banner";
 import { getActivity, getForecast, getInsights } from "@/lib/api";
 
 export function HomePage() {
@@ -87,6 +88,7 @@ export function HomePage() {
       <div className="p-4 md:p-6 lg:p-8">
         <SyncFailureBanner items={data?.bankHealth ?? null} className="mb-4 md:mb-5 lg:mb-6" />
         <AINotConnectedBanner className="mb-4 md:mb-5 lg:mb-6" />
+        <UncoveredBillsBanner className="mb-4 md:mb-5 lg:mb-6" />
 
         <div className="flex flex-col gap-4 md:gap-5 lg:gap-6">
           {forecastLoading ? (
