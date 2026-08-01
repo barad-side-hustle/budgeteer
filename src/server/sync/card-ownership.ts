@@ -7,6 +7,7 @@ export interface CardClassification {
   shared: string[];
   newlyAdded: string[];
   existingOwn: string[];
+  collidingLast4: string[];
 }
 
 export interface SyncCountResult {
@@ -30,10 +31,16 @@ export function classifyScrapedCards(
     shared: [],
     newlyAdded: [],
     existingOwn: [],
+    collidingLast4: [],
   };
   const seen = new Set<string>();
   for (const accountNumber of scrapedAccountNumbers) {
-    if (seen.has(accountNumber)) continue;
+    if (seen.has(accountNumber)) {
+      if (!result.collidingLast4.includes(accountNumber)) {
+        result.collidingLast4.push(accountNumber);
+      }
+      continue;
+    }
     seen.add(accountNumber);
     const priorOwner = priorOwnerByAccount.get(accountNumber);
     const owner = priorOwner ?? syncingCredentialId;

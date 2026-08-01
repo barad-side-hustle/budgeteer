@@ -98,3 +98,20 @@ describe("hasCardDataChange", () => {
     expect(hasCardDataChange([{ ok: true, provider: "cal", added: 0, updated: 0 }])).toBe(false);
   });
 });
+
+describe("classifyScrapedCards last-4 collisions", () => {
+  test("reports a last-4 returned twice in one scrape", () => {
+    const c = classifyScrapedCards(1, ["4929", "7408", "4929"], new Map());
+    expect(c.collidingLast4).toEqual(["4929"]);
+  });
+
+  test("reports each colliding last-4 only once", () => {
+    const c = classifyScrapedCards(1, ["4929", "4929", "4929"], new Map());
+    expect(c.collidingLast4).toEqual(["4929"]);
+  });
+
+  test("is empty when every card is distinct", () => {
+    const c = classifyScrapedCards(1, ["4929", "7408", "5287"], new Map());
+    expect(c.collidingLast4).toEqual([]);
+  });
+});

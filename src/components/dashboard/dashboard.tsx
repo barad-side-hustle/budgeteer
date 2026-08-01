@@ -13,6 +13,7 @@ import { HelpButton } from "@/components/help/help-button";
 import { PageHeader } from "@/components/layout/app-shell";
 import { QueryError } from "@/components/ui/query-error";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UncoveredBillsBanner } from "@/components/uncovered-bills-banner";
 import { useIsHydrated } from "@/hooks/use-is-hydrated";
 import type { Locale } from "@/i18n/routing";
 import { getSummary } from "@/lib/api";
@@ -92,6 +93,7 @@ export function Dashboard() {
 
       <div className="space-y-6 p-4 md:p-6 lg:p-8">
         <AINotConnectedBanner />
+        <UncoveredBillsBanner />
         {summaryQuery.isError && !summary ? (
           <QueryError onRetry={() => summaryQuery.refetch()} />
         ) : (

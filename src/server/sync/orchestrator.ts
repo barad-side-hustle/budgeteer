@@ -3,7 +3,11 @@ import "server-only";
 import { BANK_PROVIDERS, type BankProvider, type SyncKind } from "@/lib/types";
 import { createAIProvider } from "@/server/ai/factory";
 import { ensureOllamaRunning } from "@/server/ai/ollama-manager";
-import { getCardOwners, upsertBankAccount } from "@/server/db/queries/bank-accounts";
+import {
+  getCardOwners,
+  listBankAccountsByCredential,
+  upsertBankAccount,
+} from "@/server/db/queries/bank-accounts";
 import {
   type BankCredentialMeta,
   getBankCredentials,
@@ -61,6 +65,8 @@ export interface ProviderResult {
   syncRunId?: number;
   sharedCards?: string[];
   newCards?: string[];
+  missingCards?: string[];
+  collidingCards?: string[];
 }
 
 export interface WorkspaceSummary {
@@ -252,6 +258,10 @@ async function syncOneCredential(
   const priorOwners = getCardOwners(workspaceId, provider, scrapedAccountNumbers);
   const classification = classifyScrapedCards(meta.id, scrapedAccountNumbers, priorOwners);
 
+  const missingCards = listBankAccountsByCredential(workspaceId, meta.id)
+    .map((account) => account.accountNumber)
+    .filter((accountNumber) => !scrapedAccountNumbers.includes(accountNumber));
+
   rehomeOrphanTransactions(workspaceId, provider, ownedAccounts(classification), meta.id);
 
   const { added, updated } = insertTransactions(
@@ -285,6 +295,8 @@ async function syncOneCredential(
     syncRunId,
     sharedCards: classification.shared,
     newCards: classification.newlyAdded,
+    missingCards,
+    collidingCards: classification.collidingLast4,
   };
 }
 
@@ -394,6 +406,8 @@ export async function syncWorkspace(
         errorMessage: result.errorMessage,
         sharedCards: result.sharedCards ?? [],
         newCards: result.newCards ?? [],
+        missingCards: result.missingCards ?? [],
+        collidingCards: result.collidingCards ?? [],
       });
     } catch (err) {
       const message =
