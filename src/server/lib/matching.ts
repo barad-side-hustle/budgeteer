@@ -98,7 +98,7 @@ export function buildCardBillingGroups(
     const key = `${c.accountNumber}:${billingDay}`;
     const existing = byKey.get(key);
     if (existing) {
-      existing.amount += Math.abs(c.chargedAmount);
+      existing.amount += c.chargedAmount;
       existing.transactionIds.push(c.id);
     } else {
       byKey.set(key, {
@@ -106,12 +106,12 @@ export function buildCardBillingGroups(
         accountNumber: c.accountNumber,
         issuer,
         billingDay,
-        amount: Math.abs(c.chargedAmount),
+        amount: c.chargedAmount,
         transactionIds: [c.id],
       });
     }
   }
-  return [...byKey.values()];
+  return [...byKey.values()].map((group) => ({ ...group, amount: Math.abs(group.amount) }));
 }
 
 const BILL_MATCH_DAY_WINDOW = 2;

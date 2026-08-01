@@ -303,6 +303,31 @@ describe("buildCardBillingGroups", () => {
     expect(june?.transactionIds.sort()).toEqual([1, 2]);
   });
 
+  test("nets a refund against the cycle instead of adding its magnitude", () => {
+    const groups = buildCardBillingGroups(
+      [
+        purchase({ id: 1, chargedAmount: -102 }),
+        purchase({ id: 2, chargedAmount: -17.9 }),
+        purchase({ id: 3, chargedAmount: 20 }),
+      ],
+      new Set<CardIssuer>(["cal"]),
+    );
+    expect(groups).toHaveLength(1);
+    expect(groups[0].amount).toBeCloseTo(99.9, 2);
+  });
+
+  test("a cycle containing a refund still matches its bank bill", () => {
+    const groups = buildCardBillingGroups(
+      [
+        purchase({ id: 1, chargedAmount: -102 }),
+        purchase({ id: 2, chargedAmount: -17.9 }),
+        purchase({ id: 3, chargedAmount: 20 }),
+      ],
+      new Set<CardIssuer>(["cal"]),
+    );
+    expect(matchBillToGroup(-99.9, "2026-06-09", groups)).not.toBeNull();
+  });
+
   test("ignores purchases from issuers that are not connected", () => {
     const groups = buildCardBillingGroups(
       [purchase({ id: 1, provider: "max", chargedAmount: -102 })],
