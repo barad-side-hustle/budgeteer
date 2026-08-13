@@ -8,13 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { listOllamaModels, type PullEvent, pullOllamaModel, saveAIConfig } from "@/lib/api";
+import { isValidOpenRouterKey, resolveOpenRouterModel } from "@/lib/openrouter";
 import {
   type OllamaModelInfo,
   RECOMMENDED_GEMINI_MODELS,
   RECOMMENDED_OLLAMA_MODELS,
+  RECOMMENDED_OPENROUTER_MODELS,
 } from "@/lib/types";
 
-type AIChoice = "claude" | "gemini" | "ollama" | "none";
+type AIChoice = "claude" | "gemini" | "ollama" | "openrouter" | "none";
 
 interface AIStepProps {
   onComplete: () => void;
@@ -32,6 +34,7 @@ interface PullState {
 const TINTS = {
   claude: { bg: "#fad6c0", mid: "#e89968", ink: "#7a4222" },
   gemini: { bg: "#d3e3fd", mid: "#7fa6f0", ink: "#2b4a8a" },
+  openrouter: { bg: "#e7dbf6", mid: "#a98ed8", ink: "#4a3370" },
   ollama: { bg: "#dbedd1", mid: "#a8d18d", ink: "#3e5a2e" },
   none: { bg: "#e6dfd1", mid: "#a89978", ink: "#5b5240" },
 } as const;
@@ -57,6 +60,12 @@ const PROVIDERS: ProviderMeta[] = [
     titleKey: "aiProviderGeminiTitle",
     taglineKey: "aiProviderGeminiTagline",
     icon: "✧",
+  },
+  {
+    id: "openrouter",
+    titleKey: "aiProviderOpenRouterTitle",
+    taglineKey: "aiProviderOpenRouterTagline",
+    icon: "⊹",
   },
   {
     id: "ollama",
@@ -98,6 +107,10 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
   const [geminiKey, setGeminiKey] = useState("");
   const [showGeminiKey, setShowGeminiKey] = useState(false);
   const [geminiModel, setGeminiModel] = useState(RECOMMENDED_GEMINI_MODELS[0].name);
+  const [openRouterKey, setOpenRouterKey] = useState("");
+  const [showOpenRouterKey, setShowOpenRouterKey] = useState(false);
+  const [openRouterModel, setOpenRouterModel] = useState(RECOMMENDED_OPENROUTER_MODELS[0].name);
+  const [openRouterCustomModel, setOpenRouterCustomModel] = useState("");
   const [ollamaUrl, setOllamaUrl] = useState("http://localhost:11434");
   const [ollamaModel, setOllamaModel] = useState("llama3.2:3b");
   const [installedModels, setInstalledModels] = useState<string[]>([]);
@@ -132,11 +145,16 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
 
   const trimmedApiKey = apiKey.trim();
   const trimmedGeminiKey = geminiKey.trim();
+  const trimmedOpenRouterKey = openRouterKey.trim();
+  const effectiveOpenRouterModel = resolveOpenRouterModel(openRouterCustomModel, openRouterModel);
 
   const canContinue =
     choice === "none" ||
     (choice === "claude" && /^sk-ant-/.test(trimmedApiKey) && trimmedApiKey.length > 25) ||
     (choice === "gemini" && trimmedGeminiKey.length > 30) ||
+    (choice === "openrouter" &&
+      isValidOpenRouterKey(trimmedOpenRouterKey) &&
+      effectiveOpenRouterModel.length > 0) ||
     (choice === "ollama" && modelInstalled);
 
   const handlePull = () => {
@@ -176,6 +194,8 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
         claudeApiKey: choice === "claude" ? trimmedApiKey : undefined,
         geminiApiKey: choice === "gemini" ? trimmedGeminiKey : undefined,
         geminiModel: choice === "gemini" ? geminiModel : undefined,
+        openRouterApiKey: choice === "openrouter" ? trimmedOpenRouterKey : undefined,
+        openRouterModel: choice === "openrouter" ? effectiveOpenRouterModel : undefined,
         ollamaUrl: choice === "ollama" ? ollamaUrl : undefined,
         ollamaModel: choice === "ollama" ? ollamaModel : undefined,
       });
@@ -232,6 +252,24 @@ export function AIStep({ onComplete, onBack }: AIStepProps) {
                         getKeyUrl="https://aistudio.google.com/apikey"
                       >
                         <GeminiModelPicker model={geminiModel} setModel={setGeminiModel} />
+                      </ApiKeyConfig>
+                    )}
+                    {p.id === "openrouter" && (
+                      <ApiKeyConfig
+                        id="openrouter-api-key"
+                        apiKey={openRouterKey}
+                        setApiKey={setOpenRouterKey}
+                        showKey={showOpenRouterKey}
+                        setShowKey={setShowOpenRouterKey}
+                        placeholder="sk-or-v1-..."
+                        getKeyUrl="https://openrouter.ai/keys"
+                      >
+                        <OpenRouterModelPicker
+                          model={openRouterModel}
+                          setModel={setOpenRouterModel}
+                          customModel={openRouterCustomModel}
+                          setCustomModel={setOpenRouterCustomModel}
+                        />
                       </ApiKeyConfig>
                     )}
                     {p.id === "ollama" && (
@@ -423,6 +461,83 @@ function GeminiModelPicker({ model, setModel }: { model: string; setModel: (v: s
             <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{m.description}</p>
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function OpenRouterModelPicker({
+  model,
+  setModel,
+  customModel,
+  setCustomModel,
+}: {
+  model: string;
+  setModel: (v: string) => void;
+  customModel: string;
+  setCustomModel: (v: string) => void;
+}) {
+  const t = useTranslations("setup");
+  return (
+    <div className="space-y-2">
+      <div className="space-y-1.5">
+        <Label className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+          {t("aiOllamaPickModel")}
+        </Label>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {RECOMMENDED_OPENROUTER_MODELS.map((m) => (
+            <button
+              key={m.name}
+              type="button"
+              onClick={() => {
+                setModel(m.name);
+                setCustomModel("");
+              }}
+              className={`rounded-lg border bg-background p-2 text-start transition-colors ${
+                customModel.trim() === "" && model === m.name
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/40"
+              }`}
+            >
+              <div className="flex items-baseline justify-between gap-1">
+                <span className="truncate text-[11px] font-bold tracking-tight">{m.name}</span>
+                {m.free ? (
+                  <span
+                    className="rounded-full px-1 py-0 text-[8px] font-bold uppercase tracking-wider"
+                    style={{
+                      background: "color-mix(in oklch, var(--status-on-track) 16%, transparent)",
+                      color: "var(--status-on-track)",
+                    }}
+                  >
+                    {t("aiModelFreeBadge")}
+                  </span>
+                ) : (
+                  m.recommended && (
+                    <span className="rounded-full bg-primary/10 px-1 py-0 text-[8px] font-bold uppercase tracking-wider text-primary">
+                      {t("aiModelRecommendedBadge")}
+                    </span>
+                  )
+                )}
+              </div>
+              <p className="mt-1 text-[10px] leading-snug text-muted-foreground">{m.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label
+          htmlFor="openrouter-custom-model"
+          className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground"
+        >
+          {t("aiOpenRouterCustomModelLabel")}
+        </Label>
+        <Input
+          id="openrouter-custom-model"
+          value={customModel}
+          onChange={(e) => setCustomModel(e.target.value)}
+          placeholder="anthropic/claude-3.5-haiku"
+          className="font-mono text-[12px]"
+        />
       </div>
     </div>
   );

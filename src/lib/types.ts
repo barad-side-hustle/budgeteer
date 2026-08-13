@@ -568,8 +568,9 @@ export interface AppSettings {
   currentBalance: number | null;
   balanceDate: string | null;
   monthsToSync: number;
-  aiProvider: "claude" | "gemini" | "ollama" | "none";
+  aiProvider: "claude" | "gemini" | "ollama" | "openrouter" | "none";
   geminiModel: string;
+  openRouterModel: string;
   ollamaUrl: string;
   ollamaModel: string;
   showBrowser: boolean;
@@ -683,6 +684,47 @@ export const RECOMMENDED_GEMINI_MODELS: GeminiModelInfo[] = [
   {
     name: "gemini-2.5-pro",
     description: "Stable higher-quality model for more complex categorization.",
+  },
+];
+
+export interface OpenRouterModelInfo {
+  name: string;
+  description: string;
+  recommended?: boolean;
+  free?: boolean;
+}
+
+export const RECOMMENDED_OPENROUTER_MODELS: OpenRouterModelInfo[] = [
+  {
+    name: "anthropic/claude-haiku-4.5",
+    description: "Fast, low-cost Claude. Best default for categorization.",
+    recommended: true,
+  },
+  {
+    name: "anthropic/claude-sonnet-4.6",
+    description: "Higher-quality Claude for more nuanced categorization.",
+  },
+  {
+    name: "openai/gpt-5-mini",
+    description: "Cheap, capable non-Anthropic option.",
+  },
+  {
+    name: "google/gemini-3.5-flash",
+    description: "Fast, budget-friendly Google option.",
+  },
+  {
+    name: "z-ai/glm-5.2",
+    description: "Capable, low-cost model from Z.ai with tool support.",
+  },
+  {
+    name: "meta-llama/llama-3.3-70b-instruct:free",
+    description: "Free Llama 3.3 70B. Heavier rate limits than paid models.",
+    free: true,
+  },
+  {
+    name: "qwen/qwen3-next-80b-a3b-instruct:free",
+    description: "Free Qwen3 model. Heavier rate limits than paid models.",
+    free: true,
   },
 ];
 

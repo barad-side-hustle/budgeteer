@@ -35,7 +35,7 @@ Connect your Israeli bank, forecast your month, and see what's safe to spend. En
 
 Israeli banks have terrible exports, YNAB doesn't speak ILS gracefully, and every "cloud finance" app wants you to hand over your bank password. Budgeteer is the answer for people who'd rather just run something on their own laptop.
 
-Your transactions get pulled directly from your bank with [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider you choose: paid Claude, Gemini, free local Ollama, or nothing at all.
+Your transactions get pulled directly from your bank with [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers), stored in a local SQLite file you can `cp` and back up like any other file, and categorized by an AI provider you choose: paid Claude, Gemini, OpenRouter, free local Ollama, or nothing at all.
 
 The trade-off is honest: you self-host, you trust the scraper, and you accept that banks may not love automation. In return you get a fast, beautiful, fully offline dashboard that never phones home.
 
@@ -74,7 +74,7 @@ Low-confidence guesses, uncategorized rows, and suspected transfers are grouped 
 <td width="33%" valign="top">
 
 ### 🤖 AI categorization
-Choose Claude (Anthropic) for best accuracy, Gemini (Google) for a generous free tier, Ollama for fully local LLMs, or skip and categorize manually.
+Choose Claude (Anthropic) for best accuracy, Gemini (Google) for a generous free tier, OpenRouter for one key and hundreds of models (Claude, GPT, Gemini, and more), Ollama for fully local LLMs, or skip and categorize manually.
 
 </td>
 <td width="33%" valign="top">
@@ -205,7 +205,7 @@ flowchart LR
     Bank["🏦 Israeli bank<br/>(Isracard, Hapoalim, Leumi,<br/>Mizrahi, Cal, One Zero, …)"]
     Scraper["Puppeteer scraper<br/>(israeli-bank-scrapers)"]
     DB[("📦 SQLite<br/>data/budgeteer.db<br/>(WAL mode)")]
-    AI{"🤖 AI provider<br/>Claude · Gemini · Ollama · None"}
+    AI{"🤖 AI provider<br/>Claude · Gemini · OpenRouter · Ollama · None"}
     UI["🖥 Dashboard<br/>http://127.0.0.1:2412"]
 
     Bank -->|HTTPS<br/>credentials encrypted| Scraper
@@ -221,7 +221,7 @@ flowchart LR
     end
 ```
 
-Everything inside the dashed box stays on your laptop. The only outbound traffic is to your bank (for scraping) and optionally `api.anthropic.com` (if you chose Claude), Google Gemini API endpoints (if you chose Gemini), or `localhost:11434` (if you chose Ollama).
+Everything inside the dashed box stays on your laptop. The only outbound traffic is to your bank (for scraping) and optionally `api.anthropic.com` (if you chose Claude), Google Gemini API endpoints (if you chose Gemini), `openrouter.ai` (if you chose OpenRouter), or `localhost:11434` (if you chose Ollama).
 
 ## Supported banks
 
@@ -252,14 +252,14 @@ Don't see your bank? Adding a scraper is a small wrapper around `israeli-bank-sc
 
 ## AI providers
 
-| | **Claude** (Anthropic) | **Gemini** (Google) | **Ollama** (local) | **None** |
-|---|---|---|---|---|
-| Cost | ~₪0.004 per sync | Free tier available | Free | Free |
-| Accuracy | Best | Strong | Good (depends on model) | Manual |
-| Network | `api.anthropic.com` | Google Gemini API | `localhost:11434` | Offline |
-| Setup | API key | API key from Google AI Studio + choose a model | Install Ollama + pull a model | Nothing |
+| | **Claude** (Anthropic) | **Gemini** (Google) | **OpenRouter** | **Ollama** (local) | **None** |
+|---|---|---|---|---|---|
+| Cost | ~₪0.004 per sync | Free tier available | Pay-per-use, varies by model | Free | Free |
+| Accuracy | Best | Strong | Depends on chosen model | Good (depends on model) | Manual |
+| Network | `api.anthropic.com` | Google Gemini API | `openrouter.ai` | `localhost:11434` | Offline |
+| Setup | API key | API key from Google AI Studio + choose a model | API key from openrouter.ai + choose or paste a model | Install Ollama + pull a model | Nothing |
 
-Default model when Claude is selected: `claude-haiku-4-5-20251001` (cheap, fast, accurate for categorization). Gemini defaults to `gemini-3.5-flash` and lets you choose from stable text models: `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, and `gemini-2.5-pro`. For Ollama, `llama3.2:3b` is the recommended default.
+Default model when Claude is selected: `claude-haiku-4-5-20251001` (cheap, fast, accurate for categorization). Gemini defaults to `gemini-3.5-flash` and lets you choose from stable text models: `gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`, and `gemini-2.5-pro`. OpenRouter defaults to `anthropic/claude-haiku-4.5` and lets you choose from `anthropic/claude-haiku-4.5`, `anthropic/claude-sonnet-4.6`, `openai/gpt-5-mini`, `google/gemini-3.5-flash`, `z-ai/glm-5.2`, two free options (`meta-llama/llama-3.3-70b-instruct:free`, `qwen/qwen3-next-80b-a3b-instruct:free`), or paste any OpenRouter model id. Free models work but come with heavier rate limits, so they are slower for categorizing many transactions at once. For Ollama, `llama3.2:3b` is the recommended default.
 
 You can change providers any time from **Settings → AI provider**. Existing categorizations are kept.
 
@@ -292,7 +292,7 @@ In the browser:
 
 1. **Welcome** — a quick tour of the local-first, private, free idea.
 2. **Connect your bank** — credentials are AES-256-GCM encrypted before they touch disk.
-3. **Choose an AI provider** — Claude (default), Gemini, Ollama, or none.
+3. **Choose an AI provider** — Claude (default), Gemini, OpenRouter, Ollama, or none.
 4. **Set your monthly target** — the spend you want to stay under each month (optional).
 5. **Set per-category budgets** — type an amount on any category to budget it; leave blank to track without a limit (optional).
 6. **Done.** Sync starts automatically: a few months of transactions, then AI categorization. Your dashboard opens with the month's forecast.
@@ -371,7 +371,7 @@ spent/
 │   │   └── settings/         Per-tab settings panels
 │   ├── lib/                  Shared client-side types and helpers
 │   └── server/
-│       ├── ai/               Claude + Gemini + Ollama provider implementations
+│       ├── ai/               Claude + Gemini + OpenRouter + Ollama provider implementations
 │       ├── db/               SQLite singleton, migrations, query helpers
 │       ├── lib/              Encryption, dedup, transfer detection, pace
 │       └── scrapers/         Wrapper around israeli-bank-scrapers
@@ -393,6 +393,7 @@ spent/
 - [x] Visa Cal, Bank Leumi, Mizrahi, Discount, FIBI, and the rest of the `israeli-bank-scrapers` roster
 - [x] One Zero with programmatic SMS 2FA
 - [x] Gemini as a third AI provider
+- [x] OpenRouter as an AI provider
 - [x] AI chat agent for asking questions about your spending
 - [x] Multiple workspaces
 - [x] CSV export of transactions
@@ -429,4 +430,4 @@ Built on the shoulders of:
 - [`shadcn/ui`](https://ui.shadcn.com/) on top of [`base-ui`](https://base-ui.com/)
 - [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3)
 - [`next-intl`](https://next-intl.dev/) for English / Hebrew i18n
-- [Anthropic Claude](https://www.anthropic.com/), [Google Gemini](https://ai.google.dev/), and the local-LLM crew at [Ollama](https://ollama.com/)
+- [Anthropic Claude](https://www.anthropic.com/), [Google Gemini](https://ai.google.dev/), [OpenRouter](https://openrouter.ai/), and the local-LLM crew at [Ollama](https://ollama.com/)

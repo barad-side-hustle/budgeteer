@@ -39,7 +39,11 @@ export function CompleteStep({ onFinish }: CompleteStepProps) {
         ? t("aiSummaryGemini", { model: settings?.geminiModel ?? t("aiSummaryGeminiFallback") })
         : settings?.aiProvider === "ollama"
           ? t("aiSummaryOllama", { model: settings?.ollamaModel ?? t("aiSummaryOllamaFallback") })
-          : t("aiSummaryManual");
+          : settings?.aiProvider === "openrouter"
+            ? t("aiSummaryOpenRouter", {
+                model: settings?.openRouterModel ?? t("aiSummaryOpenRouterFallback"),
+              })
+            : t("aiSummaryManual");
 
   return (
     <div className="mx-auto w-full max-w-[520px] space-y-7 text-center">
